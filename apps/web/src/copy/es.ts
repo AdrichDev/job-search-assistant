@@ -175,7 +175,13 @@ export const ES = {
     heading: 'Resultados de tus postulaciones',
     empty:
       'Todavía no hay postulaciones registradas. En cuanto te postules a algunas ofertas, aquí verás qué versión del CV convierte mejor.',
+    funnelHeading: 'Embudo completo',
+    surfaced: 'Ofertas vistas',
     applied: 'Postulaciones',
+    responses: 'Respuestas',
+    interviews: 'Entrevistas',
+    offers: 'Ofertas laborales',
+    stageRate: (rate: string) => `${rate} desde la etapa anterior`,
     responseRate: 'Tasa de respuesta',
     responseHint: (responses: number, total: number) => `${responses} de ${total} respondieron`,
     advanced: 'Avanzaron',

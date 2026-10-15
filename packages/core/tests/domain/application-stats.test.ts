@@ -32,6 +32,34 @@ describe('computeApplicationStats', () => {
     expect(stats.byVariant).toEqual([]);
   });
 
+  it('computes the full funnel with safe stage-to-stage rates', () => {
+    const stats = computeApplicationStats(
+      [
+        application('frontend'),
+        application('frontend', 'rejected'),
+        application('frontend', 'screening'),
+        application('frontend', 'interview'),
+        application('frontend', 'offer'),
+      ],
+      { surfaced: 10 },
+    );
+
+    expect(stats.funnel).toEqual({
+      surfaced: 10,
+      applied: 5,
+      responses: 4,
+      advances: 3,
+      interviews: 2,
+      offers: 1,
+      applicationRate: 0.5,
+      responseRate: 0.8,
+      advanceRate: 0.75,
+      interviewRate: 2 / 3,
+      offerRate: 0.5,
+    });
+    expect(computeApplicationStats([], { surfaced: 0 }).funnel.offerRate).toBe(0);
+  });
+
   it('attributes conversion to every source and keeps legacy applications auditable', () => {
     const stats = computeApplicationStats([
       application('frontend', 'interview', ['adzuna', 'manfred']),

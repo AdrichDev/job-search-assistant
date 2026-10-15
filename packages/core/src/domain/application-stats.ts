@@ -34,6 +34,25 @@ export interface SourceStats {
   readonly advanceRate: number;
 }
 
+export interface ApplicationFunnel {
+  readonly surfaced: number;
+  readonly applied: number;
+  readonly responses: number;
+  readonly advances: number;
+  readonly interviews: number;
+  readonly offers: number;
+  readonly applicationRate: number;
+  readonly responseRate: number;
+  readonly advanceRate: number;
+  readonly interviewRate: number;
+  readonly offerRate: number;
+}
+
+export interface ApplicationStatsContext {
+  /** Unique vacancies ever surfaced across the current queue and durable logs. */
+  readonly surfaced: number;
+}
+
 export interface ApplicationStats {
   readonly totalApplied: number;
   readonly responses: number;
@@ -47,6 +66,7 @@ export interface ApplicationStats {
   readonly byVariant: readonly VariantStats[];
   /** Each source that carried a vacancy gets credit; legacy rows use `unknown`. */
   readonly bySource: readonly SourceStats[];
+  readonly funnel: ApplicationFunnel;
 }
 
 /** Rates are 0 for an empty denominator: the UI must never render `NaN%`. */
@@ -67,6 +87,7 @@ interface VariantAccumulator {
 
 export function computeApplicationStats(
   applications: readonly Application[],
+  context?: ApplicationStatsContext,
 ): ApplicationStats {
   const byOutcome = emptyOutcomeTally();
   const variants = new Map<CvVariant, VariantAccumulator>();
@@ -130,6 +151,23 @@ export function computeApplicationStats(
       b.applied !== a.applied ? b.applied - a.applied : a.cvVariant.localeCompare(b.cvVariant),
     );
 
+  const surfaced = Math.max(context?.surfaced ?? totalApplied, totalApplied);
+  const interviews = byOutcome.interview + byOutcome.offer;
+  const offers = byOutcome.offer;
+  const funnel: ApplicationFunnel = {
+    surfaced,
+    applied: totalApplied,
+    responses,
+    advances,
+    interviews,
+    offers,
+    applicationRate: rate(totalApplied, surfaced),
+    responseRate: rate(responses, totalApplied),
+    advanceRate: rate(advances, responses),
+    interviewRate: rate(interviews, advances),
+    offerRate: rate(offers, interviews),
+  };
+
   const bySource = [...sources.entries()]
     .map(([sourceId, accumulator]) => ({
       sourceId,
@@ -153,5 +191,6 @@ export function computeApplicationStats(
     byOutcome,
     byVariant,
     bySource,
+    funnel,
   };
 }

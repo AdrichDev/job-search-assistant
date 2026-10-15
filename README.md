@@ -392,12 +392,17 @@ Every click on **Apply** does two things: it opens the real posting in a new tab
 | `appliedAt` | Frozen history. Never moves. |
 | `cvVariant` | Which CV was sent. This is what makes the stats panel worth reading. |
 | `scoreAtApply` | The score *at the time*. Retuning the weights later must not rewrite what the scorer believed back then. This is the column the score/reply-rate correlation will eventually be run against. |
+| `sourceIds` | Every source that carried the deduplicated vacancy when Apply was clicked. Old records load with an empty list and remain visible as “source not recorded”. |
 | `outcome` | `applied` → `no_reply` \| `rejected` \| `screening` \| `interview` \| `offer` |
 | `outcomeUpdatedAt`, `notes` | When you last heard something, and what it was. |
 
-The payoff is the stats panel: response rate overall and **per CV variant**, which answers "does my Microsoft profile convert better than my React profile?".
+The stats panel answers three different questions:
 
-A rejection counts as a *response*. A channel that produces rejections is a different problem from one that produces silence, and collapsing them would hide that.
+- **Full funnel:** unique vacancies surfaced → applications → responses → advances → interviews → offers. Each percentage is conversion from the preceding stage, and duplicate appearances in the queue, dismissal log and application log count once by `jobId`.
+- **By source:** which adapters produce replies and advances. A deduplicated vacancy credits every source that carried it rather than inventing a “winning” source.
+- **By CV variant:** whether the Microsoft, frontend or general profile converts better.
+
+A rejection counts as a *response*. A channel that produces rejections is a different problem from one that produces silence, and collapsing them would hide that. A dismissal may also carry one optional, closed-list reason (role, seniority, stack, location, compensation or other); legacy dismissal files without it continue to load.
 
 ### The exploration quota is retired
 
@@ -409,9 +414,9 @@ It only made sense as a counterweight to **score ordering**. With a recency-orde
 
 ### Storage
 
-JSON file with atomic writes: write a uniquely-named temp file in the same directory, then `rename` over the target. A crash mid-write leaves either the old complete file or the new complete file, never a truncated one. All operations go through an in-process queue so concurrent server actions cannot interleave a read-modify-write and lose a record.
+The application and dismissal logs share one JSON-log store for the mechanics they must agree on: schema validation, refusal to overwrite unreadable data, in-process serialization and atomic writes. Each repository still owns its entity schema and business rules. A uniquely named temp file is written in the same directory and then renamed over the target; a crash leaves either the old complete file or the new complete file, never a truncated one.
 
-There is **no native dependency** — no `better-sqlite3`, nothing needing a postinstall build. `ApplicationRepository` is the seam: swapping in SQLite later touches one adapter file and no callers.
+There is **no native dependency** — no `better-sqlite3`, nothing needing a postinstall build. `ApplicationRepository` and `DismissalRepository` are the seams for replacing either JSON log without changing callers. Both formats remain version 1 because all new fields are optional and old files load without migration.
 
 ## Scoring model
 

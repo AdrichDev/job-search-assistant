@@ -114,9 +114,17 @@ export async function loadDashboard(deps: DashboardDeps): Promise<DashboardData>
    */
   const shown: JobQueue = { ...queue, jobs: visible, totalJuniorEligible: visible.length };
 
+  // A vacancy can exist in all three collections. Count its stable id once so
+  // the top of the funnel never inflates after applying or dismissing it.
+  const surfaced = new Set([
+    ...queue.jobs.map((entry) => entry.id),
+    ...applications.map((application) => application.jobId),
+    ...dismissals.map((dismissal) => dismissal.jobId),
+  ]).size;
+
   return {
     queue: withApplicationStatus(shown, applications),
-    stats: computeApplicationStats(applications),
+    stats: computeApplicationStats(applications, { surfaced }),
     origin,
     // Asked of the VISIBLE postings, so a dismissed sample offer stops raising
     // a banner about a card that is no longer on the page.

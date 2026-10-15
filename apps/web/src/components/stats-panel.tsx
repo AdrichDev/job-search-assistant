@@ -85,6 +85,36 @@ export function StatsPanel({ stats }: { stats: ApplicationStats }) {
         {ES.stats.heading}
       </h2>
 
+      <h3 className="mb-2 text-sm font-semibold text-slate-800">{ES.stats.funnelHeading}</h3>
+      <dl className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <Metric label={ES.stats.surfaced} value={String(stats.funnel.surfaced)} />
+        <Metric
+          label={ES.stats.applied}
+          value={String(stats.funnel.applied)}
+          hint={ES.stats.stageRate(percent(stats.funnel.applicationRate))}
+        />
+        <Metric
+          label={ES.stats.responses}
+          value={String(stats.funnel.responses)}
+          hint={ES.stats.stageRate(percent(stats.funnel.responseRate))}
+        />
+        <Metric
+          label={ES.stats.advanced}
+          value={String(stats.funnel.advances)}
+          hint={ES.stats.stageRate(percent(stats.funnel.advanceRate))}
+        />
+        <Metric
+          label={ES.stats.interviews}
+          value={String(stats.funnel.interviews)}
+          hint={ES.stats.stageRate(percent(stats.funnel.interviewRate))}
+        />
+        <Metric
+          label={ES.stats.offers}
+          value={String(stats.funnel.offers)}
+          hint={ES.stats.stageRate(percent(stats.funnel.offerRate))}
+        />
+      </dl>
+
       {stats.totalApplied === 0 ? (
         <p className="prose-measure rounded-xl border border-dashed border-slate-300 bg-white p-6 text-sm leading-relaxed text-slate-600">
           {ES.stats.empty}
