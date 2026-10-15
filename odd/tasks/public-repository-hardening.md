@@ -48,11 +48,11 @@ Prepare the project for its first safe public push without publishing personal d
   - Review the exact first-commit file list.
   - Evidence: `npm run build` OK; typecheck OK; tests core 985 / web 84; e2e 62 passed; 252 tracked files, none from the ignored set (.env, output/, applications/dismissals, liveness cache, agent tooling, local profile, raw newsletters); content scan of tracked files found no personal email, keys or tokens; `.env.example` holds only empty placeholders; all commits authored with the GitHub noreply identity.
 
-- [ ] 6. Publish and rename the local workspace (published; local rename pending)
+- [x] 6. Publish and rename the local workspace
   - Fast-forward the verified work onto `main` without a pull request.
   - Push `main` to `origin`.
   - Stop local processes, rename the directory to `job-search-assistant`, reopen the workspace, and verify the remote and application.
-  - Evidence: branch renamed to `main` and pushed (HEAD 16c16c7); GitHub reports the repo PUBLIC, default branch main, 5 commits, 307 tree entries, 0 ignored-set paths. Dev server on port 3000 stopped. Remaining, manual: close Pi, rename the folder to `job-search-assistant`, reopen from the new path, run `npm run dev` and confirm `git remote -v`.
+  - Evidence: branch renamed to `main` and pushed (HEAD 16c16c7); GitHub reports the repo PUBLIC, default branch main, 5 commits, 307 tree entries, 0 ignored-set paths. Dev server on port 3000 stopped. Rename done: workspace now at `job-search-assistant`; local main == origin/main (8515cb0). Stale node_modules workspace symlinks (old folder, caused a 500 on `@job-queue/core/domain`) fixed with `npm install --ignore-scripts`; `npm run dev` serves `/` with HTTP 200 and typecheck passes.
 
 ## Deferred Product Work
 After this hardening feature closes, continue the existing assessment one item at a time: use cases and funnel, source acquisition, CV/ATS tailoring, manual versus automatic application, UI/UX, and external risks.
