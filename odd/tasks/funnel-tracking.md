@@ -13,7 +13,7 @@ Measure the whole job-search funnel (not only post-application outcomes), attrib
 - Non-goals (deferred): "saved" stage, status history and follow-up reminders.
 
 ## Tasks
-- [ ] T1 (S1) Share JSON log store; derive enum; remove cast. Route: inline. Commit: pending
+- [x] T1 (S1) Share JSON log store; derive enum; remove cast. Route: inline. Commit: 00a6d29. Evidence: typecheck clean; core 985 and web 84 pass unchanged (existing repo tests cover invalid JSON, schema refusal, idempotency); no casts left in stats tally.
 - [ ] T2 (S2) Source ids on Application. Route: inline, test-first. Commit: pending
 - [ ] T3 (S3) Per-source stats and panel. Route: inline, test-first. Commit: pending
 - [ ] T4 (S4) Dismissal reason. Route: inline, test-first. Commit: pending
