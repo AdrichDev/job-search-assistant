@@ -15,7 +15,7 @@ Measure the whole job-search funnel (not only post-application outcomes), attrib
 ## Tasks
 - [x] T1 (S1) Share JSON log store; derive enum; remove cast. Route: inline. Commit: 00a6d29. Evidence: typecheck clean; core 985 and web 84 pass unchanged (existing repo tests cover invalid JSON, schema refusal, idempotency); no casts left in stats tally.
 - [x] T2 (S2) Source ids on Application. Route: inline, test-first. Commit: 136f521. Evidence: RED 3 expected failures, GREEN; typecheck clean; core 988, web 84 pass. Legacy log without sourceIds loads as [].
-- [ ] T3 (S3) Per-source stats and panel. Route: inline, test-first. Commit: pending
+- [x] T3 (S3) Per-source stats and panel. Route: inline, test-first. Commit: cf4047d. Evidence: RED 1 expected failure, GREEN 9/9 focused; typecheck passed; core 989 and web 84 passed. Multi-source vacancies credit every source; legacy records use unknown.
 - [ ] T4 (S4) Dismissal reason. Route: inline, test-first. Commit: pending
 - [ ] T5 (S5, S6) Funnel stats, panel, docs. Route: inline, test-first. Commit: pending
 
