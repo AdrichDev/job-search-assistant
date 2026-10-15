@@ -10,6 +10,7 @@ let sequence = 0;
 function application(
   cvVariant: CvVariant,
   outcome: ApplicationOutcome = 'applied',
+  sourceIds: readonly string[] = [],
 ): Application {
   sequence += 1;
   const base = createApplication({
@@ -17,6 +18,7 @@ function application(
     appliedAt: REFERENCE_NOW,
     cvVariant,
     scoreAtApply: 70,
+    sourceIds,
   });
   return outcome === 'applied' ? base : withOutcome(base, outcome, REFERENCE_NOW);
 }
@@ -28,6 +30,41 @@ describe('computeApplicationStats', () => {
     expect(stats.responseRate).toBe(0);
     expect(stats.advanceRate).toBe(0);
     expect(stats.byVariant).toEqual([]);
+  });
+
+  it('attributes conversion to every source and keeps legacy applications auditable', () => {
+    const stats = computeApplicationStats([
+      application('frontend', 'interview', ['adzuna', 'manfred']),
+      application('general', 'rejected', ['adzuna']),
+      application('microsoft', 'no_reply'),
+    ]);
+
+    expect(stats.bySource).toEqual([
+      {
+        sourceId: 'adzuna',
+        applied: 2,
+        responses: 2,
+        advances: 1,
+        responseRate: 1,
+        advanceRate: 0.5,
+      },
+      {
+        sourceId: 'manfred',
+        applied: 1,
+        responses: 1,
+        advances: 1,
+        responseRate: 1,
+        advanceRate: 1,
+      },
+      {
+        sourceId: 'unknown',
+        applied: 1,
+        responses: 0,
+        advances: 0,
+        responseRate: 0,
+        advanceRate: 0,
+      },
+    ]);
   });
 
   it('counts every logged application as applied, whatever its outcome', () => {

@@ -23,6 +23,58 @@ function Metric({ label, value, hint }: { label: string; value: string; hint?: s
   );
 }
 
+interface ConversionRow {
+  readonly key: string;
+  readonly label: string;
+  readonly applied: number;
+  readonly responses: number;
+  readonly responseRate: number;
+  readonly advances: number;
+}
+
+function ConversionTable({
+  heading,
+  caption,
+  firstColumn,
+  rows,
+}: {
+  readonly heading: string;
+  readonly caption: string;
+  readonly firstColumn: string;
+  readonly rows: readonly ConversionRow[];
+}) {
+  return (
+    <>
+      <h3 className="mb-2 mt-6 text-sm font-semibold text-slate-800">{heading}</h3>
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        <table className="w-full text-left text-sm">
+          <caption className="sr-only">{caption}</caption>
+          <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th scope="col" className="px-4 py-2.5 font-medium">{firstColumn}</th>
+              <th scope="col" className="px-4 py-2.5 text-right font-medium">{ES.stats.columnApplied}</th>
+              <th scope="col" className="px-4 py-2.5 text-right font-medium">{ES.stats.columnResponses}</th>
+              <th scope="col" className="px-4 py-2.5 text-right font-medium">{ES.stats.columnResponseRate}</th>
+              <th scope="col" className="px-4 py-2.5 text-right font-medium">{ES.stats.columnAdvanced}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rows.map((row) => (
+              <tr key={row.key}>
+                <th scope="row" className="px-4 py-2.5 font-medium text-slate-800">{row.label}</th>
+                <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{row.applied}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{row.responses}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-slate-900">{percent(row.responseRate)}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{row.advances}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
 export function StatsPanel({ stats }: { stats: ApplicationStats }) {
   return (
     <section aria-labelledby="stats-heading" className="mb-10">
@@ -54,54 +106,27 @@ export function StatsPanel({ stats }: { stats: ApplicationStats }) {
             <Metric label={ES.stats.pending} value={String(stats.pending)} />
           </dl>
 
-          <h3 className="mb-2 mt-6 text-sm font-semibold text-slate-800">
-            {ES.stats.byVariantHeading}
-          </h3>
-          <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
-              <caption className="sr-only">{ES.stats.tableCaption}</caption>
-              <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th scope="col" className="px-4 py-2.5 font-medium">
-                    {ES.stats.columnVariant}
-                  </th>
-                  <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                    {ES.stats.columnApplied}
-                  </th>
-                  <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                    {ES.stats.columnResponses}
-                  </th>
-                  <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                    {ES.stats.columnResponseRate}
-                  </th>
-                  <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                    {ES.stats.columnAdvanced}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {stats.byVariant.map((row) => (
-                  <tr key={row.cvVariant}>
-                    <th scope="row" className="px-4 py-2.5 font-medium text-slate-800">
-                      {cvVariantLabel(row.cvVariant)}
-                    </th>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">
-                      {row.applied}
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">
-                      {row.responses}
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-slate-900">
-                      {percent(row.responseRate)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">
-                      {row.advances}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ConversionTable
+            heading={ES.stats.byVariantHeading}
+            caption={ES.stats.variantTableCaption}
+            firstColumn={ES.stats.columnVariant}
+            rows={stats.byVariant.map((row) => ({
+              key: row.cvVariant,
+              label: cvVariantLabel(row.cvVariant),
+              ...row,
+            }))}
+          />
+
+          <ConversionTable
+            heading={ES.stats.bySourceHeading}
+            caption={ES.stats.sourceTableCaption}
+            firstColumn={ES.stats.columnSource}
+            rows={stats.bySource.map((row) => ({
+              key: row.sourceId,
+              label: row.sourceId === 'unknown' ? ES.stats.unknownSource : row.sourceId,
+              ...row,
+            }))}
+          />
 
           {stats.totalApplied < 10 && (
             <p className="prose-measure mt-2 text-xs leading-relaxed text-slate-500">

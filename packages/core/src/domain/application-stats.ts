@@ -24,6 +24,16 @@ export interface VariantStats {
   readonly advanceRate: number;
 }
 
+export interface SourceStats {
+  /** Source adapter id, or `unknown` for applications recorded before source tracking. */
+  readonly sourceId: string;
+  readonly applied: number;
+  readonly responses: number;
+  readonly advances: number;
+  readonly responseRate: number;
+  readonly advanceRate: number;
+}
+
 export interface ApplicationStats {
   readonly totalApplied: number;
   readonly responses: number;
@@ -35,6 +45,8 @@ export interface ApplicationStats {
   readonly byOutcome: Readonly<Record<ApplicationOutcome, number>>;
   /** Only variants actually used, most-used first. */
   readonly byVariant: readonly VariantStats[];
+  /** Each source that carried a vacancy gets credit; legacy rows use `unknown`. */
+  readonly bySource: readonly SourceStats[];
 }
 
 /** Rates are 0 for an empty denominator: the UI must never render `NaN%`. */
@@ -58,6 +70,7 @@ export function computeApplicationStats(
 ): ApplicationStats {
   const byOutcome = emptyOutcomeTally();
   const variants = new Map<CvVariant, VariantAccumulator>();
+  const sources = new Map<string, VariantAccumulator>();
 
   let responses = 0;
   let advances = 0;
@@ -88,6 +101,17 @@ export function computeApplicationStats(
     accumulator.responses += responded ? 1 : 0;
     accumulator.advances += advanced ? 1 : 0;
     variants.set(application.cvVariant, accumulator);
+
+    // A deduped vacancy can carry several source refs. Each source gets credit:
+    // the question is "does this source lead to replies?", not "which source won?".
+    const sourceIds = application.sourceIds.length === 0 ? ['unknown'] : application.sourceIds;
+    for (const sourceId of sourceIds) {
+      const source = sources.get(sourceId) ?? { applied: 0, responses: 0, advances: 0 };
+      source.applied += 1;
+      source.responses += responded ? 1 : 0;
+      source.advances += advanced ? 1 : 0;
+      sources.set(sourceId, source);
+    }
   }
 
   const totalApplied = applications.length;
@@ -106,6 +130,19 @@ export function computeApplicationStats(
       b.applied !== a.applied ? b.applied - a.applied : a.cvVariant.localeCompare(b.cvVariant),
     );
 
+  const bySource = [...sources.entries()]
+    .map(([sourceId, accumulator]) => ({
+      sourceId,
+      applied: accumulator.applied,
+      responses: accumulator.responses,
+      advances: accumulator.advances,
+      responseRate: rate(accumulator.responses, accumulator.applied),
+      advanceRate: rate(accumulator.advances, accumulator.applied),
+    }))
+    .sort((a, b) =>
+      b.applied !== a.applied ? b.applied - a.applied : a.sourceId.localeCompare(b.sourceId),
+    );
+
   return {
     totalApplied,
     responses,
@@ -115,5 +152,6 @@ export function computeApplicationStats(
     advanceRate: rate(advances, totalApplied),
     byOutcome,
     byVariant,
+    bySource,
   };
 }
