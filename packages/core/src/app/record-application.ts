@@ -71,6 +71,8 @@ export async function recordApplication(
     appliedAt: deps.now(),
     cvVariant: entry.cvVariant,
     scoreAtApply: entry.score,
+    // Server-side, like the score: the client only ever names a job id.
+    sourceIds: entry.sources.map((source) => source.sourceId),
   });
 
   /*

@@ -51,6 +51,38 @@ describe('createJsonApplicationRepository - reading', () => {
   });
 });
 
+describe('createJsonApplicationRepository - source ids', () => {
+  it('round-trips the source ids through the file', async () => {
+    await repository.record({ ...DRAFT, sourceIds: ['adzuna', 'manfred'] });
+    const reread = createJsonApplicationRepository({ filePath });
+
+    expect((await reread.list())[0]?.sourceIds).toEqual(['adzuna', 'manfred']);
+  });
+
+  it('loads a legacy log without source ids as an empty list', async () => {
+    const legacy = join(directory, 'legacy.json');
+    await writeFile(
+      legacy,
+      JSON.stringify({
+        version: 1,
+        applications: [
+          {
+            jobId: 'old::job::x',
+            appliedAt: REFERENCE_NOW.toISOString(),
+            cvVariant: 'general',
+            scoreAtApply: 50,
+            outcome: 'applied',
+            outcomeUpdatedAt: REFERENCE_NOW.toISOString(),
+          },
+        ],
+      }),
+    );
+
+    const loaded = await createJsonApplicationRepository({ filePath: legacy }).list();
+    expect(loaded[0]?.sourceIds).toEqual([]);
+  });
+});
+
 describe('createJsonApplicationRepository - recording', () => {
   it('creates the directory and file on first write', async () => {
     const result = await repository.record(DRAFT);

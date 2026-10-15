@@ -84,6 +84,22 @@ describe('recordApplication', () => {
     }
   });
 
+  it('captures the source ids of the vacancy from the SERVER queue', async () => {
+    const sources = [
+      { sourceId: 'adzuna', externalId: '1', url: 'https://example.test/a' },
+      { sourceId: 'manfred', externalId: '2', url: 'https://example.test/b' },
+    ];
+    const result = await recordApplication(
+      { jobId: 'job-1' },
+      deps({ loadQueue: async () => queue([entry({ sources })]) }),
+    );
+
+    expect(result.status).toBe('recorded');
+    if (result.status === 'recorded') {
+      expect(result.application.sourceIds).toEqual(['adzuna', 'manfred']);
+    }
+  });
+
   it('is idempotent: applying twice yields one application', async () => {
     const shared = deps();
 

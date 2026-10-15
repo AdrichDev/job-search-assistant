@@ -29,6 +29,12 @@ export interface Application {
    * weights later must not rewrite what the ranking believed back then.
    */
   readonly scoreAtApply: number;
+  /**
+   * Ids of the sources that carried the vacancy when it was applied to (a deduped
+   * vacancy can have several). Empty for applications logged before this field
+   * existed. Frozen like the score: it is what lets stats ask which source converts.
+   */
+  readonly sourceIds: readonly string[];
   readonly outcome: ApplicationOutcome;
   readonly outcomeUpdatedAt: Date;
   readonly notes?: string;
@@ -39,6 +45,8 @@ export interface ApplicationDraft {
   readonly appliedAt: Date;
   readonly cvVariant: CvVariant;
   readonly scoreAtApply: number;
+  /** Defaults to none. Trimmed and de-duplicated by `createApplication`. */
+  readonly sourceIds?: readonly string[];
   /** Defaults to `applied`. Only set explicitly when importing existing history. */
   readonly outcome?: ApplicationOutcome;
   readonly notes?: string;
@@ -90,6 +98,7 @@ export function createApplication(draft: ApplicationDraft): Application {
     appliedAt: draft.appliedAt,
     cvVariant: draft.cvVariant,
     scoreAtApply: draft.scoreAtApply,
+    sourceIds: [...new Set((draft.sourceIds ?? []).map((id) => id.trim()).filter((id) => id.length > 0))],
     outcome,
     outcomeUpdatedAt: draft.appliedAt,
     // `exactOptionalPropertyTypes` forbids an explicit `undefined`, so an absent
