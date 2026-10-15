@@ -5,7 +5,8 @@ import { normalizeText, locationKey } from './text.js';
  * Decided by the winning stack lane during scoring; consumed later by the
  * (not yet built) tailoring layer.
  */
-export type CvVariant = 'frontend' | 'microsoft' | 'general';
+export const CV_VARIANTS = ['frontend', 'microsoft', 'general'] as const;
+export type CvVariant = (typeof CV_VARIANTS)[number];
 
 /** Where a vacancy was seen. The same vacancy can carry several refs after dedupe. */
 export interface JobSourceRef {

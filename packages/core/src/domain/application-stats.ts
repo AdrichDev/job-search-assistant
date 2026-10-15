@@ -1,5 +1,4 @@
 import {
-  APPLICATION_OUTCOMES,
   isAdvance,
   isResponse,
   type Application,
@@ -43,12 +42,9 @@ function rate(part: number, whole: number): number {
   return whole === 0 ? 0 : part / whole;
 }
 
+/** A literal, not a loop: adding an outcome without a counter is a compile error. */
 function emptyOutcomeTally(): Record<ApplicationOutcome, number> {
-  const tally = {} as Record<ApplicationOutcome, number>;
-  for (const outcome of APPLICATION_OUTCOMES) {
-    tally[outcome] = 0;
-  }
-  return tally;
+  return { applied: 0, no_reply: 0, rejected: 0, screening: 0, interview: 0, offer: 0 };
 }
 
 interface VariantAccumulator {
