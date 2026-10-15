@@ -1,0 +1,241 @@
+[
+  {
+    "id": 8464,
+    "position": "Senior Software Engineer (US Eastern Time)",
+    "slug": "telnesstech-senior-software-engineer-us-eastern-time-ago26",
+    "status": "ACTIVE",
+    "internalCode": "TelnessTech_Ago26_SeniorSoftwareEngineerUSEasternTime",
+    "salaryFrom": 55000,
+    "salaryTo": 75000,
+    "bonus": 0,
+    "remotePercentage": 100,
+    "equityInf": 0,
+    "equitySup": 0,
+    "currency": "€",
+    "noStack": false,
+    "highlights": [
+      "📈 Empresa en crecimiento",
+      "🌎 Equipo internacional",
+      "🌎 Remoto 100% en España",
+      "🌴 Vacaciones extra"
+    ],
+    "locations": [
+      "Madrid, España"
+    ],
+    "offerLanguages": [
+      "ES",
+      "EN"
+    ],
+    "updatedAt": "2026-08-26T09:39:11.147Z",
+    "company": {
+      "name": "TelnessTech",
+      "web": "https://www.telness.se/",
+      "photo": {
+        "id": 442861,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/25/11/06/1d6f86af-c2ed-47d5-8291-c1591182a191_founders.jpg",
+        "filename": "25/11/06/1d6f86af-c2ed-47d5-8291-c1591182a191_founders.jpg",
+        "title": "25/11/06/1d6f86af-c2ed-47d5-8291-c1591182a191_founders.jpg",
+        "alt": "25/11/06/1d6f86af-c2ed-47d5-8291-c1591182a191_founders.jpg"
+      },
+      "logo": {
+        "id": 454095,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/26/03/25/6e2b9075-4aea-4a91-b4b0-74dfff74e594_telness_logo_telness.png",
+        "filename": "26/03/25/6e2b9075-4aea-4a91-b4b0-74dfff74e594_telness_logo_telness.png",
+        "title": "26/03/25/6e2b9075-4aea-4a91-b4b0-74dfff74e594_telness_logo_telness.png",
+        "alt": "26/03/25/6e2b9075-4aea-4a91-b4b0-74dfff74e594_telness_logo_telness.png"
+      },
+      "logoDark": {
+        "id": 454094,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/26/03/25/000551b1-86a6-45e4-868e-e62c5fcb3aa0_telness-logo-white-r.png",
+        "filename": "26/03/25/000551b1-86a6-45e4-868e-e62c5fcb3aa0_telness-logo-white-r.png",
+        "title": "26/03/25/000551b1-86a6-45e4-868e-e62c5fcb3aa0_telness-logo-white-r.png",
+        "alt": "26/03/25/000551b1-86a6-45e4-868e-e62c5fcb3aa0_telness-logo-white-r.png"
+      },
+      "primaryColor": "#001e16",
+      "secondaryColor": "#ffffff"
+    },
+    "migratedToMarkdown": true,
+    "isFreelance": false,
+    "feeRateFrom": 0,
+    "feeRateTo": 0
+  },
+  {
+    "id": 8457,
+    "position": ".NET Developer",
+    "slug": "grupo-gof-net-developer-ago26",
+    "status": "ACTIVE",
+    "internalCode": "GrupoGOF_Ago26_NETDeveloper",
+    "salaryFrom": 0,
+    "salaryTo": 35000,
+    "bonus": 0,
+    "remotePercentage": 40,
+    "equityInf": 0,
+    "equitySup": 0,
+    "currency": "€",
+    "noStack": false,
+    "highlights": [
+      "🤓 Aprendizaje continuo",
+      "🙌 Buen ambiente",
+      "🏠 Híbrido",
+      "⛰️ Sólida en su sector",
+      "✨ Buenas prácticas"
+    ],
+    "locations": [
+      "Santander, España"
+    ],
+    "offerLanguages": [
+      "ES"
+    ],
+    "updatedAt": "2026-09-04T20:18:07.614Z",
+    "company": {
+      "name": "CENTRALIA",
+      "web": "https://www.grupogof.com/",
+      "photo": {
+        "id": 421974,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-%281%29.jpg",
+        "filename": "25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-(1).jpg",
+        "title": "25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-(1).jpg",
+        "alt": "25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-(1).jpg"
+      },
+      "logo": {
+        "id": 421981,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png",
+        "filename": "25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png",
+        "title": "25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png",
+        "alt": "25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png"
+      },
+      "logoDark": {
+        "id": 421982,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg",
+        "filename": "25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg",
+        "title": "25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg",
+        "alt": "25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg"
+      },
+      "primaryColor": "#ffffff",
+      "secondaryColor": "#6fb991"
+    },
+    "migratedToMarkdown": true,
+    "isFreelance": false,
+    "feeRateFrom": 0,
+    "feeRateTo": 0
+  },
+  {
+    "id": 8451,
+    "position": "Senior Python Engineer",
+    "slug": "centellic-senior-python-engineer-ai-first-architecture-ago26",
+    "status": "ACTIVE",
+    "internalCode": "Centellic_Ago26_SeniorPythonEngineerAIFirstArchitecture",
+    "salaryFrom": 50000,
+    "salaryTo": 60000,
+    "bonus": 0,
+    "remotePercentage": 100,
+    "equityInf": 0,
+    "equitySup": 0,
+    "currency": "€",
+    "noStack": false,
+    "highlights": [
+      "🌎 Equipo internacional",
+      "🤖 IA",
+      "💂 Inglés",
+      "🎯 Producto",
+      "🌎 Remoto 100% en España"
+    ],
+    "locations": [],
+    "offerLanguages": [
+      "EN",
+      "ES"
+    ],
+    "updatedAt": "2026-09-10T09:46:47.680Z",
+    "company": {
+      "name": "Law Business Research",
+      "web": "https://www.centellic.com/",
+      "photo": {
+        "id": 464973,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/26/06/30/25b3fba2-a0f6-4b8f-be3e-e2c706db7b60_Centellic-team.jpeg",
+        "filename": "26/06/30/25b3fba2-a0f6-4b8f-be3e-e2c706db7b60_Centellic-team.jpeg",
+        "title": "26/06/30/25b3fba2-a0f6-4b8f-be3e-e2c706db7b60_Centellic-team.jpeg",
+        "alt": "26/06/30/25b3fba2-a0f6-4b8f-be3e-e2c706db7b60_Centellic-team.jpeg"
+      },
+      "logo": {
+        "id": 464972,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/26/06/30/c5775d73-cf38-40e9-8aed-5d75152420d3_Centellic_Logo_RGB.png",
+        "filename": "26/06/30/c5775d73-cf38-40e9-8aed-5d75152420d3_Centellic_Logo_RGB.png",
+        "title": "26/06/30/c5775d73-cf38-40e9-8aed-5d75152420d3_Centellic_Logo_RGB.png",
+        "alt": "26/06/30/c5775d73-cf38-40e9-8aed-5d75152420d3_Centellic_Logo_RGB.png"
+      },
+      "logoDark": {
+        "id": 464971,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/26/06/30/982d8e72-26b6-4321-ba81-b3023d714441_Centellic_Logo_RGB.png",
+        "filename": "26/06/30/982d8e72-26b6-4321-ba81-b3023d714441_Centellic_Logo_RGB.png",
+        "title": "26/06/30/982d8e72-26b6-4321-ba81-b3023d714441_Centellic_Logo_RGB.png",
+        "alt": "26/06/30/982d8e72-26b6-4321-ba81-b3023d714441_Centellic_Logo_RGB.png"
+      },
+      "primaryColor": "#003340",
+      "secondaryColor": "#ffffff"
+    },
+    "migratedToMarkdown": true,
+    "isFreelance": false,
+    "feeRateFrom": 0,
+    "feeRateTo": 0
+  },
+  {
+    "id": 8407,
+    "position": "Sr.Product Designer",
+    "slug": "mango-srproduct-designer-sept26",
+    "status": "CLOSED",
+    "internalCode": "Mango_Sept26_SrProductDesigner",
+    "salaryFrom": 50000,
+    "salaryTo": 60000,
+    "bonus": 0,
+    "remotePercentage": 50,
+    "equityInf": 0,
+    "equitySup": 0,
+    "currency": "€",
+    "noStack": false,
+    "highlights": [
+      "🙌 Buen ambiente",
+      "🏠 Híbrido",
+      "💥 Liderazgo",
+      "🎯 Producto",
+      "💪 Reto técnico"
+    ],
+    "locations": [
+      "Barcelona, España"
+    ],
+    "offerLanguages": [
+      "ES"
+    ],
+    "updatedAt": "2026-09-07T11:12:47.559Z",
+    "company": {
+      "name": "Mango",
+      "web": "https://shop.mango.com/es",
+      "photo": {
+        "id": 609,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/ad116c0f-1ccb-4682-a482-1e4550791dbe_Mango.PNG",
+        "filename": "Mango.PNG",
+        "title": "Mango",
+        "alt": "Mango"
+      },
+      "logo": {
+        "id": 624,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/63fd893d-2025-4a9a-9a58-044b0173ab5a_mango.svg",
+        "filename": "mango.svg",
+        "title": "Logo de Mango",
+        "alt": "Logo de Mango"
+      },
+      "logoDark": {
+        "id": 625,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/e5bfefaa-a89a-484b-970e-96b5f9f55d13_mango_inverse.svg",
+        "filename": "mango_inverse.svg",
+        "title": "Logo de Mango",
+        "alt": "Logo de Mango"
+      },
+      "primaryColor": "#141414",
+      "secondaryColor": "#fafafa"
+    },
+    "migratedToMarkdown": true,
+    "isFreelance": false,
+    "feeRateFrom": 0,
+    "feeRateTo": 0
+  }
+]

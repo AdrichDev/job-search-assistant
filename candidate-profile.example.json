@@ -1,0 +1,10 @@
+{
+  "displayName": "Alex Example",
+  "baseCity": "Madrid",
+  "commuteRadius": "Madrid metropolitan area",
+  "englishLevel": "B1",
+  "seekingLevel": "junior",
+  "hasDrivingLicence": false,
+  "cvVariants": ["frontend", "microsoft", "general"],
+  "headline": "Junior software developer seeking an entry-level role."
+}

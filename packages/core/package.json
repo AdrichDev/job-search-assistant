@@ -1,0 +1,47 @@
+{
+  "name": "@job-queue/core",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Domain, ports and adapters for the job-queue pipeline and application tracking.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./domain": {
+      "types": "./dist/domain-index.d.ts",
+      "default": "./dist/domain-index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "start": "tsx src/cli/main.ts",
+    "start:offline": "tsx src/cli/main.ts --source=fixture",
+    "start:boards": "tsx src/cli/main.ts --source=boards",
+    "seed:queue": "tsx scripts/seed-queue.ts",
+    "verify:boards": "tsx scripts/verify-boards.ts"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^5.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^5.0.0"
+  }
+}

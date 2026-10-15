@@ -1,0 +1,337 @@
+{
+  "id": 8457,
+  "position": ".NET Developer",
+  "slug": "grupo-gof-net-developer-ago26",
+  "status": "ACTIVE",
+  "internalCode": "GrupoGOF_Ago26_NETDeveloper",
+  "salaryFrom": 0,
+  "salaryTo": 35000,
+  "bonus": 0,
+  "remotePercentage": 40,
+  "equityInf": 0,
+  "equitySup": 0,
+  "currency": "€",
+  "noStack": false,
+  "highlights": [
+    "🤓 Aprendizaje continuo",
+    "🙌 Buen ambiente",
+    "🏠 Híbrido",
+    "⛰️ Sólida en su sector",
+    "✨ Buenas prácticas"
+  ],
+  "locations": [
+    "Santander, España"
+  ],
+  "offerLanguages": [
+    "ES"
+  ],
+  "updatedAt": "2026-09-04T20:18:07.614Z",
+  "company": {
+    "name": "CENTRALIA",
+    "web": "https://www.grupogof.com/",
+    "photo": {
+      "id": 421974,
+      "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-%281%29.jpg",
+      "filename": "25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-(1).jpg",
+      "title": "25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-(1).jpg",
+      "alt": "25/03/21/045a05c2-68fc-4a49-8958-47d343605541_IMG_1582-(1).jpg"
+    },
+    "logo": {
+      "id": 421981,
+      "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png",
+      "filename": "25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png",
+      "title": "25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png",
+      "alt": "25/03/21/1e6944c3-fd6a-4465-94db-2fafc77152a7_1631429555444-remove.png"
+    },
+    "logoDark": {
+      "id": 421982,
+      "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg",
+      "filename": "25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg",
+      "title": "25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg",
+      "alt": "25/03/21/b81455d9-c6b2-460d-a1e4-2047b0c22a49_1631429555444.jpeg"
+    },
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#6fb991"
+  },
+  "migratedToMarkdown": true,
+  "isFreelance": false,
+  "feeRateFrom": 0,
+  "feeRateTo": 0,
+  "introduction": "Si creías que la logística portuaria y el comercio a granel eran sectores analógicos donde todo se gestiona con libreta y bolígrafo, te va a encantar descubrir que estabas equivocado.\n\nTe presentamos a **Centralia GBE**, la empresa de servicios centrales de **Grupo GOF**, un grupo empresarial familiar cántabro con décadas de historia que opera las terminales portuarias más eficientes e higiénicas del Puerto de Santander (como TASA o TEFCA). Pero aquí no solo mueven mercancías: **desarrollan internamente las aplicaciones y sistemas informáticos que soportan todas sus líneas de negocio e incluso comercializan productos digitales propios para terceros** a través de Digitalia GBE.\n\nPara seguir alimentando esta máquina digital, buscan a un/a **Backend Developer**, así que **si buscas estabilidad, proyectos a largo plazo donde verás el impacto de tu código en el mundo real y un ambiente cercano**, ¡sigue leyendo!",
+  "responsibilities": [
+    "**Diseñarás e implementarás APIs, servicios y Add-ons contra el SDK de SAP** Business One (utilizando principalmente .NET/C# y Node.js).",
+    "Participarás en uno de sus proyectos estrella actuales: **llevar** la gran mayoría de sus **bases de datos SAP a entornos cloud en AWS y Azure.**",
+    "**Desarrollarás software para tótems de pesaje automatizado** de choferes, aplicaciones móviles y portales web para clientes.",
+    "¡**Buenas prácticas siempre!** Participarás en *code reviews*, automatización de despliegues, diseño de pruebas unitarias y documentación técnica.",
+    "**Soporte rotativo** (en horario laboral): Cada semana, un miembro del equipo de desarrollo se encarga de dar soporte a las incidencias internas de la empresa junto a un compi sysadmin. El resto de las semanas estarás centrado/a 100% en picar código y hacer evolucionar el producto. *(Tranqui, no te pondrán en la rotación hasta que no tengas todo el contexto y la soltura necesaria)*."
+  ],
+  "whatOffering": "* 📚 Presupuesto para **formación y certificaciones.** \n* **💸 10% de bonus anual**, vinculado a objetivos de verdad: a tu **formación continua** (hacer cursos, certificaciones, transferencia de conocimiento al equipo…) tu desempeño y objetivos del puesto y resultados del grupo.\n* 💰**35€ diarios por día disponible de guardia** y, en caso de tener que invertir tiempo en alguna incidencia, tambien se te pagará por hora. \n* 🍻Formato híbrido, con flexibilidad. \n* 🏝️**25 días de vacaciones** (los 23 por convenio + 2 festivos extra que da el grupo)",
+  "whenWillDoIt": "**Tendrás flexibilidad** de entrada y salida (la daily es a las 8:45 h así que con que estés para esa hora, el resto lo podrás organizar como mejor te venga). Los viernes trabajan hasta las 14:30 y tienen **jornada intensiva en verano** de 8:00 a 15:00 h.",
+  "whereWillDoIt": "Como te spoilea el encabezado, **les gusta promover el sentimiento de equipo y poder verse** para que el día a día no sea tan solitario. Es por eso que **ofrecen un modelo híbrido** (aprox. 60% presencial / 40% remoto), acordado de manera flexible según tus necesidades y la rotación de incidencias. Sus oficinas están situadas en Santander, [<u>Polígono de Raos, S/N, EDIFICIO PUERTA, Camargo</u>](https://www.google.com/maps/place//data=!4m2!3m1!1s0xd4949ee7820ca4f:0xf9043ebcc5cc4393?sa=X\\&ved=1t:8290\\&ictx=111)\n\n![](https://media.giphy.com/media/xT0xexIbN5TRe6RBMk/giphy.gif?cid=ecf05e47be2117f58146cbcab730204c061d4bdeede5c6fc\\&ep=v1_user_favorites\\&rid=giphy.gif\\&ct=g)",
+  "whoWillDoItWith": "Ahora que ya sabes qué harás, cómo, cuándo y dónde, querrás conocer una parte fundamental de tu día a día y es ¿con quién vas a trabajar?\n\nPues bien, actualmente son **133** personas en total, pero en el equipo de IT hay 8 personas, liderado por Esther Gayol (Directora IT). \n\nEn tu día a día trabajarás en el equipo de desarrollo junto a Elisa (Responsable Técnica) y 3 developers más, colaborando estrechamente con el equipo de Sistemas.",
+  "whatWillYouDo": "Pero antes de tentarte del todo, te cuento un poquito sobre lo que hacen y lo que harás tú. 🙌🏻\n\nY es que **Grupo GOF** es mucho más que un grupo de empresas: **es un ecosistema de innovación, personas y compromiso social**. Esta empresa familiar de Santander comenzó su andadura en el comercio de materias primas para nutrición animal y, con el tiempo, ha construido una trayectoria de éxito en **logística portuaria, tecnología y sostenibilidad**. Han desarrollado soluciones digitales que transforman sus sectores y han diseñado, construido y gestionan la terminal de graneles agroalimentarios más eficiente, higiénica y **respetuosa con el medio ambiente** en la actualidad.\n\nPero lo que realmente puede hacer que te enamores de ellos es **su enfoque en las personas y en la comunidad**. Cuidan de su equipo con iniciativas como el día de Navidad para empleados y sus familias, donde los más pequeños viven una experiencia especial. Patrocinan al equipo femenino de Rugby, Unión Norte, lo que muestra su compromiso con el deporte y la igualdad, y recaudan fondos para la Fundación Asilo de Torrelavega 😍\n\nFormarás parte de un equipo técnico consolidado y cercano. **Tu foco** principal **será el desarrollo backend, creando y evolucionando soluciones que se comunican con su ERP** (SAP Business One) a través de Add-ons desarrollados e**n .NET, además de trabajar con arquitecturas en Node.js, bases de datos SQL Server, contenedores y servicios cloud en AWS y Azure**.  No vas a picar código a ciegas; participarás en la definición técnica y funcional de los productos. Y no te preocupes, aunque en la oferta leas \"apoyo puntual al frontend\", Sandra nos ha confirmado que el peso de tu trabajo en el front no superará un 10-15% del tiempo.\n\n¿Te gusta lo que lees? ¡Pues sigue scrolleando para descubrir más!\n\n![](https://media.giphy.com/media/3oFzmnuVY7X7LmT3kk/giphy.gif?cid=ecf05e47cdcf29de96838bfb3680b4d98c628ddf704c44e5\\&ep=v1_user_favorites\\&rid=giphy.gif\\&ct=g)",
+  "howWillYouDoIt": "Formarás parte de un equipo cercano, con mentalidad práctica y mucho enfoque en la mejora continua.\n\nSiguen una **metodología Scrum** sin burocracias innecesarias. Cada mañana hacéis una rápida **daily** para sincronizaros, y los martes revisáis en **Jira** la planificación a largo plazo, proyectos y tareas. Usan **Confluence** para la documentación y trabajan bajo una cultura de mejora continua y refactorización constante.\n\nComo te hemos spoileado su stack consiste fundamentalmente en **.NET, SQLServer, MySQL, NodeJs, TypeScript, Dockers, React,  Azure y AWS.**",
+  "whatTheyAskFor": "Para unirte al equipo están buscando un perfil con buenas bases y buena actitud 😊 así que se fijarán en que:&#x20;\n\n* Vengas con al menos 4-5 años de experiencia en desarrollo backend, concretamente programando en .NET / C# (MVC).\n* Te manejas con soltura en con bases de datos relacionales, preferiblemente SQL Server.\n* Vienes con buenas prácticas, acostumbrado/a al control de versiones (Git), diseño de APIs REST y aplicación de pruebas automatizadas de código.\n* Proactividad, capacidad de trabajar en equipo y buena predisposición para aprender el dominio de negocio.\n\nPero te sumará muchos puntos si además tienes:&#x20;\n\n* Conocimientos de Node.js (lo usan para proyectos específicos como los tótems).\n* Experiencia trasteando con SAP Business One (su SDK o comprensión de sus Add-ons).\n* Experiencia con entornos Cloud en AWS o Azure.\n* Despliegues automatizados\n* Interés o experiencia en el uso de IA para automatizar procesos o mejorar el desarrollo.",
+  "inOneMonth": "Te sumergirás en el negocio de Centralia. Conocerás a Elisa (la responsable de desarrollo) y al resto del equipo, con los que te tomarás al café virtual y presencial 🍻.\n\nAprenderás cómo se estructuran sus Add-ons con el SDK de SAP Business One, te familiarizarás con sus bases de datos en SQL Server y empezarás a subir tus primeras contribuciones.",
+  "inThreeMonths": "Ya te moverás con soltura por la arquitectura de .NET y los proyectos en la nube. Estarás participando activamente en la migración de bases de datos a AWS/Azure y estarás resolviendo tareas complejas en las planificaciones de Jira.",
+  "inSixMonths": "Serás un perfil plenamente autónomo. Aportarás criterio técnico en el diseño de soluciones, colaborarás en la rotación semanal de incidencias con total seguridad y serás una pieza clave en la mejora continua del código del grupo, llevando a cabo el seguimiento de los proyectos y realizando code review.",
+  "lastStatusChange": "2026-08-13T11:43:05.754Z",
+  "faq": [
+    {
+      "question": "¿Puedo aplicar si vivo fuera de España?",
+      "answer": "Por temas administrativos y de coordinación del equipo, ahora mismo están buscando a personas residentes en España, que sean o estén cerca de Santander.&#x20;"
+    },
+    {
+      "question": "¿De qué fases consta el proceso de selección? ¿Será muy largo?",
+      "answer": "El proceso será super ameno, porque lo harás de la mano de la mano de tus futuros compañeros.\n\nTendrás una entrevista con Sandra, Esther y Elisa en la cual aunarán la parte cultural y parte técnica donde entraréis en una charla más a bajo nivel. Dada esta entrevista, si surge alguna duda o se han quedado cosillas en el tintero habrá una segunda para rematar flecos y poder empezar a ver una posible oferta para que te unas al equipo.&#x20;"
+    }
+  ],
+  "watches": {
+    "description": "**Guardias de barcos (puntuales)**: Si entra un barco en puerto durante el fin de semana, hay una guardia en remoto (estar pendiente del móvil por si hay alguna llamada puntual, nada de mirar el correo). Estas guardias se rotan entre el equipo, están totalmente remuneradas con un fijo por día de disponibilidad más pago por hora trabajada, y no te las asignarán hasta que lleves un buen tiempo en la casa. Además, las incidencias suelen ser muy puntuales, teniendo tan solo 1 al mes de media.",
+    "faq": []
+  },
+  "workingDayInfo": {
+    "isFullTime": true,
+    "hasFlexTime": true,
+    "hasContinuousWorkDayOnFridays": true,
+    "hasContinuousWorkDayInSummer": true,
+    "annualHolidays": 25,
+    "schedules": []
+  },
+  "perks": [
+    {
+      "id": 4,
+      "name": "Presupuesto para formación",
+      "description": "",
+      "icon": {
+        "id": 218,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/585b7d89-d201-41dd-b3a6-c8d1179b5d3f_learning.svg",
+        "filename": "learning.svg",
+        "title": "Formación_Icon",
+        "alt": "Formación_Icon"
+      }
+    },
+    {
+      "id": 6,
+      "name": "Teléfono de empresa",
+      "description": "",
+      "icon": {
+        "id": 220,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/cbdf646b-a3cd-46ec-8551-02e56df4923d_chat.svg",
+        "filename": "chat.svg",
+        "title": "TeléfonoEmpresa_Icon",
+        "alt": "TeléfonoEmpresa_Icon"
+      }
+    },
+    {
+      "id": 10,
+      "name": "Café, fruta y snacks",
+      "description": "",
+      "icon": {
+        "id": 224,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/9d7b7df4-58c4-48e4-9035-6f7b37c30c43_food-delivery.svg",
+        "filename": "food-delivery.svg",
+        "title": "Cafe_Icon",
+        "alt": "Cafe_Icon"
+      }
+    },
+    {
+      "id": 16,
+      "name": "Eventos de formación internos",
+      "description": "",
+      "icon": {
+        "id": 230,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/f31c7526-b72e-4532-94cb-9f1c36284f8d_meeting.svg",
+        "filename": "meeting.svg",
+        "title": "EventosFormacionInternos_Icon",
+        "alt": "EventosFormacionInternos_Icon"
+      }
+    }
+  ],
+  "techs": [
+    {
+      "name": "NodeJS",
+      "icon": {
+        "id": 258,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/6f9516ed-93b4-4c0c-8437-e07d208087a8_nodejs-original.svg",
+        "filename": "nodejs-original.svg",
+        "title": "NodeJS icon",
+        "alt": "NodeJS icon"
+      },
+      "level": "INTERMEDIATE",
+      "section": "COULD",
+      "order": 0
+    },
+    {
+      "name": "React",
+      "icon": {
+        "id": 263,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/5230823c-de8c-4996-9b46-4a9029c41322_react-original.svg",
+        "filename": "react-original.svg",
+        "title": "React icon",
+        "alt": "React icon"
+      },
+      "level": "BASIC",
+      "section": "EXTRA",
+      "order": 0
+    },
+    {
+      "name": ".NET",
+      "icon": {
+        "id": 272,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/d158c355-e539-4a89-9ab6-1f88e3b9f317_dot-net-original.svg",
+        "filename": "dot-net-original.svg",
+        "title": ".NET icon",
+        "alt": ".NET icon"
+      },
+      "level": "ADVANCED",
+      "section": "MUST",
+      "order": 0
+    },
+    {
+      "name": "Azure",
+      "icon": {
+        "id": 363902,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/24/08/22/e9b66a7d-b46e-4d6e-af59-62cacc253841_microsoft_azure.svg",
+        "filename": "Microsoft_Azure.svg",
+        "title": "Azure icon",
+        "alt": "Azure icon"
+      },
+      "level": "INTERMEDIATE",
+      "section": "COULD",
+      "order": 1
+    },
+    {
+      "name": "SQLServer",
+      "icon": {
+        "id": 10926,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/22/05/10/46a40279-1fcc-4d1d-bd0c-3504d376da20_sql-logo.png",
+        "filename": "sql-logo.png",
+        "title": "SQLServer icon",
+        "alt": "SQLServer icon"
+      },
+      "level": "INTERMEDIATE",
+      "section": "MUST",
+      "order": 1
+    },
+    {
+      "name": "SAP",
+      "icon": {
+        "id": 977,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/eda7e51b-277e-48d7-a5ec-c8c726b4c202_SAP_Icon.png",
+        "filename": "SAP_Icon.png",
+        "title": "SAP icon",
+        "alt": "SAP icon"
+      },
+      "level": "INTERMEDIATE",
+      "section": "COULD",
+      "order": 2
+    }
+  ],
+  "softSkills": [
+    {
+      "name": "Adaptabilidad al cambio",
+      "description": "",
+      "icon": {
+        "id": 413,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/18e14432-caf9-4de9-8d70-145115c7d930_Theme%3DLight%2C%20Category%3DSkills%2C%20Type%3DChange.svg",
+        "filename": "Theme=Light, Category=Skills, Type=Change.svg",
+        "title": "Adaptabilidad_Al_Cambio_Icon",
+        "alt": "Adaptabilidad_Al_Cambio_Icon"
+      },
+      "section": "MUST",
+      "order": 0
+    },
+    {
+      "name": "Aprendizaje Continuo",
+      "description": "",
+      "icon": {
+        "id": 414,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/02b84f8a-4832-42b6-aec0-5b216e2d35c0_Theme%3DLight%2C%20Category%3DSkills%2C%20Type%3DContinuous%20learning.svg",
+        "filename": "Theme=Light, Category=Skills, Type=Continuous learning.svg",
+        "title": "Aprendizaje_Continuo_Icon",
+        "alt": "Aprendizaje_Continuo_Icon"
+      },
+      "section": "MUST",
+      "order": 1
+    },
+    {
+      "name": "Atención al detalle",
+      "description": "",
+      "icon": {
+        "id": 415,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/a6955deb-eac5-4734-894f-0f3792f3cc4b_Theme%3DLight%2C%20Category%3DSkills%2C%20Type%3DAttention%20detail.svg",
+        "filename": "Theme=Light, Category=Skills, Type=Attention detail.svg",
+        "title": "Atención_Detalle_Icon",
+        "alt": "Atención_Detalle_Icon"
+      },
+      "section": "MUST",
+      "order": 2
+    },
+    {
+      "name": "Capacidad de escucha",
+      "description": "",
+      "icon": {
+        "id": 420,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/408d404e-17f1-4797-af92-5d7d0bac7cf9_Theme%3DLight%2C%20Category%3DSkills%2C%20Type%3DListening.svg",
+        "filename": "Theme=Light, Category=Skills, Type=Listening.svg",
+        "title": "Capacidad_escucha_Icon",
+        "alt": "Capacidad_escucha_Icon"
+      },
+      "section": "MUST",
+      "order": 6
+    },
+    {
+      "name": "Proactividad",
+      "description": "",
+      "icon": {
+        "id": 433,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/97ff1624-1b47-4ef4-ad3a-0bac0d516cab_Theme%3DLight%2C%20Category%3DSkills%2C%20Type%3DProactivity.svg",
+        "filename": "Theme=Light, Category=Skills, Type=Proactivity.svg",
+        "title": "Proactividad_Icon",
+        "alt": "Proactividad_Icon"
+      },
+      "section": "MUST",
+      "order": 5
+    },
+    {
+      "name": "Pensamiento analítico",
+      "description": "",
+      "icon": {
+        "id": 431,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/5a9f97a9-b652-45ec-a8b1-b2b3d0971e58_Theme%3DLight%2C%20Category%3DSkills%2C%20Type%3DPositivity.svg",
+        "filename": "Theme=Light, Category=Skills, Type=Positivity.svg",
+        "title": "Pensamiento_analitico_Icon",
+        "alt": "Pensamiento_analitico_Icon"
+      },
+      "section": "MUST",
+      "order": 3
+    },
+    {
+      "name": "Trabajo en equipo",
+      "description": "",
+      "icon": {
+        "id": 436,
+        "url": "https://media-asgard.s3.eu-west-1.amazonaws.com/1c1163a6-8693-48e8-86b1-9963543dc91e_Theme%3DLight%2C%20Category%3DSkills%2C%20Type%3DTeamwork.svg",
+        "filename": "Theme=Light, Category=Skills, Type=Teamwork.svg",
+        "title": "Trabajo_Equipo_Icon",
+        "alt": "Trabajo_Equipo_Icon"
+      },
+      "section": "MUST",
+      "order": 4
+    }
+  ],
+  "languages": [],
+  "scout": {
+    "firstName": "Casey",
+    "lastName": "Recruiter",
+    "email": "casey.recruiter@example.com",
+    "avatar": {
+      "id": 1,
+      "url": "https://example.com/avatar.png",
+      "filename": "avatar.png",
+      "title": "Example recruiter avatar",
+      "alt": "Example recruiter avatar"
+    }
+  }
+}

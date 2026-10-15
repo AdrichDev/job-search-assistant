@@ -1,0 +1,35 @@
+{
+  "name": "job-queue-workspace",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Wide-intake, ranked-output job aggregation pipeline plus an application-tracking web UI.",
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "apps/web",
+    "e2e"
+  ],
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspace @job-queue/core && npm run build --workspace @job-queue/web",
+    "build:core": "npm run build --workspace @job-queue/core",
+    "//pre-scripts": "apps/web and e2e import @job-queue/core through its package exports, i.e. packages/core/dist. Without these, a core change that adds an export makes the web tests, the e2e typecheck and the e2e specs fail against a stale dist - a confusing failure that has nothing to do with the code under test. npm runs a pre<script> automatically.",
+    "pretypecheck": "npm run build:core",
+    "typecheck": "npm run typecheck --workspace @job-queue/core && npm run typecheck --workspace @job-queue/web && npm run typecheck --workspace @job-queue/e2e",
+    "pretest": "npm run build:core",
+    "test": "npm run test --workspace @job-queue/core && npm run test --workspace @job-queue/web",
+    "test:coverage": "npm run test:coverage --workspace @job-queue/core",
+    "start": "npm run start --workspace @job-queue/core --",
+    "start:offline": "npm run start:offline --workspace @job-queue/core",
+    "start:boards": "npm run start:boards --workspace @job-queue/core",
+    "seed:queue": "npm run seed:queue --workspace @job-queue/core",
+    "verify:boards": "npm run verify:boards --workspace @job-queue/core --",
+    "dev": "npm run build:core && npm run dev --workspace @job-queue/web",
+    "web": "npm run build:core && npm run start --workspace @job-queue/web",
+    "pretest:e2e": "npm run build:core",
+    "test:e2e": "npm run test:e2e --workspace @job-queue/e2e",
+    "test:e2e:ui": "npm run test:e2e --workspace @job-queue/e2e -- --ui"
+  }
+}

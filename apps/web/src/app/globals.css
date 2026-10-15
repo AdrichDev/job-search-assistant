@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+
+    /*
+     * One accent, used for exactly one thing: the primary action.
+     *
+     * Restricting the accent to Apply is what makes Apply obvious. The moment a
+     * heading, a chip and a link all share the accent, nothing is primary any
+     * more and the user has to read the whole card to find the verb.
+     */
+    --accent: 79 70 229; /* indigo-600 - 6.3:1 on white, AA for body text */
+    --accent-strong: 67 56 202; /* indigo-700 */
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  /*
+   * One visible focus treatment for every interactive element.
+   *
+   * Keyboard users must always be able to see where they are; removing the
+   * outline without replacing it is the single most common accessibility bug in
+   * dashboards like this one. Two rings - dark over white - so the indicator
+   * survives on white cards, on the slate page background AND on the indigo
+   * Apply button, where a single dark ring would disappear.
+   */
+  :focus-visible {
+    @apply outline-none ring-2 ring-slate-900 ring-offset-2 ring-offset-white;
+  }
+
+  /* Readable measure for long-form explanatory prose. */
+  .prose-measure {
+    max-width: 68ch;
+  }
+}
+
+@layer utilities {
+  /*
+   * Tailwind's `motion-reduce:` variants cover the classes we write. This
+   * catches everything else - third-party markup, future components, and the
+   * `animate-spin` on the pending indicator - so "reduce motion" is a property
+   * of the app rather than a promise each component has to remember to keep.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,0 +1,62 @@
+node_modules/
+coverage/
+dist/
+*.tsbuildinfo
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Pipeline output
+output/
+
+# Application log: personal job-hunting history, not source.
+# data/sample-jobs.json IS tracked - it is the offline fixture.
+data/applications.json
+data/.applications.*.tmp
+
+# Dismissal log: which offers he said no to. Personal, like the log above, and
+# for the same reason: it is a record of his decisions, not source.
+data/dismissals.json
+data/.dismissals.*.tmp
+
+# Fetch run status board and its single-flight lock. Transient state about the
+# last run, safe to delete, rebuilt by the next one - unlike the two logs above,
+# nothing here is the user's data.
+data/.fetch-run.json
+data/.fetch-run.json.lock
+data/.fetch-run.*.tmp
+
+# Generated link evidence and raw personal job-alert inputs.
+data/.link-liveness.json
+data/.link-liveness.*.tmp
+data/newsletters/*
+!data/newsletters/README.md
+
+# Personal candidate details belong only in the local override.
+candidate-profile.local.json
+
+.env
+.env.local
+.env.*.local
+
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# Local AI/runtime state and machine-specific agent instructions.
+.atl/
+.codegraph/
+.openclaw/
+.windsurf/
+AGENTS.md
+
+# E2E: scratch data the browser suite writes, plus its reports.
+# `e2e/.tmp/` is the ONLY place the suite is allowed to write; it stands in for
+# the real output/ and data/ so a test run can never touch them.
+e2e/.tmp/
+e2e/playwright-report/
+e2e/test-results/

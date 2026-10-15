@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "note": "Offline sample data so the whole pipeline runs with no API key. Postings use relative ages (postedDaysAgo) instead of absolute dates so the demo never goes stale. Ad copy is intentionally in Spanish because that is what the Spanish job market publishes and it is what the scorer must parse.",
+  "jobs": [
+    {
+      "externalId": "fx-001",
+      "title": "Desarrollador Junior Frontend (React)",
+      "company": "ACME Software",
+      "location": "Madrid, Comunidad de Madrid",
+      "description": "Buscamos un desarrollador junior para incorporarse a nuestro equipo de producto en Madrid. Stack: React, Next.js, TypeScript y Tailwind CSS. Valoramos Git y algo de SQL. No se requiere experiencia previa, formacion a cargo de la empresa. Ingles B1. Modelo hibrido, 2 dias en oficina.",
+      "url": "https://example-board.test/offers/fx-001",
+      "postedDaysAgo": 2,
+      "salaryMin": 21000,
+      "salaryMax": 25000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-002",
+      "title": "Becario de Desarrollo Web",
+      "company": "Innovatek",
+      "location": "Madrid",
+      "description": "Practicas remuneradas en desarrollo web. Trabajaras con HTML, CSS, JavaScript y React junto a un equipo senior que te acompanara. Perfil junior, ideal para recien titulados de Desarrollo de Aplicaciones Multiplataforma. Metodologia Scrum.",
+      "url": "https://example-board.test/offers/fx-002",
+      "postedDaysAgo": 1,
+      "contractType": "practicas"
+    },
+    {
+      "externalId": "fx-003",
+      "title": "Consultor Junior Power Platform",
+      "company": "Nexia Consulting",
+      "location": "Alcobendas, Madrid",
+      "description": "Incorporamos perfil junior al equipo de Power Platform. Trabajaras con Power Apps, Power Automate, Dataverse y Power Pages para clientes del sector industrial. Se valora SQL y conocimientos de API REST. Ingles no necesario. Formacion continua.",
+      "url": "https://example-board.test/offers/fx-003",
+      "postedDaysAgo": 3,
+      "salaryMin": 22000,
+      "salaryMax": 26000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-004",
+      "title": "Desarrollador Business Central / Navision",
+      "company": "Adelan ERP",
+      "location": "Madrid",
+      "description": "Buscamos desarrollador para proyectos de Microsoft Dynamics 365 Business Central (Navision). Se requieren 2 anos de experiencia en entornos ERP. Conocimientos de SQL y C#. Ingles B2 valorable.",
+      "url": "https://example-board.test/offers/fx-004",
+      "postedDaysAgo": 5,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-005",
+      "title": "Senior Frontend Engineer",
+      "company": "Globex",
+      "location": "Barcelona",
+      "description": "Buscamos un senior frontend con amplia experiencia. Se requieren 6 anos de experiencia con React y TypeScript. Imprescindible ingles C1 para trabajar con equipos internacionales. Liderazgo tecnico del equipo de interfaz.",
+      "url": "https://example-board.test/offers/fx-005",
+      "postedDaysAgo": 12,
+      "salaryMin": 55000,
+      "salaryMax": 70000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-006",
+      "title": "Junior Backend Developer (Java)",
+      "company": "Datalabs",
+      "location": "Madrid",
+      "description": "Perfil junior para nuestro equipo backend. Stack Java, SQL, MySQL y colas de mensajeria RabbitMQ. Trabajamos con Git, Jira y metodologia Kanban. 0-1 anos de experiencia. Modelo hibrido en Madrid.",
+      "url": "https://example-board.test/offers/fx-006",
+      "postedDaysAgo": 4,
+      "salaryMin": 24000,
+      "salaryMax": 28000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-007",
+      "title": "Full Stack Developer (Remote)",
+      "company": "Northwind Labs",
+      "location": "Remote",
+      "description": "We are looking for a full stack developer to join our distributed team. You will work with React, Node and Postgres. Native English is required because the whole company operates in English. This is a fully remote role open worldwide.",
+      "url": "https://example-board.test/offers/fx-007",
+      "postedDaysAgo": 6,
+      "contractType": "permanent"
+    },
+    {
+      "externalId": "fx-008",
+      "title": "Programador Junior .NET",
+      "company": "Sistemas Ibericos",
+      "location": "Getafe, Madrid",
+      "description": "Se busca programador junior para mantenimiento y evolutivos en .NET y C#. Base de datos SQL Server. Primer empleo valido, formacion a cargo de la empresa. Presencial en Getafe.",
+      "url": "https://example-board.test/offers/fx-008",
+      "postedDaysAgo": 8,
+      "salaryMin": 20000,
+      "salaryMax": 23000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-009",
+      "title": "Analista Programador",
+      "company": "Tecnisa Sistemas",
+      "location": "Madrid",
+      "description": "Buscamos analista programador con 3 anos de experiencia demostrable en desarrollo de aplicaciones. Stack Java y Python. Ingles B2. Se valorara experiencia en banca.",
+      "url": "https://example-board.test/offers/fx-009",
+      "postedDaysAgo": 10,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-010",
+      "title": "Trainee Software Developer",
+      "company": "Kubo Labs",
+      "location": "Madrid",
+      "description": "Programa trainee de 12 meses. Sin experiencia previa necesaria. Aprenderas JavaScript, TypeScript, Git y API REST acompanado de un mentor. Buscamos recien titulados con muchas ganas. Ingles basico suficiente.",
+      "url": "https://example-board.test/offers/fx-010",
+      "postedDaysAgo": 0,
+      "salaryMin": 18000,
+      "salaryMax": 20000,
+      "contractType": "formacion"
+    },
+    {
+      "externalId": "fx-011",
+      "title": "Desarrollador React Senior",
+      "company": "Levante Digital",
+      "location": "Valencia",
+      "description": "Se requiere experiencia minima de 5 anos con React, Redux y TypeScript. Trabajo presencial en Valencia. Ingles alto para reuniones con cliente.",
+      "url": "https://example-board.test/offers/fx-011",
+      "postedDaysAgo": 20,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-012",
+      "title": "Tecnico Junior de Soporte y Automatizacion",
+      "company": "Grupo Serval",
+      "location": "Madrid",
+      "description": "Perfil junior para soporte a usuarios y automatizacion de procesos internos. Se valoran conocimientos de SQL, Python, Git y herramientas de automatizacion tipo n8n. No se requiere ingles. Presencial en Madrid, se valora carnet de conducir.",
+      "url": "https://example-board.test/offers/fx-012",
+      "postedDaysAgo": 15,
+      "salaryMin": 19000,
+      "salaryMax": 22000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-013",
+      "title": "Desarrollador Python Junior",
+      "company": "Remoto Tech",
+      "location": "Espana",
+      "description": "Puesto 100% en remoto desde Espana. Buscamos un desarrollador junior con conocimientos de Python, SQL y Git. Trabajamos en Scrum con Jira. Ingles B1 suficiente. Sin experiencia previa obligatoria.",
+      "url": "https://example-board.test/offers/fx-013",
+      "postedDaysAgo": 7,
+      "salaryMin": 22000,
+      "salaryMax": 26000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-014",
+      "title": "Lead Frontend Architect",
+      "company": "Meridian Bank",
+      "location": "Madrid",
+      "description": "Tech lead para el area de canales digitales. Se requieren 8 anos de experiencia con React y arquitectura frontend. Ingles C1. Liderazgo de un equipo de 10 personas.",
+      "url": "https://example-board.test/offers/fx-014",
+      "postedDaysAgo": 25,
+      "salaryMin": 65000,
+      "salaryMax": 80000,
+      "contractType": "indefinido"
+    },
+    {
+      "externalId": "fx-015",
+      "title": "desarrollador junior frontend (react)",
+      "company": "acme software",
+      "location": "Madrid",
+      "description": "Reposted duplicate of fx-001 with different casing, a shorter body and a different offer id. It exists to prove cross-page deduplication works.",
+      "url": "https://example-board.test/offers/fx-015",
+      "postedDaysAgo": 6
+    }
+  ]
+}

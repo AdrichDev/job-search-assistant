@@ -1,0 +1,313 @@
+{
+  "offset": 0,
+  "limit": 100,
+  "totalFound": 3,
+  "content": [
+    {
+      "id": "744000148470573",
+      "name": "Big Data Administrator (100% Remoto)",
+      "uuid": "55c6da61-3156-4135-b097-3b3ec4fc55fe",
+      "jobAdId": "c76e64cf-123c-4be7-b091-4b2cde8dd06f",
+      "defaultJobAd": true,
+      "refNumber": "REF12563X",
+      "company": {
+        "identifier": "Devoteam",
+        "name": "Devoteam"
+      },
+      "releasedDate": "2026-09-09T11:06:50.115Z",
+      "location": {
+        "city": "Madrid",
+        "region": "MD",
+        "country": "es",
+        "address": "Calle de María de Molina 37",
+        "postalCode": "28006",
+        "remote": true,
+        "hybrid": false,
+        "latitude": "40.4377011",
+        "longitude": "-3.6807835",
+        "fullLocation": "Madrid, MD, Spain"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "5427325",
+        "label": "Data"
+      },
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "mid_senior_level",
+        "label": "Mid-Senior Level"
+      },
+      "customField": [
+        {
+          "fieldId": "63b9e2abdd202d15823c582d",
+          "fieldLabel": "Infinite Team",
+          "valueId": "PP-DDD",
+          "valueLabel": "Data Driven"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "es",
+          "valueLabel": "Spain"
+        },
+        {
+          "fieldId": "5bc9a4abb1f60b7aea922932",
+          "fieldLabel": "Devoteam Department",
+          "valueId": "DPT_ES_DDD_04_OS_DPT",
+          "valueLabel": "ES-DDD Data Hub"
+        },
+        {
+          "fieldId": "63b9e4174a16fe43f1f6e434",
+          "fieldLabel": "Operating Unit",
+          "valueId": "OE-ES-DDD",
+          "valueLabel": "ES - Data Driven"
+        },
+        {
+          "fieldId": "5be1ad0bb1f60b7aea922daf",
+          "fieldLabel": "Job Area",
+          "valueId": "2f2d530d-bfe8-4b47-be6b-a89f41960a0a",
+          "valueLabel": "Data Engineer"
+        },
+        {
+          "fieldId": "5b8f982e6d8bc52a560cb0ce",
+          "fieldLabel": "Job Family",
+          "valueId": "5427325",
+          "valueLabel": "Data"
+        },
+        {
+          "fieldId": "5b8f982e6d8bc52a560cb0cd",
+          "fieldLabel": "Brands",
+          "valueId": "5933f74e-2fe4-44f7-b1b6-7d569d40d351",
+          "valueLabel": "Devoteam Spain"
+        },
+        {
+          "fieldId": "5bc9adbcb1f60b7aea92293a",
+          "fieldLabel": "Contract type",
+          "valueId": "074cb382-873b-467b-921d-22cc0f8018f7",
+          "valueLabel": "Permanent contract"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Devoteam/postings/744000148470573",
+      "language": {
+        "code": "es",
+        "label": "Spanish",
+        "labelNative": "español"
+      }
+    },
+    {
+      "id": "744000148447924",
+      "name": "Atlassian Architect",
+      "uuid": "5ab92720-c3b3-4379-ad8c-56fa12603f93",
+      "jobAdId": "fb990b81-05d7-478a-a406-a31bd09622ab",
+      "defaultJobAd": true,
+      "refNumber": "REF12538Q",
+      "company": {
+        "identifier": "Devoteam",
+        "name": "Devoteam"
+      },
+      "releasedDate": "2026-09-09T09:20:11.199Z",
+      "location": {
+        "city": "Madrid",
+        "region": "MD",
+        "country": "es",
+        "address": "Calle de María de Molina 37",
+        "postalCode": "28006",
+        "remote": true,
+        "hybrid": false,
+        "latitude": "40.4377011",
+        "longitude": "-3.6807835",
+        "fullLocation": "Madrid, MD, Spain"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "5427291",
+        "label": "Business Processes"
+      },
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "mid_senior_level",
+        "label": "Mid-Senior Level"
+      },
+      "customField": [
+        {
+          "fieldId": "63b9e2abdd202d15823c582d",
+          "fieldLabel": "Infinite Team",
+          "valueId": "PP-INT",
+          "valueLabel": "Innovative Tech"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "es",
+          "valueLabel": "Spain"
+        },
+        {
+          "fieldId": "5bc9a4abb1f60b7aea922932",
+          "fieldLabel": "Devoteam Department",
+          "valueId": "DPT_ES_INT_24_OS_DPT",
+          "valueLabel": "ES-INT Atlassian"
+        },
+        {
+          "fieldId": "63b9e4174a16fe43f1f6e434",
+          "fieldLabel": "Operating Unit",
+          "valueId": "OE-ES-INT",
+          "valueLabel": "ES - Innovative Tech"
+        },
+        {
+          "fieldId": "5be1ad0bb1f60b7aea922daf",
+          "fieldLabel": "Job Area",
+          "valueId": "dc4dbc72-995a-49d9-92b9-f45efb198766",
+          "valueLabel": "Solution Architect"
+        },
+        {
+          "fieldId": "5b8f982e6d8bc52a560cb0ce",
+          "fieldLabel": "Job Family",
+          "valueId": "5427291",
+          "valueLabel": "Business Processes"
+        },
+        {
+          "fieldId": "5b8f982e6d8bc52a560cb0cd",
+          "fieldLabel": "Brands",
+          "valueId": "5933f74e-2fe4-44f7-b1b6-7d569d40d351",
+          "valueLabel": "Devoteam Spain"
+        },
+        {
+          "fieldId": "5bc9adbcb1f60b7aea92293a",
+          "fieldLabel": "Contract type",
+          "valueId": "074cb382-873b-467b-921d-22cc0f8018f7",
+          "valueLabel": "Permanent contract"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Devoteam/postings/744000148447924",
+      "language": {
+        "code": "es",
+        "label": "Spanish",
+        "labelNative": "español"
+      }
+    },
+    {
+      "id": "744000148283814",
+      "name": "Becari@s Administración y Finanzas",
+      "uuid": "442d6b79-5270-4fed-9723-b80276cfed56",
+      "jobAdId": "17b6975b-1e0f-4100-bc33-0befbd52bf31",
+      "defaultJobAd": true,
+      "refNumber": "REF12631C",
+      "company": {
+        "identifier": "Devoteam",
+        "name": "Devoteam"
+      },
+      "releasedDate": "2026-09-08T15:48:14.927Z",
+      "location": {
+        "city": "Madrid",
+        "region": "MD",
+        "country": "es",
+        "address": "Calle de María de Molina 37",
+        "postalCode": "28006",
+        "remote": false,
+        "hybrid": true,
+        "latitude": "40.4377011",
+        "longitude": "-3.6807835",
+        "fullLocation": "Madrid, MD, Spain"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "1154273",
+        "label": "Support Functions"
+      },
+      "function": {
+        "id": "information_technology",
+        "label": "Information Technology"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "internship",
+        "label": "Internship"
+      },
+      "customField": [
+        {
+          "fieldId": "63b9e2abdd202d15823c582d",
+          "fieldLabel": "Infinite Team",
+          "valueId": "PP-STRUCTURE",
+          "valueLabel": "Structure"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "es",
+          "valueLabel": "Spain"
+        },
+        {
+          "fieldId": "5bc9a4abb1f60b7aea922932",
+          "fieldLabel": "Devoteam Department",
+          "valueId": "DPT_ES_BSU_01_OS_DPT",
+          "valueLabel": "ES-BSU Administracion y Finanzas"
+        },
+        {
+          "fieldId": "63b9e4174a16fe43f1f6e434",
+          "fieldLabel": "Operating Unit",
+          "valueId": "OE-ES-BSU",
+          "valueLabel": "ES - Business Support"
+        },
+        {
+          "fieldId": "5be1ad0bb1f60b7aea922daf",
+          "fieldLabel": "Job Area",
+          "valueId": "ef665c79-730d-4f8b-bbcc-e2157b99faf6",
+          "valueLabel": "Other Support Functions"
+        },
+        {
+          "fieldId": "5b8f982e6d8bc52a560cb0ce",
+          "fieldLabel": "Job Family",
+          "valueId": "1154273",
+          "valueLabel": "Support Functions"
+        },
+        {
+          "fieldId": "5b8f982e6d8bc52a560cb0cd",
+          "fieldLabel": "Brands",
+          "valueId": "5933f74e-2fe4-44f7-b1b6-7d569d40d351",
+          "valueLabel": "Devoteam Spain"
+        },
+        {
+          "fieldId": "5bc9adbcb1f60b7aea92293a",
+          "fieldLabel": "Contract type",
+          "valueId": "a8412524-374d-4c50-bd03-0d4da6eca401",
+          "valueLabel": "Internship"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/Devoteam/postings/744000148283814",
+      "language": {
+        "code": "es",
+        "label": "Spanish",
+        "labelNative": "español"
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+[
+  {
+    "id": 19714,
+    "currency_code": "EUR",
+    "expires_at": "2027-05-12",
+    "main_requirements": null,
+    "nice_to_have": null,
+    "perks": null,
+    "relocation_paid": false,
+    "role_description": "<div><!--block--><strong>Role description and responsibilities</strong></div><div><!--block-->Damia Group is an international tech recruitment agency with 3 decades of experience. Our arrival in Portugal, 7 years later, was set on a mission to transform IT recruitment experiences and, through them, achieve better results. We believe in long-term relationships with a transparent and relaxed mindset. In a short period, we have reached the hearts of both scale-ups and larger organisations by delivering spot-on curated candidate shortlists, increased job offer acceptance rates and shorter time-to-fill.<br><br><strong>About the role:</strong> As a <strong>Principal Cloud Security Engineer</strong>, the successful candidate will partner with DevOps and CI/CD engineers and their Architects team to ensure security best practices are embedded across the company's cloud infrastructure.<br><br></div><div><!--block-->The Cloud Security team is a collaborative group of talented cloud security engineers working in close partnership with the engineering, platform, and trust &amp; security teams. They are on a mission to safeguard the privacy and security of the company and its users' data, embedded directly in the heart of product development.<br><br></div><div><!--block--><strong>Responsibilities:</strong></div><ul><li><!--block-->Act as a strategic security leader by defining and driving cloud security principles, standards, and reference architectures across the organisation</li><li><!--block-->Use their knowledge of security architecture to help engineers build and securely operate products and services from the ground up</li><li><!--block-->Assess, design, and implement security processes and controls to meet security, compliance, and audit requirements</li><li><!--block-->Perform proactive research to identify new threats and attack vectors</li><li><!--block-->Partner with engineering teams to embed shift-left security practices throughout the software development lifecycle</li><li><!--block-->Implement and manage cloud and Kubernetes security posture management tooling to continuously monitor and reduce risk across containerised workloads</li></ul><div><!--block--><br></div><div><!--block--><strong>Requirements</strong></div><ul><li><!--block-->Proven experience working with AWS and AWS security services in a secure production environment, including IAM, Config, KMS, Secrets Manager, CloudWatch, CloudTrail, and GuardDuty</li><li><!--block-->Proven experience working closely with engineering teams and supporting them on their path to shifting security left</li><li><!--block-->Background with infrastructure as code (AWS CDK, CloudFormation, or Terraform), version control and CI tools such as GitLab and GitLab CI</li><li><!--block-->Hands-on experience with Kubernetes (AWS EKS), containers (Docker, AWS ECS), K8s admission controllers and Supply Chain Security</li><li><!--block-->Solid understanding of internet and computer network protocols, including TCP/IP, TLS, and VPN</li><li><!--block-->Good written and verbal communication skills in English</li><li><!--block-->Collaborative team player with a hands-on, can-do approach to problem-solving</li><li><!--block-->Currently living in Portugal and legally authorized to work in the country</li></ul><div><!--block--><br><strong>Nice to have:</strong></div><ul><li><!--block-->AWS Certified Security – Specialty certification or similar</li><li><!--block-->General familiarity with AI tools and large language models (e.g., Claude by Anthropic, AWS Bedrock)</li></ul>",
+    "title": "Principal Cloud Security Engineer",
+    "created_at": "2026-08-04T10:08:04.907Z",
+    "updated_at": "2026-09-01T01:00:10.777Z",
+    "published_at": "2026-08-04T12:51:54.862Z",
+    "type": "Full-time",
+    "remote": true,
+    "gross_salary_low": 70000,
+    "gross_salary_high": 78000,
+    "tags": [
+      "Kubernetes",
+      "GitLab",
+      "Amazon Web Services"
+    ],
+    "url": "https://landing.jobs/at/damia-group-portugal/principal-cloud-security-engineer",
+    "locations": [
+      {
+        "country_code": "PT"
+      }
+    ]
+  },
+  {
+    "id": 19576,
+    "currency_code": "EUR",
+    "expires_at": "2027-05-12",
+    "main_requirements": "<div><strong>Role Overview</strong></div><div>This is a senior, hands-on role for someone who views Data Infrastructure as a product.</div><div>You will define how billions of records are structured, indexed, and exposed to the rest of the company. Ideal for someone who combines strong backend engineering skills with deep expertise in data platforms, data lakes, and large-scale data systems.</div><div>&nbsp;</div><div><strong>Key Responsibilities</strong></div><ul><li><strong>Database Reliability &amp; Scaling:</strong><ul><li>Own the health and performance of their core databases.</li><li>Own and optimize their <strong>MongoDB</strong> clusters and <strong>OpenSearch</strong> indexes, which houses billions of documents. You will design sharding strategies and indexing patterns to ensure search performance.</li><li>Design and implement a multi-tier storage strategy. You will determine which data remains \"hot\" in production databases for their Product team and which data is offloaded to \"cold/analytical\" storage for AI and R&amp;D.</li></ul></li><li><strong>Data Access Layer:</strong><ul><li>Build and maintain internal APIs that allow internal teams to build features without worrying about the underlying database complexities.</li></ul></li></ul><ul><li><strong>Schema Evolution &amp; Migrations:</strong><ul><li>Lead the strategy for updating data structures across billions of records. You will design \"no-downtime\" migration paths for their production MongoDB and OpenSearch environments.</li></ul></li></ul><div><br></div><ul><li><strong>Data Platform &amp; Architecture</strong><ul><li>Own and evolve their Core Data Architecture, ensuring it supports analytics, product features, AI workflows, and internal consumption.</li><li>Evaluate the feasibility and ROI of introducing a <strong>Data Lakehouse architecture for long-term storage and AI training.</strong></li><li>Define standards for how data is ingested, stored, versioned, and exposed to downstream systems.</li></ul></li></ul><div><br></div><ul><li><strong>Data Quality &amp; Documentation:</strong><ul><li>Ensure data accuracy, freshness, and consistency through validation and testing.</li><li>Maintain clear, up-to-date documentation of pipelines, schemas, and data assets to enable internal adoption.</li></ul></li></ul><div><br></div><ul><li><strong>Collaboration:</strong><ul><li>Act as a bridge between Core, Product, and R&amp;D, ensuring research initiatives (e.g. data enrichment) are integrated into the Core platform.</li><li>Translate business and product needs into scalable, maintainable data solutions.</li><li>Comfortable working in async-first environments, keeping task statuses and documentation up to date for full team visibility.</li></ul></li></ul><div>&nbsp;</div><div><strong>What They’re Looking For</strong></div><ul><li>5+ years of experience in Backend, Data Engineering and/or Data Platform roles, specifically within <strong>high-concurrency/high-volume</strong> environments.</li><li><strong>NoSQL &amp; Search Expert.</strong> Professional experience tuning <strong>MongoDB</strong> and <strong>OpenSearch/Elasticsearch</strong> at massive scale (sharding, cluster topology, query optimization).</li><li><strong>Strong Python Skills.</strong> Proficiency in writing production-grade, highly efficient Python. Experience with asynchronous programming (FastAPI, etc.) for building high-performance Internal APIs is essential.</li><li><strong>System Design &amp; Architecture.</strong> A strong grasp of distributed systems, including eventual consistency, message queues (Kafka/RabbitMQ), and caching strategies to protect production databases.</li><li><strong>Strategic Storage Thinking.</strong> Familiarity with <strong>Data Lakehouse</strong> concepts (e.g., Parquet, Delta Lake, Iceberg). Proven experience building one.</li><li>Excellent communication skills and attention to documentation.</li><li>Self-managed and comfortable working cross-functionally.</li><li>Fluent in English.</li><li>Tax residency in Portugal.</li></ul>",
+    "nice_to_have": "<div><strong>Bonus Points</strong></div><ul><li>Experience with Azure Cloud services or equivalent.</li><li>Experience with orchestration tools like <strong>Airflow,</strong> <strong>Prefect</strong>, or similar.</li><li>Exposure to AI/ML workflows or supporting AI teams with data pipelines.</li><li>Knowledge of Data Observability tools to monitor data quality and indexing lag at scale.</li><li>Interest or experience in influencer marketing or social media analytics.&nbsp;</li></ul>",
+    "perks": "<ul><li>Competitive salary and other social benefits</li><li>Opportunities for growth and professional development</li><li>Workplace: Remote, with the possibility of using their Nomad Offices (their next location is in Greece)</li><li>Schedule: Flexible, with the requirement to ensure a minimum of 4 hours of overlap with the normal working hours in Portugal (9 am-6 pm)</li><li>A curious, collaborative, and forward-thinking team.</li><li>They are equal opportunity employer. They celebrate diversity and are committed to creating an inclusive environment for all employees.</li></ul><div>&nbsp;</div>",
+    "relocation_paid": false,
+    "role_description": "<div><strong>About the company:&nbsp;</strong></div><div>Damia Group is an international tech recruitment agency with 3 decades of experience. Our arrival in Portugal, 7 years later, was set on a mission to transform IT recruitment experiences and, through them, achieve better results. We believe in long-term relationships with a transparent and relaxed mindset. In a short period, we have reached the hearts of both scale-ups and larger organisations by delivering spot-on curated candidate shortlists, increased job offer acceptance rates and shorter time-to-fill.<br><br></div>",
+    "title": "Data Platform Engineer",
+    "created_at": "2026-04-09T10:57:40.690Z",
+    "updated_at": "2026-09-01T01:00:10.777Z",
+    "published_at": "2026-04-09T11:10:51.715Z",
+    "type": "Full-time",
+    "remote": true,
+    "tags": [
+      "NoSQL",
+      "Data Lake",
+      "Python",
+      "Apache Airflow",
+      "Prefect",
+      "Microsoft Azure",
+      "Cloud Technologies",
+      "Apache Kafka",
+      "RabbitMQ"
+    ],
+    "url": "https://landing.jobs/at/damia-group-portugal/data-platform-engineer-in",
+    "locations": [
+      {
+        "country_code": "PT"
+      }
+    ]
+  },
+  {
+    "id": 19066,
+    "currency_code": "EUR",
+    "expires_at": "2027-03-02",
+    "main_requirements": "<ul><li>6-8 years of experience in software development with Java.</li><li>5+ years working with Spring Boot.</li><li>Experience with SQL.</li><li>Proactively solution oriented (Nothing is lost in the cracks).</li><li>Always on the ball.</li><li>Displays maturity and loyalty to the processes, organization, and decisions.</li><li>Dares and wants to challenge status quo.</li><li>Keeping cool and taking qualified decisions under pressure.</li><li>Able and willing to mentor and teach others.</li><li>Is very adept at managing own time and priorities.</li><li>Collaboration and help-seeking are seen as strength.</li></ul>",
+    "nice_to_have": "<ul><li>Experience with Cloud Native engineering.</li><li>Experience with Kafka.</li><li>Experience with Docker and Kubernetes.</li><li>Test Driven Development (TDD).</li></ul>",
+    "perks": "<ul><li>Permanent contract with Inscale</li><li>14 salaries</li><li>22 days vacation</li><li>Portugal Holidays</li><li>Health insurance</li><li>Flex benefits</li><li>Career plan&nbsp;</li></ul>",
+    "relocation_paid": false,
+    "role_description": "<div>Our client is a Global retail chain that brings Scandinavian design and quality to the world through an extensive range of quality products for sleeping and living. Known for its commitment to simplicity, functionality, and affordability.&nbsp;<br><br></div><div>Teamwork, innovation, and a customer-focused mindset as core values.&nbsp;<br><br></div><div>Our culture is built on Scandinavian roots, emphasizing respect, responsibility, and sustainable practices. We are proud to provide opportunities for career growth in a dynamic and supportive environment. <br><br>The Java team is responsible for a wide range of in-house developed applications. So, you will get the opportunity to work in different business areas and with different technologies. <br><br><strong>Responsibilities<br></strong><br></div><ul><li>Are passionate about IT and software development.</li><li>Are skilled Java developers, who continuously strives to improve their skills.</li><li>Write a clean code and create software architecture that are flexible.</li><li>Are experienced with Java web technologies.</li><li>Write thorough tests of the code and are familiar with test driven development.</li><li>Can drive and facilitate design discussions.</li><li>Have extensive knowledge of distributed systems and concurrency.</li></ul>",
+    "title": "Senior Java Software Developer",
+    "created_at": "2025-02-26T08:53:02.254Z",
+    "updated_at": "2026-09-02T07:19:49.719Z",
+    "published_at": "2025-02-26T09:38:38.127Z",
+    "type": "Full-time",
+    "remote": false,
+    "gross_salary_low": 50000,
+    "gross_salary_high": 67000,
+    "tags": [
+      "Spring Boot",
+      "Java",
+      "SQL",
+      "Apache Kafka",
+      "Kubernetes",
+      "Docker"
+    ],
+    "url": "https://landing.jobs/at/inscale/senior-java-software-developer-in-lisbon-2025",
+    "locations": [
+      {
+        "city": "Lisbon",
+        "country_code": "PT"
+      }
+    ]
+  }
+]

@@ -1,0 +1,130 @@
+{
+  "id": "744000148470573",
+  "name": "Big Data Administrator (100% Remoto)",
+  "uuid": "55c6da61-3156-4135-b097-3b3ec4fc55fe",
+  "jobId": "13004376-235b-4a67-a04e-753d90cf2cf8",
+  "jobAdId": "c76e64cf-123c-4be7-b091-4b2cde8dd06f",
+  "defaultJobAd": true,
+  "refNumber": "REF12563X",
+  "company": {
+    "name": "Devoteam",
+    "identifier": "Devoteam"
+  },
+  "location": {
+    "city": "Madrid",
+    "region": "MD",
+    "country": "es",
+    "address": "Calle de María de Molina 37",
+    "postalCode": "28006",
+    "remote": true,
+    "hybrid": false,
+    "latitude": "40.4377011",
+    "longitude": "-3.6807835",
+    "fullLocation": "Madrid, MD, Spain"
+  },
+  "customField": [
+    {
+      "fieldId": "63b9e2abdd202d15823c582d",
+      "fieldLabel": "Infinite Team",
+      "valueId": "PP-DDD",
+      "valueLabel": "Data Driven"
+    },
+    {
+      "fieldId": "COUNTRY",
+      "fieldLabel": "Country/Region",
+      "valueId": "es",
+      "valueLabel": "Spain"
+    },
+    {
+      "fieldId": "5bc9a4abb1f60b7aea922932",
+      "fieldLabel": "Devoteam Department",
+      "valueId": "DPT_ES_DDD_04_OS_DPT",
+      "valueLabel": "ES-DDD Data Hub"
+    },
+    {
+      "fieldId": "63b9e4174a16fe43f1f6e434",
+      "fieldLabel": "Operating Unit",
+      "valueId": "OE-ES-DDD",
+      "valueLabel": "ES - Data Driven"
+    },
+    {
+      "fieldId": "5be1ad0bb1f60b7aea922daf",
+      "fieldLabel": "Job Area",
+      "valueId": "2f2d530d-bfe8-4b47-be6b-a89f41960a0a",
+      "valueLabel": "Data Engineer"
+    },
+    {
+      "fieldId": "5b8f982e6d8bc52a560cb0ce",
+      "fieldLabel": "Job Family",
+      "valueId": "5427325",
+      "valueLabel": "Data"
+    },
+    {
+      "fieldId": "5b8f982e6d8bc52a560cb0cd",
+      "fieldLabel": "Brands",
+      "valueId": "5933f74e-2fe4-44f7-b1b6-7d569d40d351",
+      "valueLabel": "Devoteam Spain"
+    },
+    {
+      "fieldId": "5bc9adbcb1f60b7aea92293a",
+      "fieldLabel": "Contract type",
+      "valueId": "074cb382-873b-467b-921d-22cc0f8018f7",
+      "valueLabel": "Permanent contract"
+    }
+  ],
+  "releasedDate": "2026-09-09T11:06:50.115Z",
+  "creator": {
+    "name": "",
+    "avatarUrl": ""
+  },
+  "postingUrl": "https://jobs.smartrecruiters.com/Devoteam/744000148470573-big-data-administrator-100-remoto-",
+  "applyUrl": "https://jobs.smartrecruiters.com/Devoteam/744000148470573-big-data-administrator-100-remoto-?oga=true",
+  "referralUrl": "https://jobs.smartrecruiters.com/external-referrals/company/Devoteam/publication/55c6da61-3156-4135-b097-3b3ec4fc55fe?dcr_ci=Devoteam",
+  "jobAd": {
+    "sections": {
+      "companyDescription": {
+        "title": "Descripción de la empresa",
+        "text": "<p>¿Te apasiona trabajar con plataformas <strong>Big Data</strong>, administrar sistemas distribuidos y garantizar entornos de datos seguros, escalables y de alto rendimiento?</p><p>En <strong>Devoteam</strong> buscamos incorporar un/a <strong>Administrador/a Big Data con experiencia en Cloudera y Apache Cassandra</strong>, trabajando en la administración, mantenimiento y evolución de plataformas de datos distribuidas.</p><p>Buscamos un perfil con experiencia sólida en entornos Big Data, especialmente en <strong>Cloudera y Apache Cassandra</strong>, conocimientos de seguridad mediante <strong>Kerberos</strong> y experiencia en procesos de actualización, gestión de versiones y automatización mediante herramientas <strong>CI/CD de Azure DevOps</strong>.</p><p><strong>Modelo de trabajo 100% remoto desde España. </strong>con preferencia por candidaturas localizadas en <strong>Madrid, Barcelona, Valencia, Bilbao o Zaragoza</strong>.</p>"
+      },
+      "jobDescription": {
+        "title": "Descripción del empleo",
+        "text": "<p><strong>¿QUE HARAS EN DEVOTEAM?</strong></p><p>Formarás parte de un equipo especializado en plataformas Big Data, responsabilizándote de la administración, mantenimiento y evolución de entornos distribuidos, con especial foco en <strong>Cloudera y Apache Cassandra</strong>.</p><p>Entre tus responsabilidades estarán:</p><ul><li>Administrar, mantener y evolucionar plataformas <strong>Big Data basadas en Cloudera</strong>.</li><li>Gestionar y mantener entornos distribuidos con <strong>Apache Cassandra</strong>, asegurando su disponibilidad, estabilidad y rendimiento.</li><li>Monitorizar la salud de los sistemas y realizar tareas de análisis, diagnóstico y resolución de incidencias.</li><li>Participar en la configuración y administración de mecanismos de seguridad y autenticación mediante <strong>Kerberos</strong>.</li><li>Ejecutar y coordinar <strong>actualizaciones de sistemas, upgrades y gestión de versiones</strong> de los diferentes componentes de la plataforma.</li><li>Garantizar la disponibilidad, escalabilidad, seguridad y rendimiento de los entornos de datos.</li><li>Participar en la automatización de procesos de administración, despliegue y mantenimiento de las plataformas.</li><li>Utilizar herramientas de <strong>Azure DevOps y pipelines CI/CD</strong> para optimizar procesos de despliegue y automatización.</li><li>Colaborar con otros equipos técnicos en la resolución de incidencias, cambios de infraestructura y evolución de las plataformas.</li><li>Aplicar buenas prácticas de administración y operación para mantener entornos Big Data robustos, seguros y preparados para producción.</li></ul><p>&#xa0;</p>"
+      },
+      "qualifications": {
+        "title": "Requisitos",
+        "text": "<p><strong>¿QUE ESPERAMOS DE TI?</strong></p><ul><li><strong>Resides en España</strong> y cuentas con un nivel de <strong>español fluido</strong>.</li><li>Experiencia sólida como <strong>Administrador/a Big Data</strong> en entornos empresariales y de producción.</li><li>Experiencia en administración y mantenimiento de plataformas <strong>Cloudera</strong>.</li><li>Experiencia práctica con <strong>Apache Cassandra</strong>, incluyendo administración, mantenimiento y operación de sistemas distribuidos.</li><li>Conocimientos sólidos de arquitectura y funcionamiento de <strong>sistemas distribuidos</strong>.</li><li>Experiencia en configuración, administración y resolución de incidencias relacionadas con <strong>Kerberos</strong>.</li><li>Experiencia realizando <strong>upgrades, actualizaciones de sistemas y gestión de versiones</strong> en plataformas Big Data.</li><li>Conocimientos de automatización y procesos <strong>CI/CD</strong>.</li><li>Experiencia utilizando <strong>Azure DevOps</strong> y sus herramientas de CI/CD para despliegues y automatización.</li><li>Capacidad para analizar y resolver problemas relacionados con rendimiento, disponibilidad y estabilidad de plataformas de datos.</li><li>Conocimientos de buenas prácticas de <strong>seguridad, escalabilidad y alta disponibilidad</strong> en entornos Big Data.</li><li>Capacidad para trabajar de forma autónoma y colaborar con equipos técnicos multidisciplinares.</li></ul>"
+      },
+      "additionalInformation": {
+        "title": "Información adicional",
+        "text": "<p><strong>¿QUE ENCONTRARAS EN DEVOTEAM?</strong></p><p>En Devoteam creemos que la tecnología genera un mayor impacto cuando se combina con el talento de las personas.&#xa0;Te ofrecemos:</p><ul><li><strong>Salario acorde a tu experiencia.</strong></li><li><strong>Incentivo anual, porque remamos a una:</strong> además de tu salario, podrás optar a una retribución adicional en función de la consecución de tus objetivos, los de tu equipo y los de Devoteam.</li><li><strong>Retribución flexible</strong>, con opciones como transporte, guardería, seguro médico y restaurante.</li><li><strong>Beneficios y ventajas para devoteamers</strong>, con acceso a una amplia plataforma de descuentos, fisioterapia y clases de inglés gratuitas.</li><li><strong>Plan de carrera y desarrollo profesional</strong>, con acceso a formación, certificaciones y evaluaciones anuales.</li><li><strong>Modalidad de trabajo: remoto 100%.</strong></li></ul><p>Si disfrutas administrando plataformas Big Data, resolviendo retos técnicos en sistemas distribuidos y quieres trabajar en un proyecto de gran escala, queremos conocerte.</p>"
+      }
+    }
+  },
+  "active": true,
+  "visibility": "PUBLIC",
+  "industry": {
+    "id": "it_and_services",
+    "label": "Information Technology And Services"
+  },
+  "function": {
+    "id": "engineering",
+    "label": "Engineering"
+  },
+  "department": {
+    "id": 5427325,
+    "label": "Data"
+  },
+  "experienceLevel": {
+    "id": "mid_senior_level",
+    "label": "Mid-Senior Level"
+  },
+  "typeOfEmployment": {
+    "id": "permanent",
+    "label": "Full-time"
+  },
+  "language": {
+    "code": "es",
+    "label": "Spanish",
+    "labelNative": "español"
+  }
+}

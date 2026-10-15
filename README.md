@@ -1,0 +1,886 @@
+# Job queue — tech offers open to juniors, newest first
+
+A job-search aggregation pipeline for a junior developer in Madrid. It pulls vacancies from public job APIs, collapses duplicates, and applies exactly **two hard filters**: the posting must be software work, and it must carry no explicit signal that a first-job candidate is disqualified. Everything that passes both is shown, newest first. Nothing is ranked away and nothing is truncated — you decide what is worth your time.
+
+A score is still computed and persisted for every offer, but it is a secondary, inspectable detail: it does not order the list and it never removes anything. It exists so that, once there are enough applications logged, it can be correlated against reply rate and either earned its keep or be dropped.
+
+It then tracks **what you applied to and what came of it**, which is the only way to find out whether any of this is any good.
+
+It ships with committed sample data, so it runs end to end with **no API key and no network**.
+
+## Quick path
+
+```bash
+npm install
+npm start -- --source=boards   # real offers from company boards: no API key, no quota
+npm run dev                    # web UI at http://localhost:3000 (in Spanish)
+```
+
+Or run fully offline against the committed sample catalogue:
+
+```bash
+npm run start:offline     # CLI: table + output/queue.json, no API key, invented data
+```
+
+Every row of that run is printed `[SAMPLE]` under a banner saying so, and the
+catalogue can never share a run with a real source. See
+[Sample data](#sample-data-never-shares-a-run-with-real-vacancies).
+
+`npm run seed:queue` exists but **refuses to run**, on purpose. See
+[Restoring the queue](#restoring-the-queue).
+
+`npm run dev` builds the core package first, then starts Next.js. The UI reads the queue the CLI produced; if there is none yet it falls back to the offline sample catalogue, so the first launch is never an empty screen.
+
+**The web UI is in Spanish; the CLI is in English.** Every UI string lives in
+`apps/web/src/copy/es.ts` — one file to edit wording, and the seam is already there if a
+second locale is ever needed.
+
+To run against the live company boards — **no API key, no signup, no credentials**:
+
+```bash
+npm run start:boards      # Greenhouse + Lever + Ashby
+```
+
+To use the live Adzuna Spain API instead:
+
+```bash
+cp .env.example .env      # then fill in ADZUNA_APP_ID / ADZUNA_APP_KEY
+npm start -- --source=adzuna
+```
+
+Free credentials: <https://developer.adzuna.com/>
+
+## Sources
+
+| Source | Kind | Key needed | How coverage is decided |
+|--------|------|-----------|-------------------------|
+| `fixture` | Committed sample data | No | The catalogue in `data/sample-jobs.json` |
+| `adzuna` | Search API (Spain) | Yes | The search plan in `config/search-plan.ts` |
+| `greenhouse` | Per-company boards | No | The company list in `config/company-boards.ts` |
+| `lever` | Per-company boards | No | Same list |
+| `ashby` | Per-company boards | No | Same list |
+| `newsletter` | Saved job-alert emails | No | The files you put in `data/newsletters/` |
+
+The first five are documented JSON APIs. The sixth reads text files off your own
+disk. Nothing here scrapes an HTML page or parses one.
+
+## Job alerts by email — the widest-reaching source
+
+**[Full workflow below](#reading-job-alerts-from-your-inbox).** In one paragraph:
+
+Most job sites either forbid scraping or render their listings with JavaScript,
+so there is nothing to read even if you were allowed to. Michael Page is typical:
+no public API, a sitemap that deliberately excludes individual postings, and
+category pages built in the browser. But **almost every one of those same sites
+will email you the openings if you subscribe to an alert.**
+
+So this pipeline does not visit those sites. You subscribe, you save the emails
+into a folder, and it reads the folder. That is legitimate, it does not break
+when somebody changes a CSS class, and it works for every sender at once.
+
+### Company boards are not search engines — read this before expecting coverage
+
+Greenhouse, Lever and Ashby have no "find junior React jobs in Madrid" endpoint. Each one only answers
+**"what is open at this specific company"**. There is no query to tune and no ranking to improve: the
+pipeline sees exactly the employers listed in `packages/core/src/config/company-boards.ts`, and nothing else.
+
+That makes the company list the single most valuable file for coverage. Three working adapters plus an
+empty list finds zero jobs.
+
+### Adding a company
+
+1. Find the company's careers page and read the ATS out of the URL:
+
+   | URL you land on | `provider` |
+   |-----------------|-----------|
+   | `job-boards.greenhouse.io/<slug>` | `greenhouse` |
+   | `jobs.lever.co/<slug>` | `lever` |
+   | `jobs.ashbyhq.com/<slug>` | `ashby` |
+   | `jobs.smartrecruiters.com/<slug>` | `smartrecruiters` |
+
+2. Probe the name. Companies move ATS and slugs vary, so try **all four providers at once** rather
+   than assuming a name is absent because one spelling failed:
+
+   ```bash
+   npm run verify:boards -- --probe cabify cabify-es grupocabify
+   ```
+
+   For a large sweep, put one name per line in a file (`#` starts a comment) and use
+   `npm run verify:boards -- --probe-file candidates.txt`.
+
+3. Add the entry to `COMPANY_BOARDS`, recording the date and **both** counts you saw:
+
+   ```ts
+   { slug: 'cabify', provider: 'greenhouse', displayName: 'Cabify',
+     verifiedOn: '2026-09-10', spainOpeningsAtVerification: 25,
+     softwareOpeningsAtVerification: 6 },
+   ```
+
+   The provenance fields are not decoration. A slug nobody ever verified looks exactly like a slug that
+   works, right up until it silently contributes nothing forever.
+
+#### The bar: all three, not one
+
+A slug is committed only if it passes **every** one of these. `verify:boards` checks all three and
+tells you which one a failure hit:
+
+| # | Bar | Why it is separate |
+|---|-----|--------------------|
+| 1 | **Reachable** — the board answers | — |
+| 2 | **Spain** — it has openings located in Spain | On SmartRecruiters an *unknown* company answers `HTTP 200` with `totalFound: 0`. `Telefonica`, `Glovo`, `Santander`, `Indra` and `Inditex` all "succeeded" while being nothing. A status code proves nothing there. |
+| 3 | **Software** — at least one of those is a software job | `Sixt` had 35 Spanish openings and every one was a car rental agent. A board whose entire Spanish presence is discarded by the software gate downstream is still a request per run. |
+
+Bar 3 is judged by running the pipeline's **own** `scoreSoftwareRelevance` gate over the postings, not
+by reading titles. That cuts both ways: eyeballing would have admitted the staffing firms, and it would
+have rejected the Spanish consultancy whose title says only "Consultor/a" with Dynamics 365 named in
+the body.
+
+Re-check the whole list at any time — this is the single command:
+
+```bash
+npm run verify:boards
+```
+
+It prints one group per outcome: boards that pass all three bars (with both counts), then the ones that
+failed bar 3, bar 2 and bar 1 respectively.
+
+#### What a 2026-09-10 sweep already ruled out
+
+~300 names were probed across all four providers (~1200 requests). **Spanish IT consultancies are not on
+any of these platforms.** Seidor, Ibermática, Ayesa, Sothis, Aitana, Prodware, Hiberus, Plain Concepts,
+Encamina, Bilbomática, Intelequia, Softeng, NTT Data, everis, Minsait, Indra, Accenture, Capgemini,
+Sopra Steria, Inetum, VASS, Izertis, Babel, Paradigma, Plexus, Alten, Stratesys, Deloitte — plus the
+international Dynamics shops (Avanade, Delaware, HSO, Columbus, Fellowmind) and the corporate tech arms
+(CaixaBank, Santander, BBVA, Telefónica, Mapfre, Repsol, Iberdrola, Mercadona, Inditex) — all returned
+404 or an empty board.
+
+These four ATS are used by venture-backed product companies. Spanish consultancies publish on their own
+careers pages, InfoJobs and Tecnoempleo. **Adding slugs cannot reach them; that needs a different
+source.** Don't spend another sweep re-proving it.
+
+## Reading job alerts from your inbox
+
+No programming needed. Four steps.
+
+### 1. Subscribe to an alert
+
+On any job site you care about, look for **"job alerts"**, **"crear alerta"**,
+**"saved search"** or **"avísame de nuevas ofertas"**. Subscribe with your normal
+email address. This is the only step that happens outside this project, and it is
+the step that decides your coverage.
+
+### 2. Wait for an email to arrive
+
+You need a real one. Do not guess at the format — see
+[Why only one sender works today](#why-only-one-sender-works-today).
+
+### 3. Save the email text into `data/newsletters/`
+
+Open the email, select the whole message body, copy it, and paste it into a new
+file:
+
+```
+data/newsletters/juniorjobs-2026-09-06.txt
+```
+
+Two things matter:
+
+- **Save it verbatim.** Do not tidy it up, retype it or delete the emoji. The
+  parser was written against the real formatting; the quirks are the spec.
+- **Put the date in the file name** as `YYYY-MM-DD`. That is what the pipeline
+  uses as the posting date, and therefore what decides whether an offer counts as
+  recent. Without a date it falls back to the file's modification time.
+
+You can keep as many files in there as you like. All of them are read.
+
+> **Privacy:** everything in `data/newsletters/` except its `README.md` is
+> git-ignored. Saved alerts and the link cache are personal input and never
+> enter the repository. The parser tests use the synthetic digest
+> `packages/core/tests/fixtures/juniorjobs-digest.synthetic.txt`.
+
+### Your candidate profile (local, optional)
+
+The committed default profile is fictional (`Alex Example`). To rank for yourself,
+copy `candidate-profile.example.json` to `candidate-profile.local.json` at the
+repository root and edit it. The local file is git-ignored, may contain only the
+fields you want to override, and a malformed file fails the run with a clear
+error instead of silently using other data.
+
+### 4. Run it
+
+```bash
+npm start -- --source=newsletter                      # follows the tracking links (default)
+npm start -- --source=newsletter --no-resolve-links   # no network at all
+npm start -- --source=all                             # newsletters plus every other REAL source
+```
+
+> **`--source=all` means every REAL source** — Adzuna, the three company boards
+> and the newsletter. It does **not** include `fixture`, and `fixture` may not
+> share a run with a real source. See [Sample data](#sample-data-never-shares-a-run-with-real-vacancies).
+
+Then `npm run dev` to see the result in the web UI, exactly like any other source.
+
+### Why only one sender works today
+
+**Supported right now: the JuniorJobs weekly digest** — numbered Spanish entries
+with `juniorjobs.short.gy` links. That is the only newsletter a real saved sample
+exists for, and that is the only reason it is the only one supported.
+
+Any other file you drop in the folder is **skipped, by name, with a message**:
+
+```
+warn  [newsletter] michael-page-alert.txt: no registered parser recognised this file.
+      Supported senders today: JuniorJobs weekly digest (...)
+```
+
+That is the correct behaviour, not a gap waiting to be filled in with guesswork.
+A parser written against an *imagined* email format produces rows that look
+completely plausible and are wrong — which is precisely how this project once
+shipped [thirteen fabricated URLs](#the-rule-this-enforces). So the rule is:
+
+> **A parser may only be written against a real saved email.**
+
+**To add a sender, this is what you must supply:**
+
+1. A **real saved alert email** from that sender, verbatim, saved locally in
+   `data/newsletters/`. Not a description of it, not a screenshot, not an
+   example you wrote. One real file. The committed test fixture is then a
+   **synthetic copy** that keeps the real structure and quirks but replaces
+   personal data and tracking tokens (see the JuniorJobs fixture).
+2. Which parts of it are the **employer**, the **job title** and the **link** —
+   or just the file, if that is readable from it.
+3. Ideally **two** emails from the same sender, so the parser is written against
+   what varies rather than against one lucky message.
+
+With that in hand the work is one file implementing `NewsletterParser` plus one
+line registering it. The checklist lives in
+`packages/core/src/adapters/newsletter/newsletter-parser.ts`.
+
+### The links, and why they are the risky part
+
+Newsletters do not link to jobs. They link to **themselves** — every entry in the
+sample points at `juniorjobs.short.gy/<token>`, which redirects to the employer's
+real posting.
+
+The rule, unchanged from the rest of the pipeline:
+
+> **The URL comes from the newsletter payload, or the posting does not exist.**
+
+- An entry with **no link is dropped**, with a warning naming it. The real sample
+  contains exactly one of these, where the sender pasted the job title over the
+  link. It is not repaired, not defaulted, and not turned into a search URL.
+- **Resolution is ON by default.** Each tracking link is followed to the
+  employer's real address, because a `short.gy` redirect is not an address the
+  candidate can apply at — it belongs to a third party, and one of them was
+  already observed answering 404. Use `--no-resolve-links` for an offline or
+  quota-conscious run. Every safeguard is unchanged: **one `HEAD` request per
+  unique link** (one `GET` retry for servers that refuse `HEAD`), **no page body
+  read**, bounded concurrency, a hard timeout, and a disk cache so a re-run
+  costs nothing. `--resolve-links` is still accepted and is now a no-op.
+- **A failed lookup keeps the newsletter's own link.** Never a guess. The
+  shortener opens the posting in a browser perfectly well; a fabricated "real"
+  URL does not.
+
+Every resolution is recorded in `data/newsletters/.link-cache.json`, which is
+both the cache and the **provenance record** — open it to see which URL the
+newsletter gave and which one the queue shows:
+
+```json
+{
+  "https://juniorjobs.short.gy/2sxqtb": {
+    "finalUrl": "https://careers.factorialhr.com/job_posting/gtm-engineer-factorial-it-304580?utm_source=juniorjobs",
+    "status": 200,
+    "resolved": true,
+    "resolvedAt": "2026-09-08T15:31:12.443Z"
+  }
+}
+```
+
+The run also prints a one-line summary:
+
+```
+Newsletter links: 212 unique, 199 resolved to the employer's posting, 13 kept as the original newsletter link.
+```
+
+### What the newsletter source does *not* do
+
+- It never opens a job page. Seniority is decided by the same junior filter every
+  other source goes through, from the title and the newsletter's own wording.
+- It never filters by country. The digest already ships a curated
+  "Spain + rest of Europe" section, and the pipeline's rule is that location
+  *ranks* an offer and never deletes it. A German remote role stays in the list,
+  scored lower, where you can see it and disagree.
+
+### Which locations survive the board filter
+
+A company board hands back its **entire** board — all 618 Stripe postings worldwide included — so the
+narrowing Adzuna does server-side with `where` has to happen in the adapter. `DEFAULT_BOARD_LOCATION_FILTER`
+keeps anything mentioning a Spanish city or Spain itself, including `Spain (Remote)`, `Remote - Spain`
+and `Madrid HQ, ES`.
+
+It is deliberately generous inside Spain: a Barcelona posting is kept and then ranked down by the location
+dimension, rather than deleted where you could never see or argue with the decision. It narrows **where**,
+never **what** — the software-relevance gate still judges every posting afterwards, exactly as it does an
+Adzuna one.
+
+## Workspace layout
+
+Three npm workspaces:
+
+| Package | What it is |
+|---------|-----------|
+| `packages/core` | Domain, ports, adapters, the pipeline, the CLI. No UI, no framework. |
+| `apps/web` | Next.js App Router UI. Server-side reads only; it holds no credentials. |
+| `e2e` | Browser tests that drive the real app. No production code depends on it. |
+
+Shared runtime data lives at the workspace root: `data/` (fixture, application log, saved newsletters) and `output/` (generated queue). Both locations can be relocated with an environment variable — see [State isolation](#state-isolation-the-suite-cannot-touch-your-data).
+
+## What it will never do
+
+This project does **not** touch LinkedIn. No scraping, no automation, no login, no LinkedIn HTTP calls. LinkedIn's User Agreement §8.2 prohibits automated access, and the penalty is a permanent account ban — an unacceptable risk for someone whose job search depends on that account. The same rule applies to Adzuna, Greenhouse, Lever, Ashby and every other board: they are read through their public APIs and never driven through a browser.
+
+**Where the browser-automation line actually sits.** The ban is on automating *someone else's* site. Driving a browser against *our own* app on localhost is a different act with none of the same consequences, and it is how the E2E suite works. The two rules together:
+
+- ❌ A browser may never navigate to, log into, or scrape a real job board.
+- ✅ A browser may drive `http://127.0.0.1` to check that our own UI is honest.
+
+The E2E harness enforces this in code rather than by convention: every request to a non-localhost origin is aborted at the browser-context level (`e2e/support/test.ts`). Apply links are verified by reading their `href` attribute, never by following them. The suite passes with the network cable unplugged.
+
+## The core design decision
+
+**Wide intake, two hard filters, no ranking.**
+
+Intake stays deliberately wide: no stack filtering, no seniority filtering, no location filtering at the query. Everything the sources return enters the pipeline.
+
+Then exactly two filters run, and there is no third:
+
+| | Filter | Rule | Bias |
+|---|--------|------|------|
+| **A** | Software relevance | Is this software-engineering work at all? A dentist, a sales executive and a treasury clerk are not ranked lower — they are not in the list. | Biased toward inclusion: a role word in the *title* is proof on its own. |
+| **B** | Junior eligibility | Does the posting explicitly disqualify a first-job candidate? Only two things count: a rank word in the **title** (`senior`, `lead`, `principal`, `staff`, `head of`, `architect`, `arquitecto`, `director`, `jefe de`), or a stated requirement of **3+ years**. | Strongly biased toward inclusion: **silence means yes**. |
+
+Filter B's asymmetry is the whole design. A junior job wrongly dropped is an opportunity that is invisible, to you and to us, permanently. A mid-level job wrongly shown costs eight words of reading. Those two errors are not equal, so the filter is not symmetric: it never guesses, and "seniority unclear" is always resolved in your favour.
+
+**What is deliberately absent: any score threshold, any top-N cut, any "only show the good ones".**
+
+Ordering is **newest first**. Recency is a fact about the data. It needs no justification, no breakdown panel, and no trust from the person reading it — which a ranking, with no measured reply-rate evidence behind it, has not yet earned.
+
+The score survives as an audit trail you can open per offer:
+
+```
+#1 Consultor Junior Power Platform — Nexia Consulting (90.4/100, CV: microsoft)
+    seniorityFit  0.80 x 0.34 =  27.2 pts  junior signal in title (junior)
+    stackMatch    0.93 x 0.24 =  22.2 pts  Microsoft Power Platform / Dynamics lane: power apps, ...
+    locationFit   1.00 x 0.18 =  18.0 pts  based in Madrid
+    languageFit   1.00 x 0.14 =  14.0 pts  English requirement within reach (ingles no necesario)
+    recency       0.90 x 0.10 =   9.0 pts  posted 3 days ago
+```
+
+If you disagree with it, you can see exactly which dimension caused it and change one number in `packages/core/src/config/scoring-config.ts`. It changes the number; it does not change what you see or in what order.
+
+Filter B's vocabulary is separate, in `packages/core/src/config/junior-filter-config.ts`. It deliberately does **not** reuse the scoring `seniorTerms` list: that list is tuned to apply a soft penalty and contains terms like `manager` and `amplia experiencia`, which are fine as a nudge and far too blunt as a delete.
+
+## Application tracking
+
+Every click on **Apply** does two things: it opens the real posting in a new tab, and it records an `Application` server-side. You apply on the job board yourself — nothing here logs into anything.
+
+| Field | Why it exists |
+|-------|---------------|
+| `jobId` | The content fingerprint. One application per vacancy, enforced by the store. |
+| `appliedAt` | Frozen history. Never moves. |
+| `cvVariant` | Which CV was sent. This is what makes the stats panel worth reading. |
+| `scoreAtApply` | The score *at the time*. Retuning the weights later must not rewrite what the scorer believed back then. This is the column the score/reply-rate correlation will eventually be run against. |
+| `outcome` | `applied` → `no_reply` \| `rejected` \| `screening` \| `interview` \| `offer` |
+| `outcomeUpdatedAt`, `notes` | When you last heard something, and what it was. |
+
+The payoff is the stats panel: response rate overall and **per CV variant**, which answers "does my Microsoft profile convert better than my React profile?".
+
+A rejection counts as a *response*. A channel that produces rejections is a different problem from one that produces silence, and collapsing them would hide that.
+
+### The exploration quota is retired
+
+There used to be an exploration quota: 15% of surfaced slots were deliberately sampled from *outside* the top band and labelled, to generate evidence about jobs the ranking did not like.
+
+It only made sense as a counterweight to **score ordering**. With a recency-ordered list that shows everything, there is no top band to be biased toward, so there is nothing left to counteract — the mechanism is not merely unused, it is meaningless. It is gone from the pipeline, the queue DTO, the CLI and the UI.
+
+`domain/exploration.ts` and `config/exploration-config.ts` are kept unwired and still tested, and are no longer exported from the package barrels. They are the two files to delete if score ordering never returns.
+
+### Storage
+
+JSON file with atomic writes: write a uniquely-named temp file in the same directory, then `rename` over the target. A crash mid-write leaves either the old complete file or the new complete file, never a truncated one. All operations go through an in-process queue so concurrent server actions cannot interleave a read-modify-write and lose a record.
+
+There is **no native dependency** — no `better-sqlite3`, nothing needing a postinstall build. `ApplicationRepository` is the seam: swapping in SQLite later touches one adapter file and no callers.
+
+## Scoring model
+
+Each dimension returns `0..1`. They are combined with configurable weights and normalized to a `0..100` score.
+
+| Dimension | Weight | What it rewards | What it punishes |
+|-----------|--------|-----------------|------------------|
+| `seniorityFit` | 0.34 | `junior`, `trainee`, `becario`, `prácticas`, `sin experiencia`, `0-1 años`, `recién titulado` | `senior`, `lead`, `arquitecto`, and any demand of 3+ years |
+| `stackMatch` | 0.24 | Best of two lanes plus a shared general bucket | Nothing — a zero here still reaches the output |
+| `locationFit` | 0.18 | Madrid, Madrid metro area, hybrid Madrid, remote-Spain | Other Spanish cities on-site; English-first remote-global |
+| `languageFit` | 0.14 | No English requirement, or B1/basic | C1/C2/fluent/native, and postings written entirely in English |
+| `recency` | 0.10 | Fresh postings | Linear decay to zero over 30 days |
+
+### The two stack lanes
+
+`stackMatch` scores the posting against two named lanes and keeps the winner. The winning lane is written to the job as `cvVariant`, which the future CV-tailoring layer will consume.
+
+| Lane | Keywords (excerpt) | `cvVariant` |
+|------|--------------------|-------------|
+| `frontend` | react, next.js, typescript, javascript, tailwind, css, html | `"frontend"` |
+| `microsoft` | power apps, power automate, dataverse, power pages, dynamics 365, business central, navision, .net, c# | `"microsoft"` |
+| *(shared bucket)* | sql, mysql, java, python, git, api, rest, scrum, agile, node | `"general"` when no lane matched |
+
+### Things the scorer gets right on purpose
+
+- `"3 años de experiencia"` is **not** read as junior. Year extraction requires an experience noun near the number, so `"23 días de vacaciones al año"` and `"desde 2026"` are ignored.
+- A range takes its upper bound: `"entre 3 y 5 años"` scores as 5, because 5 is what rules you out.
+- `senior` in the title costs more than `senior` in the body — `"reportarás al senior developer"` is not a senior vacancy.
+- `java` does not match inside `javascript`; `sql` does not match inside `mysql`.
+- A C2 English demand down-ranks a job, it never deletes it. Job ads routinely overstate language needs.
+
+**All weights and keyword lists live in `packages/core/src/config/scoring-config.ts`.** The scoring code in `src/domain/scoring/` contains zero keywords.
+
+`extractRequirements` reuses those same lists and the same parsers to derive the chips the UI shows (`yearsRequired`, seniority signals, `matchedStack`, English level, work mode). It owns no vocabulary of its own, so the chips and the score can never tell different stories.
+
+## Architecture
+
+Hexagonal / ports and adapters. The dependency arrow only ever points inward:
+
+```
+adapters  ->  app  ->  ports  ->  domain
+```
+
+```
+packages/core/src/
+  domain/          Pure. No I/O, no node builtins, no config imports.
+    job.ts           Normalized Job entity + fingerprinting
+    text.ts          Normalization, boundary-aware keyword matching
+    dedupe.ts        Cross-source / cross-page collapsing
+    order.ts         scoreJobs (no sorting) + orderByRecency. Split on purpose.
+    junior-eligibility.ts  Filter B. Excludes only on explicit signals.
+    application.ts   Application entity + outcome transitions
+    application-stats.ts  Response / advance rates, overall and per CV variant
+    exploration.ts   RETIRED: seeded exploration sampling, unwired
+    requirements.ts  Structured signals for the UI chips
+    scoring/         One file per dimension + the weighted combiner
+  ports/           Interfaces only: JobSource, QueueWriter, QueueReader,
+                   ApplicationRepository, Logger, JobQueue DTO
+    identity.ts      Cross-source identity: canonical company + title
+  adapters/
+    adzuna/          Adzuna Spain HTTP adapter (zod-validated)
+    boards/          Per-company board adapters, all zod-validated
+      board-http.ts       Bounded concurrency, per-request timeout, User-Agent
+      board-location.ts   Location narrowing (never stack filtering)
+      board-job-source.ts One JobSource over many company boards
+      html-text.ts        Description-field decoder (no HTML parser dependency)
+      greenhouse-board.ts / lever-board.ts / ashby-board.ts
+    fixture/         Offline adapter reading committed sample data
+    output/          JSON queue writer + zod-validated reader
+    persistence/     JSON application log with atomic writes
+    logging/         Console logger (writes to stderr)
+  app/             buildJobQueue, recordApplication, updateApplicationOutcome
+  config/          Candidate profile, scoring weights, search plan, paths, env
+  cli/             Argument parsing and table rendering
+  index.ts         Server-side public API
+  domain-index.ts  Client-safe public API (pure domain only)
+
+apps/web/src/
+  app/             Layout, page (server component), server actions
+  server/          Composition root, dashboard read model, write use cases
+  components/      Presentational + two client components (apply link, filters)
+```
+
+### Two entry points, on purpose
+
+`@job-queue/core` exports adapters that import `node:fs`. Importing it from a React **client** component drags the filesystem layer into the browser bundle — and the Next build fails, correctly.
+
+So the package has a second entry point, `@job-queue/core/domain`, exporting only pure domain code and type-only port contracts. Client components import from there and share the same vocabulary as the server without duplicating a single enum.
+
+The domain layer's purity is not a claim in a comment, it is an executable test:
+
+```bash
+npm test --workspace @job-queue/core   # tests/architecture/purity.test.ts
+```
+
+It walks the real import graph from `domain-index.ts` and fails on any node builtin, adapter, or third-party import.
+
+## CLI options
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--source=LIST` | `fixture` | Comma-separated: `fixture`, `adzuna`, `greenhouse`, `lever`, `ashby`, `newsletter`. Shortcuts: `boards` (the three company boards), `all` (every **real** source: `adzuna,greenhouse,lever,ashby,newsletter`). `fixture` is never in a shortcut and may not share a run with a real source |
+| `--limit=N` | *off* | Truncate the list to N rows. **Off by default** — every offer that passed both filters is shown. Opt-in only, for keeping a huge exploratory run readable. |
+| `--explain=N` | `3` | How many entries get a full score breakdown |
+| `--concurrency=N` | `4` | Simultaneous company-board requests |
+| `--timeout=MS` | `15000` | Per-request timeout for company boards |
+| `--out=PATH` | `output/queue.json` | Where to write the queue |
+| `--fixture=PATH` | `data/sample-jobs.json` | Sample data file |
+| `--applications=PATH` | `data/applications.json` | Application log |
+| `--newsletters=PATH` | `data/newsletters` | Folder of saved job-alert emails |
+| `--no-resolve-links` | *off* | Do **not** follow newsletter tracking links. Resolution is **on by default**, because a `short.gy` redirect is not an address the candidate can apply at. One `HEAD` per unique link, cached to disk; a failure keeps the original link and never invents one. |
+| `--resolve-links` | — | Accepted, now a no-op: this is the default |
+| `--link-cache=PATH` | `data/newsletters/.link-cache.json` | Resolved links, and the record of which URL was original and which was resolved |
+| `--no-check-links` | *off* | Do **not** check whether the postings still exist. Checking is **on by default** and covers **every source**, not just the newsletter. One `HEAD` per unique apply URL, bounded and TTL-cached, so a repeat run is nearly free. A posting is **removed only on HTTP 404 or 410**; 403, 401, 429, every 3xx, every 5xx, timeouts, connection resets and DNS failures all **keep** it and mark it unverified. A run with no network removes nothing. |
+| `--check-links` | — | Accepted, now a no-op: this is the default |
+| `--liveness-cache=PATH` | `data/.link-liveness.json` | Liveness verdicts, and the evidence for every posting the pipeline removed |
+| `--help` | — | Usage |
+
+### Why removal is so narrow
+
+A dead link the candidate clicks past costs five seconds. A real vacancy
+silently deleted is invisible and unrecoverable — it does not appear, it does
+not warn, and nothing anywhere would tell him it was ever found. So the burden
+of proof sits entirely on the deletion, and only two status codes carry it.
+
+This is not caution for its own sake. Two of the six unresolved shortener links
+in the September queue were live junior roles at **CaixaBank Tech**. Their real
+destination (`caixabanktech.com/es/job/junior-software-engineer-full-stack/`)
+answers Node's `fetch` with `read ECONNRESET` — bot protection — while serving a
+browser normally. A checker that deleted on "the server was unfriendly" would
+have destroyed two opportunities the candidate is qualified for, and left no
+trace. They are pinned as a named regression in
+`tests/domain/link-liveness.test.ts` and `tests/app/queue-liveness.test.ts`.
+
+Diagnostics go to stderr, the table goes to stdout, so `npm run start:offline > today.txt` keeps the table clean.
+
+## Sample data never shares a run with real vacancies
+
+`data/sample-jobs.json` is a committed demo catalogue. Its employers do not
+exist and its links point at `example-board.test`, a domain reserved by RFC 2606
+that resolves nowhere. That is the right design for a demo and a disaster the
+moment one of its rows lands next to a real vacancy with an apply button on it.
+
+It did. `--source=all` used to expand to *every selectable source*, fixture
+included, so the documented command produced:
+
+```
+Contributed: fixture 105, adzuna 1, greenhouse 64, lever 14, ashby 29, newsletter 221
+
+  #1  Trainee Software Developer   Kubo Labs   Madrid   85.8
+      link: https://example-board.test/offers/fx-010
+```
+
+Two invented postings at positions #1 and #3 of a real queue. Three rules now:
+
+1. **`all` means every real source.** The catalogue has to be asked for by name.
+2. **Sample and real sources may not share a run.** `--source=all,fixture` and
+   `--source=boards,fixture` are refused *at parse time*, before a single
+   request, with an error naming the flag that does what you probably wanted.
+
+   This is a refusal rather than a warning on purpose. A mixed queue is not one
+   list with a caveat — it is a list where every row has to be re-checked for
+   provenance before you act on it, because the table interleaves them by
+   recency and the two look identical. There is also no use case: the fixture
+   exists for an offline demo and for tests, and neither gets better with real
+   vacancies stirred in. A refusal is cheaper than a banner, because a banner
+   above a list of offers is the first thing a person stops reading on day three.
+
+3. **Wherever sample data does surface, it says so.** `--source=fixture` is
+   still legal, the web app still falls back to the catalogue, and an
+   `output/queue.json` from an older build may still contain it — so the answer
+   is read from the posting's own `sources[]` rather than from this run's flags:
+
+   - the CLI prints a `SAMPLE DATA IN THIS QUEUE — n of m offers below are NOT
+     REAL` banner **and** marks every affected row `[SAMPLE]`, because the table
+     is longer than a screen and the banner scrolls away;
+   - the web app shows the amber notice **whenever sample postings are present**,
+     not only in the offline fallback, and badges each card `Ejemplo` with an
+     amber rail.
+
+## The pipeline audits its own links
+
+Every run checks the queue it just built against the provenance rules in
+`packages/core/src/domain/link-provenance.ts`, before writing it:
+
+```
+LINK AUDIT: 10 of 10 apply link(s) are not usable posting addresses.
+
+  [placeholder-host] "Trainee Software Developer"
+      href:   https://example-board.test/offers/fx-010
+      reason: "example-board.test" does not host real postings
+```
+
+Nothing is repaired. A link the pipeline cannot vouch for is *reported*, never
+replaced with a guess — that is how thirteen dead apply buttons shipped once.
+
+No request is made: provenance is read from the address, which is where the
+defect lives. Those rules were previously test-only code inside the E2E suite,
+which is why they were green for the entire life of the `example-board.test`
+defect — that suite only ever inspected queues it seeded itself. They are
+production code now, shared by three callers: this CLI audit, the browser suite,
+and `packages/core/tests/app/pipeline-link-provenance.test.ts`, which runs them
+over a queue the real pipeline actually built.
+
+## Failure behaviour
+
+A dead source degrades the run; it never aborts it.
+
+| Failure | Behaviour |
+|---------|-----------|
+| Adzuna returns a non-2xx | That query is reported as `failed`, other sources continue |
+| Adzuna returns an unknown payload shape | Same — the envelope is zod-validated before use |
+| A single offer is malformed | That offer is skipped and logged; the page still yields the rest |
+| **One company board 404s** | Absorbed. Logged, listed as a `degradedTargets` entry on the source report, and the other boards' postings are kept. It does **not** mark the run degraded |
+| **Every board of one provider fails** | That provider is reported as `failed`; the other providers continue |
+| A board hangs | Aborted after `--timeout` and treated as that board failing |
+| `ADZUNA_APP_ID` missing | Fails fast at startup, before any request, and points you at `--source=fixture` |
+| Application log unreadable | Warned; every job renders as not-applied rather than blanking the page |
+
+### Why one dead board is not a "degraded run"
+
+The degraded-write guard was designed when a source was one request and a failure was rare and alarming.
+With ~28 company boards, something 404s or times out on an ordinary day. If that counted as a failed
+source query, the queue would print **"Degraded run"** every single morning — and a warning printed every
+morning is a warning nobody reads on the morning it finally matters.
+
+So the two facts are kept apart:
+
+| Fact | Where it shows | Weight |
+|------|----------------|--------|
+| A **source query** failed | `status: 'failed'`, run health, can refuse a write | Loud, rare |
+| A **company board** failed | `degradedTargets` on an otherwise `ok` report, a note in the summary | Quiet, common |
+
+A provider only reports `failed` when it lost **every** one of its boards — the one case where "we found
+nothing" is a statement about the network rather than about the job market, which is exactly what the
+write guard needs in order to protect real postings.
+| `output/queue.json` corrupt or from an older format | Web UI warns and falls back to the offline catalogue |
+| Application log **corrupt on write** | Refuses to overwrite. Losing your real application history is worse than a loud error. |
+
+### The queue is never overwritten by a run that learned nothing
+
+Same asymmetry as the application log, applied to `output/queue.json`. The rule is one
+sentence:
+
+> **An empty result may only replace a non-empty queue when every source query succeeded.**
+
+"Nothing came back" is trustworthy evidence about the job market only when every source
+was asked *and* every source answered. The moment one query fails, an empty result is a
+statement about the network instead — and that must not be written over real postings.
+
+| Run | Existing queue | Result | Exit |
+|-----|----------------|--------|------|
+| Every query failed | has postings | **Not written.** Prior data untouched | `2` |
+| Every query failed | absent or empty | Written — nothing to protect | `1` |
+| Some failed, **0 postings** | has postings | **Not written.** Prior data untouched | `2` |
+| Some failed, some postings | any | Written, with a loud `Degraded run` warning | `0` |
+| All queries OK, 0 postings | any | Written — a real empty market is a real fact | `0` |
+| Queue file unreadable | — | Treated as "holds data": protected, not assumed empty | `2` |
+
+Exit `2` means *your data is intact and the API is not*, which is a different problem from
+exit `1`. A partially degraded run that still produced postings is written on purpose:
+refusing there would let one permanently flaky query freeze the queue forever.
+
+## Restoring the queue
+
+**`npm run seed:queue` refuses to run, and exits non-zero.** This is the fix for a real
+defect, not an outage.
+
+It used to rewrite `output/queue.json` from the 25 postings recorded in
+`packages/core/tests/fixtures/real-adzuna-run.ts`. The titles, companies and dates in that
+fixture are real. **The URLs were not** — the fixture never captured them, so it built one
+per posting out of the job *title*:
+
+```
+https://www.adzuna.es/details/Optima%20Solutions%20Junior%20Power%20Platform%20Developer   -> HTTP 403
+https://www.adzuna.es/details/5874810786?utm_medium=api&utm_source=5327d1be                -> HTTP 200 (the real one, now lost)
+```
+
+All 13 seeded apply buttons were dead links. A seeded queue is indistinguishable from a real
+one on screen — same titles, same chips, same prominent Apply button — and the one field
+that was wrong is the only field you act on, failing silently as "the offer expired".
+
+So the trade is: an empty screen that explains itself, versus a full screen that lies. The
+empty screen wins. Run a real source instead:
+
+```bash
+npm start -- --source=boards     # Greenhouse + Lever + Ashby. No API key, no quota.
+npm start -- --source=all        # Adds Adzuna, if its free quota has recovered.
+```
+
+The fixture is still used: it is the regression corpus for the software-relevance gate,
+which does not read URLs. It simply can never again be a source of postings a human sees.
+
+### The rule this enforces
+
+> A job's URL is the source payload's own URL field, or the job does not exist.
+
+It is enforced in the **domain**, in `createJob`, not per adapter — every path into the
+system mints its jobs through that one function, so it is the single place the invariant
+cannot be forgotten. A draft with a missing, relative or non-`http(s)` URL throws; adapters
+catch that, skip the posting and log it. Nothing is ever defaulted or reconstructed.
+
+## Development
+
+```bash
+npm run typecheck      # all three workspaces, strict, no any
+npm test               # unit + integration (core and web)
+npm run test:e2e       # browser tests against the real running app
+npm run build          # core (tsc) then the Next.js app
+npm run test:coverage --workspace @job-queue/core
+```
+
+The web app consumes `packages/core/dist`, so **core must be built before `next build` or `next dev`**. `npm run build` and `npm run dev` both do this for you.
+
+## End-to-end tests
+
+```bash
+npm run test:e2e
+```
+
+That single command builds core, builds the Next app, starts the production server on port 3178, runs 29 browser tests against it, and shuts it down. No manually-started server, no manual seeding. First run only, install the browser:
+
+```bash
+npx playwright install chromium
+```
+
+To run a subset, work from the `e2e` workspace directly (npm eats the flags otherwise):
+
+```bash
+cd e2e && npx playwright test --grep "link integrity"
+cd e2e && npx playwright test --ui
+```
+
+### What this suite guarantees that the 631 unit tests do not
+
+This suite exists because of a specific, shipped, humiliating defect: **every apply button in the UI pointed at a fabricated URL and returned HTTP 403.** The address was built by pasting the job title into a path:
+
+```
+https://www.adzuna.es/details/Junior%20Frontend%20Developer
+```
+
+626 tests were green while that was live. Not one of them was wrong — and not one of them ever rendered the page, looked at a link and clicked it. They verified internals. The user clicked the buttons and found nothing.
+
+Note what the bad URL is *not*: not empty, not relative, not a placeholder, not malformed. It is a well-formed absolute `https:` URL on a real external host. `z.string().url()` accepts it. TypeScript accepts it. `expect(href).toBeTruthy()` accepts it. The defect was **provenance** — the URL was invented from a field the pipeline happened to have, instead of taken from the source payload — and provenance is not a property a schema can see.
+
+So the suite is optimised for one question: *would this have caught the dead-link bug?* Concretely, it checks the things that only exist once a browser has rendered the page:
+
+| Guarantee | Why a unit test cannot give it |
+|-----------|-------------------------------|
+| **Every apply link in the DOM is a usable external address** | Unit tests assert on data structures. This walks the rendered `<article>` elements and reads the `href` the user would actually click, paired with the title on the same card. |
+| **No apply link is derived from the job title** | The regression rule. Fires when the job title appears in the URL *and* the URL carries no source identifier — i.e. the address **is** the title, which is only true when something synthesised it. URLs that contain a title slug next to a real board id (`/jobs/4471203-junior-frontend`) pass, because they are addressable. |
+| **No apply link resolves back into this app** | Computed the way the browser computes it, `new URL(href, origin)`. A relative href looks harmless in a snapshot and silently lands the user on our own page. |
+| **A click records exactly one application — twice clicked, still one** | Idempotency is proven at the repository by unit tests. This proves it through a client component, a `useTransition`, a server action, `revalidatePath`, a re-render and a JSON file. Any of those links can break while the function stays correct. |
+| **The applied state survives a reload, and is legible in greyscale** | WCAG 1.4.1. Asserts the label, the icon *and* the colour — the three redundant signals the component promises. |
+| **An outcome set in the form is still there after a reload** | A form that updates the screen but not the disk is indistinguishable from a correct one until tomorrow. |
+| **Filter counts stay truthful** | A filtered list whose headline still claims the unfiltered total is the same class of defect as a dead button: the interface stating something it cannot back up. |
+| **Empty ≠ degraded** | "We asked and the market had nothing" and "we could not ask" must render different Spanish. Each assertion also requires the *other* message to be absent, so the two cannot be swapped silently. |
+| **The apply control is reachable by Tab and fires on Enter, with a visible focus ring** | Walks the real tab order rather than calling `.focus()`. A product whose one button needs a pointer is unusable for a chunk of the people it serves. |
+| **A normal session logs no console errors** | Nothing below the UI can observe this. |
+| **The Spanish copy is the copy that reaches the screen** | The unit test over `es.ts` proves the strings exist. A component hard-coding `"Apply"` next to an unused `ES.apply.action` passes that test and fails the user. |
+
+### State isolation: the suite cannot touch your data
+
+The app writes to `data/applications.json` — your actual job-hunting history — and reads `output/queue.json`, your last real pipeline run. A browser test that clicks "Aplicar" performs a **real** write. A test suite that eats your application history would be a worse bug than the one it was written to catch.
+
+So the suite never runs against those paths. `packages/core/src/config/paths.ts` exposes two overrides:
+
+| Variable | Overrides |
+|----------|-----------|
+| `JOB_QUEUE_QUEUE_PATH` | `output/queue.json` |
+| `JOB_QUEUE_APPLICATIONS_PATH` | `data/applications.json` |
+
+`playwright.config.ts` exports both into the server process, pointing at `e2e/.tmp/` (gitignored, wiped before each run). Three layers make that a guarantee rather than an intention:
+
+1. `assertIsolated()` aborts in global setup, before a browser starts, if either override is missing or points outside the scratch tree.
+2. Global setup fingerprints both real files with SHA-256 and prints the hashes into the run log.
+3. `zz-real-user-data.spec.ts` runs **last** (the `zz-` prefix is load-bearing — Playwright orders spec files by path) and asserts both files are byte-identical to that baseline. It also asserts a write *did* land in the scratch log, because "the real file did not change" is equally true of a suite that never wrote anything at all.
+
+Verified on the run that shipped this suite: both files identical, same size, same mtime, before and after.
+
+### Design choices worth knowing
+
+- **A separate `e2e` workspace**, not tests inside `apps/web`. The suite builds and starts *both* other workspaces, so it is a workspace-level concern; keeping it separate also stops Playwright's globals and its 300 MB browser dependency leaking into the app's own package and typecheck.
+- **`workers: 1`, `fullyParallel: false`.** The system under test is one server process whose state is two files on disk. Parallel workers would seed each other's queue mid-render. This is a handful of high-value journeys, not a matrix — the whole suite runs in ~30 s including the build.
+- **`retries: 0`.** A retry on a suite this small turns a real intermittent defect into a green tick, which is the exact class of blindness that let thirteen dead buttons ship.
+- **`next start`, not `next dev`.** Dev-mode React logging and on-demand compilation would make the console-error assertion meaningless.
+- **Fixtures are literal JSON**, not pipeline output. The pipeline has 590 tests of its own; a browser suite that depended on it would go red for reasons that have nothing to do with the browser.
+
+### What this suite still would not catch
+
+Stated plainly, because a test suite you trust too much is worse than one you distrust:
+
+- **A URL that is well-formed, has a real id, and is still dead.** Nothing here makes an HTTP request — deliberately, since that would be exactly the third-party board traffic this project refuses to generate. A posting that 404s because it was filled last week looks identical to a live one.
+- **A URL taken from the right field of the wrong posting.** Provenance is checked structurally, not against the source payload.
+- **Anything above the queue file.** The suite starts from a seeded `queue.json`. A scoring, filtering, dedupe or source-adapter defect that produces a *plausible* queue passes every test here.
+- **Rendering defects.** No visual regression baseline. Text that is white-on-white, a card pushed off-screen, or a broken mobile layout all pass.
+- **Real accessibility.** Keyboard reachability and focus visibility are checked; contrast ratios, screen-reader output and ARIA correctness are not. This is a smoke test, not an audit.
+- **Cross-browser and cross-device.** Chromium at one desktop viewport only.
+- **Concurrency across processes.** The application log's write lock is per-process. Two servers writing at once is out of scope here, as it is in the repository itself.
+
+## Deliberate seams for the next slice
+
+These are extension points, not missing features. This slice does not build them.
+
+| Seam | Where | What plugs in |
+|------|-------|---------------|
+| More job boards | `JobSource` in `ports/job-source.ts` | InfoJobs, Tecnoempleo, RemoteOK — add an adapter, register it in the CLI. No domain change. |
+| More company-board ATSs | `BoardProvider` in `adapters/boards/board-job-source.ts` | Workable, SmartRecruiters, Recruitee — supply a URL builder and a payload parser; fan-out, concurrency, timeouts, location filtering and failure isolation are already shared. |
+| More newsletter senders | `NewsletterParser` in `adapters/newsletter/newsletter-parser.ts` | Michael Page, LinkedIn, InfoJobs and any other alert email — **but only once you supply a real saved sample.** File reading, format detection, link handling, provenance and per-file failure isolation are already shared. See [Why only one sender works today](#why-only-one-sender-works-today). |
+| CV / cover-letter tailoring | `cvVariant` on every queue entry | The winning lane is already computed and persisted for every job |
+| SQLite instead of a JSON file | `ApplicationRepository` in `ports/application-repository.ts` | One new adapter. Idempotency is already part of the port contract, so no caller changes. |
+| Empirical weight retuning | `Application.scoreAtApply` + `outcome` | The labelled dataset this layer exists to produce. Nothing consumes it yet. |
+| Multi-user / auth | The web app has none | Single-user local tool today. Every read is unauthenticated. |
+| Re-tuning the ranking by hand | `config/scoring-config.ts` | Every weight and keyword, in one typed object |
+
+## Cross-source dedupe: why it is deliberately conservative
+
+Once the same vacancy can arrive from Adzuna **and** from the company's own board, it arrives with a
+different id, a different URL (one is an Adzuna redirect) and often a different title — `Frontend Engineer`
+on Greenhouse, `Frontend Engineer (m/f/d)` on Adzuna. The original three dedupe keys all miss it.
+
+The governing rule, which decides every design choice here:
+
+> **A false merge is worse than a missed duplicate.**
+
+A missed duplicate costs ten seconds of scrolling. A false merge **deletes a real, applyable vacancy from
+the queue** and leaves nothing behind saying it existed.
+
+That rules out the obvious approach. No edit distance, no token-overlap ratio, no similarity threshold —
+every one of those merges `Backend Engineer` into `Backend Engineering Manager` at some tuning, because the
+difference between decoration and seniority is semantic, not lexical.
+
+**The heuristic actually used** (`domain/identity.ts`): strip only the decoration boards are *known* to add,
+then require an **exact** match on what remains, anchored on the employer.
+
+| Removed | Kept |
+|---------|------|
+| Gender markers: `(m/f/d)`, `(M/W/D)`, `Desarrollador/a` | Seniority: `Senior`, `Junior`, `Lead` |
+| Legal forms: `S.L.`, `S.A.`, `Inc.`, `GmbH`, `Ltd` | Level markers: `II`, `III` |
+| Location/remote tails: `- Madrid`, `\| Remote`, `(Madrid)` | Stack qualifiers: `(React)`, `(Java)` |
+
+Two extra safeguards:
+
+- **No employer, no merge.** With a blank company the key returns `null` rather than degrading into
+  `::junior developer::madrid`, which would collapse every anonymous posting in the queue into one. Adzuna
+  reaches that state on its own — its schema defaults `company` to the empty string, which is how
+  recruiter-posted ads routinely arrive.
+- **A parenthetical is dropped only when *every* word inside it is known noise.** `(Madrid)` goes,
+  `(German Market)` stays.
+
+So `Frontend Engineer (m/f/d)` at `Cabify S.L.` in `Madrid, Comunidad de Madrid, Spain` merges with
+`Frontend Engineer` at `Cabify` in `Madrid`. `Frontend Engineer` and `Frontend Engineer II` at the same
+company do **not**. Anything this misses stays in the queue as a visible duplicate — the cheap failure.
+
+## Known limitations
+
+- **`languageFit` is a heuristic.** It counts Spanish vs. English stopwords rather than doing real language detection. A Spanish ad that quotes a lot of English can be misread.
+- **The seniority body-penalty has false positives.** `"trabajarás junto a un equipo senior"` costs a junior posting a few points. The penalty is deliberately weaker for body matches than for title matches, but it is not zero.
+- **Cross-source dedupe is exact-after-canonicalization, so it misses reworded reposts on purpose.** See below.
+- **Company boards contribute few *junior engineering* roles.** A real 3-provider run over 28 boards returned 105 postings → 103 unique → 51 passed the software gate → **14** passed the junior filter. The rest were sales, marketing, finance and operations, or explicitly senior/principal/staff engineering roles. Company boards are the whole company, and the companies on this list hire mostly seniors.
+- **The newsletter source supports exactly one sender.** The JuniorJobs digest, because that is the only format a real saved email exists for. Everything else is skipped by name. This is the design, not a to-do — see [Why only one sender works today](#why-only-one-sender-works-today).
+- **A newsletter posting has no description beyond the sender's one-line sentence.** The junior filter therefore judges it almost entirely on the title. In practice this makes the filter *more permissive* for this source, which is the safe direction: on the real digest it excluded 0 of 200 postings on seniority, and the software gate did all the work (83 excluded).
+- **A newsletter cannot tell you the city.** The digest states a country and sometimes "100% remoto", so `location` is country-level. That means a newsletter posting will usually *not* cross-source-merge with the same vacancy from Adzuna, which reports `Madrid`. That is the conservative failure — a duplicate you scroll past, rather than a real vacancy deleted.
+- **Link resolution cannot resolve everything.** A real run resolved 199 of 212 links. The rest were expired postings and career sites that block automated requests; all 13 kept the newsletter's own link, which is what the user would have clicked anyway.
+- **A kept original link can still be dead, and nothing says so yet.** When the shortener's destination answers 404 or 403 the resolver correctly refuses to point at it and keeps the newsletter's URL — but the shortener passes that status through, so the apply button is a 404 the pipeline knows about and does not surface. The `status` is recorded in `.link-cache.json`; it is not yet carried into the queue, the CLI audit or the UI. The link audit is deliberately provenance-only and makes no requests, so it cannot see this either. This is the largest remaining hole in the apply-link guarantee.
+- **A resolved link is a link the employer answered, not a vacancy that is still open.** The pipeline does not verify that a posting is live, for newsletters or for any other source. A digest a week old will contain a few closed roles.
+- **Filter B reads the title for rank words, and the whole posting for years.** A body saying "you will work alongside our senior engineers" does not disqualify anything; a body saying "3 years of experience" does. `manager` and `responsable de` were considered for the title list and rejected as genuinely ambiguous in this market.
+- **The offline sample catalogue is invented data with non-resolving URLs** (`example-board.test`). It can no longer reach a real run at all (`--source=all` excludes it and mixing is refused), and wherever it *is* surfaced the CLI and the UI both mark it — banner plus per-row `[SAMPLE]` / `Ejemplo` badge. See [Sample data](#sample-data-never-shares-a-run-with-real-vacancies).
+- **The fixture source ignores `what` and `where`.** Every query returns the whole sample catalogue. This is what makes the offline demo collapse 105 postings into 14 unique ones.
+- **Sample ad copy is in Spanish.** That is the language of the market this parses; the code, comments and interface are English.
+- **Apply-tracking needs JavaScript.** The Apply anchor always opens the posting, but the click is only *recorded* when JS is enabled. Setting an outcome works without JS — it is a plain form post.
+- **The application log is single-process safe, not multi-process safe.** Writes are atomic and serialized within one Node process. Running the CLI and the web app at the same moment could still lose a write. Acceptable for a single-user local tool; it is the reason the repository interface exists.
+- **Response rates over small samples are noise.** The panel says so explicitly below 10 applications, and always shows the denominator next to the percentage.
+- **`next` pins an internal `postcss@8.4.31`** with known advisories. They concern build-time processing of attacker-supplied CSS; all CSS here is authored in-repo. Fixing it requires Next 16 (a breaking upgrade), so it is accepted rather than forced.

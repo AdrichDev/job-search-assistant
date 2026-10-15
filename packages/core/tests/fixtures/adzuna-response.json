@@ -1,0 +1,35 @@
+{
+  "count": 3,
+  "results": [
+    {
+      "id": "4820001",
+      "title": "Desarrollador Junior Frontend (React)",
+      "description": "Buscamos un desarrollador junior para nuestro equipo en Madrid. Stack React, TypeScript y Tailwind. Ingles B1.",
+      "created": "2026-09-05T09:00:00Z",
+      "redirect_url": "https://www.adzuna.es/land/ad/4820001",
+      "company": { "display_name": "ACME Software" },
+      "location": { "display_name": "Madrid, Comunidad de Madrid", "area": ["Spain", "Comunidad de Madrid", "Madrid"] },
+      "salary_min": 21000,
+      "salary_max": 25000,
+      "contract_type": "permanent"
+    },
+    {
+      "id": "4820002",
+      "title": "Senior .NET Engineer",
+      "description": "We need a senior engineer with 6 years of experience. Fluent English required.",
+      "created": "2026-08-20T09:00:00Z",
+      "redirect_url": "https://www.adzuna.es/land/ad/4820002",
+      "company": { "display_name": "Globex" },
+      "location": { "display_name": "Barcelona" }
+    },
+    {
+      "id": null,
+      "title": "Broken record with no usable id",
+      "description": "This entry must be skipped instead of crashing the run.",
+      "created": "2026-09-01T09:00:00Z",
+      "redirect_url": "https://www.adzuna.es/land/ad/broken",
+      "company": { "display_name": "Nope" },
+      "location": { "display_name": "Madrid" }
+    }
+  ]
+}

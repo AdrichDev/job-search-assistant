@@ -1,0 +1,16 @@
+{
+  "name": "@job-queue/e2e",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end browser tests driving the real web app against isolated fixture data.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
