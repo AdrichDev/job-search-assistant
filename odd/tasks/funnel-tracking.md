@@ -17,7 +17,7 @@ Measure the whole job-search funnel (not only post-application outcomes), attrib
 - [x] T2 (S2) Source ids on Application. Route: inline, test-first. Commit: 136f521. Evidence: RED 3 expected failures, GREEN; typecheck clean; core 988, web 84 pass. Legacy log without sourceIds loads as [].
 - [x] T3 (S3) Per-source stats and panel. Route: inline, test-first. Commit: cf4047d. Evidence: RED 1 expected failure, GREEN 9/9 focused; typecheck passed; core 989 and web 84 passed. Multi-source vacancies credit every source; legacy records use unknown.
 - [x] T4 (S4) Dismissal reason. Route: inline, test-first. Commit: 68fbfc4. Evidence: RED domain/persistence/web; GREEN focal core 21/21 and web 17/17; typecheck passed; full core 991 and web 85. Legacy rows load without reason; invalid reasons write nothing.
-- [ ] T5 (S5, S6) Funnel stats, panel, docs. Route: inline, test-first. Commit: pending
+- [x] T5 (S5, S6) Funnel stats, panel, docs. Route: inline, test-first. Commit: cfd1b2c. Evidence: RED 1 expected failure; GREEN focal 10/10; typecheck passed; full core 992 and web 85. Surface count uses unique job ids across queue, applications and dismissals; README updated.
 
 ## Log
 - L1 (user, verbatim): "Hzlo como creas que es mas operativo y renemos que revisar la deuda"
