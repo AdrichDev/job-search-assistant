@@ -42,11 +42,11 @@ Prepare the project for its first safe public push without publishing personal d
   - Record the intended routes for Knowmad Mood, InfoJobs, Tecnoempleo, Indeed, Michael Page, LinkedIn, and Experteer.
   - Evidence: added `docs/sources.md` (allowed routes, rejected routes, per-portal intended route) and linked it from the README.
 
-- [ ] 5. Verify the first public candidate
+- [x] 5. Verify the first public candidate
   - Run typecheck, unit/integration tests, build, and E2E tests.
   - Re-run secret/PII scans over the exact staged candidate.
   - Review the exact first-commit file list.
-  - Evidence: pending.
+  - Evidence: `npm run build` OK; typecheck OK; tests core 985 / web 84; e2e 62 passed; 252 tracked files, none from the ignored set (.env, output/, applications/dismissals, liveness cache, agent tooling, local profile, raw newsletters); content scan of tracked files found no personal email, keys or tokens; `.env.example` holds only empty placeholders; all commits authored with the GitHub noreply identity.
 
 - [ ] 6. Publish and rename the local workspace
   - Fast-forward the verified work onto `main` without a pull request.
