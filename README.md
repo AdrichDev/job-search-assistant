@@ -337,6 +337,8 @@ Shared runtime data lives at the workspace root: `data/` (fixture, application l
 
 ## What it will never do
 
+See [docs/sources.md](docs/sources.md) for the full safe source boundary: allowed routes, rejected routes and the intended route per portal.
+
 This project does **not** touch LinkedIn. No scraping, no automation, no login, no LinkedIn HTTP calls. LinkedIn's User Agreement §8.2 prohibits automated access, and the penalty is a permanent account ban — an unacceptable risk for someone whose job search depends on that account. The same rule applies to Adzuna, Greenhouse, Lever, Ashby and every other board: they are read through their public APIs and never driven through a browser.
 
 **Where the browser-automation line actually sits.** The ban is on automating *someone else's* site. Driving a browser against *our own* app on localhost is a different act with none of the same consequences, and it is how the E2E suite works. The two rules together:

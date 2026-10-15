@@ -36,11 +36,11 @@ Prepare the project for its first safe public push without publishing personal d
   - Keep single-user local persistence explicit and document its multi-process limit.
   - Evidence: new `adapters/pipeline/source-composition.ts` holds the single source-factory table, link resolver and link checker builders; `cli/main.ts` and `queue-pipeline-runner.ts` now only inject logger/clock (CLI keeps its provenance hook). Added `pipeline-source-composition.test.ts` (5 tests). README documents the module and the multi-process limit. typecheck OK; core 985, web 84, e2e 62 passed. Dependency direction unchanged (architecture purity test passes).
 
-- [ ] 4. Define the safe source boundary
+- [x] 4. Define the safe source boundary
   - Document supported official APIs, employer ATS endpoints, email alerts, and manual import.
   - Explicitly reject unauthorized LinkedIn/Indeed scraping and automatic application.
   - Record the intended routes for Knowmad Mood, InfoJobs, Tecnoempleo, Indeed, Michael Page, LinkedIn, and Experteer.
-  - Evidence: pending.
+  - Evidence: added `docs/sources.md` (allowed routes, rejected routes, per-portal intended route) and linked it from the README.
 
 - [ ] 5. Verify the first public candidate
   - Run typecheck, unit/integration tests, build, and E2E tests.
