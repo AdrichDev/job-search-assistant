@@ -16,6 +16,7 @@ Prepare the project for its first safe public push without publishing personal d
 - [x] 1. Sanitize the public source boundary
   - Status: done. Independent `gentle-ai-verify` (anthropic/claude-opus-5-5) returned PASS on all 5 criteria, no blockers. Commit deliberately deferred: the repository has no commits yet, so the first commit must not contain the obsolete artifacts removed in Task 2 (`scripts/scrape-newsletter.ts`, `data/newsletter-2026-09-06.txt`). Task 1 and Task 2 will land as consecutive work-unit commits right after Task 2.
   - Note: ignored local files under `output/` still contain the real name; they are gitignored and must never be force-added.
+  - Commit: 77b1d77 (shared with Task 2 because the repository had no prior commits; author is the GitHub noreply identity, set locally for this repository).
   - Ignore generated liveness state, raw newsletters, local agent configuration, and repository-local personal configuration.
   - Replace the embedded candidate identity with a safe committed example/default and a local override seam.
   - Replace personal names in tests with fictional fixtures.
@@ -27,7 +28,7 @@ Prepare the project for its first safe public push without publishing personal d
   - Remove the duplicate root newsletter input and the superseded standalone newsletter scraping script if no production path depends on them.
   - Keep only the maintained newsletter adapter and synthetic test fixtures.
   - Remove or ignore generated link/liveness caches and obsolete generated reports.
-  - Evidence: removed `scripts/scrape-newsletter.ts`, `data/newsletter-2026-09-06.txt` (identical duplicate of `data/newsletters/` copy) and the `scrape:newsletter` npm script; added synthetic `packages/core/tests/fixtures/juniorjobs-digest.synthetic.txt` (212 tokens anonymized) and repointed `juniorjobs-digest.test.ts` (20/20); `data/newsletters/*` ignored except README; README updated; typecheck OK; tests core 980, web 84.
+  - Evidence: removed `scripts/scrape-newsletter.ts`, `data/newsletter-2026-09-06.txt` (identical duplicate of `data/newsletters/` copy) and the `scrape:newsletter` npm script; added synthetic `packages/core/tests/fixtures/juniorjobs-digest.synthetic.txt` (212 tokens anonymized) and repointed `juniorjobs-digest.test.ts` (20/20); `data/newsletters/*` ignored except README; README updated; typecheck OK; tests core 980, web 84. Commit: 77b1d77.
 
 - [ ] 3. Consolidate critical architecture debt
   - Eliminate avoidable duplication between CLI and web source composition where a bounded shared seam is safe.
