@@ -131,13 +131,17 @@ function requireDismissals(deps: WriteDeps): DismissalRepository {
  * at any time - see `dismissal-view.ts` for why that is the shape of the whole
  * feature rather than a nicety.
  */
-export async function dismissOffer(jobId: unknown, deps: WriteDeps): Promise<ActionOutcome> {
+export async function dismissOffer(
+  jobId: unknown,
+  deps: WriteDeps,
+  reason?: unknown,
+): Promise<ActionOutcome> {
   if (typeof jobId !== 'string') {
     return { ok: false, message: ACTION_MESSAGES.missingJobId };
   }
 
   const result = await dismissJob(
-    { jobId },
+    { jobId, ...(reason === undefined ? {} : { reason }) },
     {
       dismissals: requireDismissals(deps),
       applications: deps.applicationRepository,
@@ -156,6 +160,8 @@ export async function dismissOffer(jobId: unknown, deps: WriteDeps): Promise<Act
       return { ok: false, message: ACTION_MESSAGES.cannotDismissApplied };
     case 'conflict_unknown':
       return { ok: false, message: ACTION_MESSAGES.dismissConflictUnknown };
+    case 'invalid_reason':
+      return { ok: false, message: ACTION_MESSAGES.invalidDismissalReason };
     case 'unknown_job':
       return { ok: false, message: ACTION_MESSAGES.unknownJob };
     case 'queue_unavailable':

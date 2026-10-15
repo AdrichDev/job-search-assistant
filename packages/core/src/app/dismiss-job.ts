@@ -1,4 +1,8 @@
-import type { Dismissal } from '../domain/dismissal.js';
+import {
+  isDismissalReason,
+  type Dismissal,
+  type DismissalReason,
+} from '../domain/dismissal.js';
 import type { ApplicationRepository } from '../ports/application-repository.js';
 import type { DismissalRepository } from '../ports/dismissal-repository.js';
 import type { JobQueue } from '../ports/queue-writer.js';
@@ -36,6 +40,8 @@ import type { JobQueue } from '../ports/queue-writer.js';
 
 export interface DismissJobInput {
   readonly jobId: string;
+  /** Unknown at the boundary; validated here before anything is written. */
+  readonly reason?: unknown;
 }
 
 export interface DismissJobDeps {
@@ -52,6 +58,7 @@ export type DismissJobResult =
   | { readonly status: 'already_applied'; readonly jobId: string }
   | { readonly status: 'unknown_job'; readonly jobId: string }
   | { readonly status: 'queue_unavailable' }
+  | { readonly status: 'invalid_reason' }
   /**
    * The application log could not be read, so the conflict above cannot be
    * ruled out.
@@ -70,6 +77,14 @@ export async function dismissJob(
   const jobId = input.jobId.trim();
   if (jobId.length === 0) {
     return { status: 'unknown_job', jobId };
+  }
+
+  let reason: DismissalReason | undefined;
+  if (input.reason !== undefined && input.reason !== '') {
+    if (!isDismissalReason(input.reason)) {
+      return { status: 'invalid_reason' };
+    }
+    reason = input.reason;
   }
 
   const queue = await deps.loadQueue();
@@ -103,6 +118,7 @@ export async function dismissJob(
     dismissedAt: deps.now(),
     title: entry.title,
     company: entry.company,
+    ...(reason === undefined ? {} : { reason }),
   });
 
   return { status: 'dismissed', dismissal, created };

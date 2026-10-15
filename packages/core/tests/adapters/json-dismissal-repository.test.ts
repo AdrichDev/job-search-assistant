@@ -56,6 +56,19 @@ describe('createJsonDismissalRepository', () => {
     });
   });
 
+  it('round-trips a reason and loads legacy entries without one', async () => {
+    await repository.dismiss({ ...draft('a::b::c'), reason: 'location' });
+    expect((await repository.list())[0]?.reason).toBe('location');
+
+    const legacyPath = join(directory, 'legacy.json');
+    await writeFile(legacyPath, JSON.stringify({
+      version: 1,
+      dismissals: [{ jobId: 'old::job::x', dismissedAt: NOW.toISOString(), title: 'Old', company: 'ACME' }],
+    }));
+    const legacy = await createJsonDismissalRepository({ filePath: legacyPath }).list();
+    expect(legacy[0]?.reason).toBeUndefined();
+  });
+
   it('is idempotent: dismissing twice records ONE dismissal', async () => {
     const first = await repository.dismiss(draft('a::b::c'));
     const second = await repository.dismiss(draft('a::b::c', LATER));

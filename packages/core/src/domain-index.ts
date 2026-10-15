@@ -34,10 +34,13 @@ export {
 } from './domain/application-stats.js';
 
 export {
+  DISMISSAL_REASONS,
   createDismissal,
   indexDismissalsByJobId,
+  isDismissalReason,
   type Dismissal,
   type DismissalDraft,
+  type DismissalReason,
 } from './domain/dismissal.js';
 
 export {

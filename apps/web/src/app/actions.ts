@@ -66,8 +66,11 @@ export async function setOutcomeAction(formData: FormData): Promise<void> {
   revalidatePath('/');
 }
 
-export async function dismissOfferAction(jobId: string): Promise<ActionOutcome> {
-  const result = await dismissOffer(jobId, deps());
+export async function dismissOfferAction(
+  jobId: string,
+  reason?: string,
+): Promise<ActionOutcome> {
+  const result = await dismissOffer(jobId, deps(), reason);
   if (result.ok) {
     revalidatePath('/');
   }

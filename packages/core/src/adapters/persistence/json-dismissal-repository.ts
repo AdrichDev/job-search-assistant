@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { createJsonLogStore } from './json-log-store.js';
-import { createDismissal, type Dismissal, type DismissalDraft } from '../../domain/dismissal.js';
+import {
+  DISMISSAL_REASONS,
+  createDismissal,
+  type Dismissal,
+  type DismissalDraft,
+} from '../../domain/dismissal.js';
 import type { DismissResult, DismissalRepository } from '../../ports/dismissal-repository.js';
 
 /**
@@ -23,6 +28,7 @@ const dismissalSchema = z.object({
   dismissedAt: isoDate,
   title: z.string(),
   company: z.string(),
+  reason: z.enum(DISMISSAL_REASONS).optional(),
 });
 
 export interface JsonDismissalRepositoryOptions {
@@ -35,6 +41,7 @@ function serialize(dismissal: Dismissal) {
     dismissedAt: dismissal.dismissedAt.toISOString(),
     title: dismissal.title,
     company: dismissal.company,
+    ...(dismissal.reason === undefined ? {} : { reason: dismissal.reason }),
   };
 }
 
@@ -52,7 +59,8 @@ export function createJsonDismissalRepository(
     label: 'dismissal',
     entriesKey: 'dismissals',
     entrySchema: dismissalSchema,
-    revive: (entry) => createDismissal(entry),
+    revive: ({ reason, ...entry }) =>
+      createDismissal({ ...entry, ...(reason === undefined ? {} : { reason }) }),
     serialize,
   });
 

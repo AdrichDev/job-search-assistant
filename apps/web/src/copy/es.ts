@@ -109,6 +109,7 @@ const ACTION_RESULT: Record<ActionMessage, string> = {
    */
   [ACTION_MESSAGES.dismissed]: 'Oferta descartada. Puedes recuperarla cuando quieras.',
   [ACTION_MESSAGES.alreadyDismissed]: 'Ya estaba descartada.',
+  [ACTION_MESSAGES.invalidDismissalReason]: 'El motivo de descarte no es válido.',
   [ACTION_MESSAGES.cannotDismissApplied]:
     'Ya te postulaste a esta oferta. Registra su resultado en lugar de descartarla.',
   [ACTION_MESSAGES.dismissConflictUnknown]:
@@ -309,6 +310,16 @@ export const ES = {
   dismiss: {
     action: 'Descartar',
     pending: 'Descartando…',
+    reasonLabel: 'Motivo (opcional)',
+    reasonPlaceholder: 'Sin especificar',
+    reasonOptions: {
+      role_mismatch: 'El puesto no encaja',
+      seniority_mismatch: 'Nivel de experiencia inadecuado',
+      stack_mismatch: 'Tecnologías que no encajan',
+      location: 'Ubicación o modalidad',
+      compensation: 'Salario o condiciones',
+      other: 'Otro motivo',
+    },
     hint: 'No te la volveremos a mostrar. Puedes recuperarla cuando quieras.',
     screenReader: (title: string) =>
       `Descartar la oferta de ${title}. Se oculta de la lista y puedes recuperarla en «Ofertas descartadas».`,

@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  DISMISSAL_REASONS,
+  isDismissalReason,
+  type DismissalReason,
+} from '@job-queue/core/domain';
 import { useState, useTransition } from 'react';
 import { dismissOfferAction } from '@/app/actions';
 import { ES, translateActionMessage } from '@/copy/es';
@@ -82,6 +87,7 @@ export function DismissButton({
 }) {
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [reason, setReason] = useState<DismissalReason | ''>('');
 
   if (applied) {
     return (
@@ -98,7 +104,7 @@ export function DismissButton({
 
   function handleDismiss() {
     startTransition(async () => {
-      const result = await dismissOfferAction(jobId);
+      const result = await dismissOfferAction(jobId, reason || undefined);
       // Kept on a successful dismiss too: `revalidatePath` re-renders the page
       // without this card, so the message is only ever read on the paths where
       // the card SURVIVES - which are exactly the ones worth explaining.
@@ -108,6 +114,23 @@ export function DismissButton({
 
   return (
     <div className="flex w-full flex-col gap-1 sm:w-auto sm:items-end">
+      <label className="w-full text-xs text-slate-600 sm:w-56">
+        <span className="sr-only">{ES.dismiss.reasonLabel}</span>
+        <select
+          value={reason}
+          disabled={isPending}
+          onChange={(event) => {
+            const value = event.target.value;
+            if (value === '' || isDismissalReason(value)) setReason(value);
+          }}
+          className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700"
+        >
+          <option value="">{ES.dismiss.reasonPlaceholder}</option>
+          {DISMISSAL_REASONS.map((option) => (
+            <option key={option} value={option}>{ES.dismiss.reasonOptions[option]}</option>
+          ))}
+        </select>
+      </label>
       <button
         type="button"
         onClick={handleDismiss}

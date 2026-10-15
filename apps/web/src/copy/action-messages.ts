@@ -25,6 +25,7 @@ export const ACTION_MESSAGES = {
   /* Dismissal -------------------------------------------------------- */
   dismissed: 'Offer dismissed.',
   alreadyDismissed: 'Already dismissed earlier.',
+  invalidDismissalReason: 'That is not a valid dismissal reason.',
   /**
    * The applied-and-dismissed conflict, as the human reads it.
    *

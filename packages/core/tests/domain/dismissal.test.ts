@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createDismissal,
   indexDismissalsByJobId,
+  isDismissalReason,
   type Dismissal,
 } from '../../src/domain/dismissal.js';
 
@@ -31,6 +32,16 @@ describe('createDismissal', () => {
       title: 'Junior Frontend Developer',
       company: 'ACME',
     });
+  });
+
+  it('keeps an optional closed-list reason', () => {
+    const dismissal = createDismissal({
+      jobId: 'a::b::c', dismissedAt: NOW, title: 't', company: 'c', reason: 'stack_mismatch',
+    });
+
+    expect(dismissal.reason).toBe('stack_mismatch');
+    expect(isDismissalReason('stack_mismatch')).toBe(true);
+    expect(isDismissalReason('made_up')).toBe(false);
   });
 
   it('trims the job id, exactly as the application factory does', () => {

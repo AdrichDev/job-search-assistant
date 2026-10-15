@@ -22,6 +22,21 @@
  * title and company per row is cheap; an unreadable, un-restorable row is not.
  */
 
+export const DISMISSAL_REASONS = [
+  'role_mismatch',
+  'seniority_mismatch',
+  'stack_mismatch',
+  'location',
+  'compensation',
+  'other',
+] as const;
+
+export type DismissalReason = (typeof DISMISSAL_REASONS)[number];
+
+export function isDismissalReason(value: unknown): value is DismissalReason {
+  return typeof value === 'string' && (DISMISSAL_REASONS as readonly string[]).includes(value);
+}
+
 export interface Dismissal {
   /** Matches `Job.id` and `Application.jobId`. One dismissal per vacancy. */
   readonly jobId: string;
@@ -30,6 +45,8 @@ export interface Dismissal {
   readonly title: string;
   /** Who it was with when it was dismissed. */
   readonly company: string;
+  /** Optional because choosing a reason must never block the reversible action. */
+  readonly reason?: DismissalReason;
 }
 
 export interface DismissalDraft {
@@ -37,6 +54,7 @@ export interface DismissalDraft {
   readonly dismissedAt: Date;
   readonly title: string;
   readonly company: string;
+  readonly reason?: DismissalReason;
 }
 
 /**
@@ -69,6 +87,7 @@ export function createDismissal(draft: DismissalDraft): Dismissal {
     dismissedAt: draft.dismissedAt,
     title: title.length === 0 ? UNKNOWN_TITLE : title,
     company: company.length === 0 ? UNKNOWN_COMPANY : company,
+    ...(draft.reason === undefined ? {} : { reason: draft.reason }),
   };
 }
 

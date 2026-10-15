@@ -116,8 +116,8 @@ describe('dismissOffer', () => {
     expect(await dismissals.list()).toHaveLength(1);
   });
 
-  it('writes the dismissal to disk with the server-side snapshot', async () => {
-    await dismissOffer(JOB_ID, deps);
+  it('writes the dismissal to disk with the server-side snapshot and validated reason', async () => {
+    await dismissOffer(JOB_ID, deps, 'stack_mismatch');
     const stored: unknown = JSON.parse(await readFile(dismissalPath, 'utf8'));
 
     expect(stored).toMatchObject({
@@ -128,9 +128,16 @@ describe('dismissOffer', () => {
           title: 'Junior Frontend Developer',
           company: 'ACME Digital',
           dismissedAt: NOW.toISOString(),
+          reason: 'stack_mismatch',
         },
       ],
     });
+  });
+
+  it('rejects a dismissal reason outside the closed list without writing', async () => {
+    const result = await dismissOffer(JOB_ID, deps, 'invented');
+    expect(result.ok).toBe(false);
+    expect(await dismissals.list()).toEqual([]);
   });
 
   it('hides the offer from the visible queue immediately', async () => {
