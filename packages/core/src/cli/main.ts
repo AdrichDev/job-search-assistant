@@ -1,36 +1,20 @@
-import { createAdzunaJobSource } from '../adapters/adzuna/adzuna-job-source.js';
-import { createArbeitnowJobSource } from '../adapters/arbeitnow/arbeitnow-job-source.js';
-import { createAshbyJobSource } from '../adapters/boards/ashby-board.js';
-import { createGreenhouseJobSource } from '../adapters/boards/greenhouse-board.js';
-import { createLandingJobsSource } from '../adapters/landingjobs/landingjobs-job-source.js';
-import { createLeverJobSource } from '../adapters/boards/lever-board.js';
-import { createManfredJobSource } from '../adapters/manfred/manfred-job-source.js';
-import { createSmartRecruitersJobSource } from '../adapters/boards/smartrecruiters-board.js';
-import { createFixtureJobSource } from '../adapters/fixture/fixture-job-source.js';
-import { createHttpLinkChecker } from '../adapters/liveness/http-link-checker.js';
-import { createJsonLivenessCache } from '../adapters/liveness/json-liveness-cache.js';
-import { createJsonLinkCache } from '../adapters/newsletter/json-link-cache.js';
-import {
-  createPassthroughLinkResolver,
-  createRedirectLinkResolver,
-  type LinkResolver,
-} from '../adapters/newsletter/link-resolver.js';
-import {
-  createNewsletterJobSource,
-  type LinkProvenance,
-  type NewsletterJobSource,
-} from '../adapters/newsletter/newsletter-job-source.js';
 import { consoleLogger } from '../adapters/logging/console-logger.js';
 import { createJsonFileQueueReader } from '../adapters/output/json-file-queue-reader.js';
 import { createJsonFileQueueWriter } from '../adapters/output/json-file-queue-writer.js';
 import { createJsonApplicationRepository } from '../adapters/persistence/json-application-repository.js';
+import type {
+  LinkProvenance,
+  NewsletterJobSource,
+} from '../adapters/newsletter/newsletter-job-source.js';
+import {
+  buildLinkChecker as buildSharedLinkChecker,
+  buildSourceFactories,
+  type SourceCompositionOptions,
+} from '../adapters/pipeline/source-composition.js';
 import { buildJobQueue } from '../app/build-job-queue.js';
 import { persistQueue } from '../app/persist-queue.js';
 import { loadCandidateProfile } from '../config/candidate-profile.js';
-import { loadAdzunaCredentials, loadDotEnv } from '../config/env.js';
-import { companiesFor } from '../config/company-boards.js';
-import { DEFAULT_LIVENESS_CONCURRENCY } from '../adapters/liveness/http-link-checker.js';
-import { DEFAULT_NEWSLETTER_LINK_CONCURRENCY } from '../config/newsletter.js';
+import { loadDotEnv } from '../config/env.js';
 import { DEFAULT_JUNIOR_FILTER_CONFIG } from '../config/junior-filter-config.js';
 import { DEFAULT_SCORING_CONFIG } from '../config/scoring-config.js';
 import { DEFAULT_SEARCH_PLAN } from '../config/search-plan.js';
@@ -38,7 +22,6 @@ import type { JobSource } from '../ports/job-source.js';
 import type { LinkChecker } from '../ports/link-checker.js';
 import { exitCodeFor } from './exit-code.js';
 import { USAGE, parseCliOptions, type CliOptions } from './options.js';
-import type { SelectableSourceId } from './source-selection.js';
 import {
   renderExcludedTable,
   renderLinkAudit,
@@ -57,150 +40,45 @@ import {
  * import time - anything defined here is, by construction, untestable.
  */
 
-/**
- * Builds one `JobSource` per selected provider.
- *
- * The three board factories share a shape because they share a problem: a
- * per-company API with no key, no search endpoint and no rate limit worth
- * relying on. Concurrency and timeout are passed explicitly rather than left to
- * each adapter, so "be polite to free endpoints" is one decision made once.
- */
-/**
- * The link resolver the newsletter source will use.
- *
- * Redirect-following unless the user explicitly opted out with
- * `--no-resolve-links`. Still framed as a choice made HERE, in the composition
- * root, rather than a default buried in the adapter: "does this program talk to
- * the internet" is not a decision an adapter gets to make quietly on the user's
- * behalf. The adapter's own default remains passthrough, so a caller that
- * forgets to pass a resolver makes no requests.
- *
- * What changed is which way the CLI leans. A `short.gy` tracking URL is not an
- * address the candidate can apply at; it is a redirect owned by a third party,
- * and one of them was already observed answering 404. The employer's own
- * posting is the thing the apply button is for.
- */
-function buildLinkResolver(options: CliOptions): LinkResolver {
-  if (!options.resolveLinks) {
-    return createPassthroughLinkResolver();
-  }
-
-  return createRedirectLinkResolver({
-    cache: createJsonLinkCache({ filePath: options.linkCachePath }),
-    logger: consoleLogger,
-    now: () => new Date(),
-    concurrency: DEFAULT_NEWSLETTER_LINK_CONCURRENCY,
-    timeoutMs: options.timeoutMs,
-  });
-}
-
-/**
- * The liveness checker, chosen HERE rather than defaulted inside the app layer.
- *
- * Same posture as the resolver above and for the same reason: "does this
- * program talk to the internet" is not a decision a use case gets to make
- * quietly on the user's behalf. `buildJobQueue` receives a checker or it
- * receives nothing, and receiving nothing removes nothing.
- *
- * On by default. That is defensible only because the removal rule is as narrow
- * as it is - 404 and 410, nothing else - so the worst a checking run can do on
- * a bad network is mark some postings unverified. It cannot delete anything it
- * has not proved.
- */
-function buildLinkChecker(options: CliOptions): LinkChecker | undefined {
-  if (!options.checkLinks) {
-    /*
-     * `undefined`, not a do-nothing checker. That is the ONLY way to say "off",
-     * and having a second way is what made a `--no-check-links` run print
-     * "Link liveness: 0 checked, 0 reachable" - a report about a pass that
-     * never happened, which the pipeline could not distinguish from a pass
-     * whose every answer came back empty.
-     */
-    return undefined;
-  }
-
-  return createHttpLinkChecker({
-    cache: createJsonLivenessCache({ filePath: options.livenessCachePath }),
-    logger: consoleLogger,
-    now: () => new Date(),
-    concurrency: DEFAULT_LIVENESS_CONCURRENCY,
-    timeoutMs: options.timeoutMs,
-  });
-}
-
 interface BuiltSources {
   readonly sources: readonly JobSource[];
   /** Kept so the run can report link provenance. `null` when not selected. */
   readonly newsletter: NewsletterJobSource | null;
 }
 
-function buildSources(options: CliOptions): BuiltSources {
-  const boardOptions = {
-    logger: consoleLogger,
+/**
+ * The CLI's view of the shared source composition.
+ *
+ * Whether this program talks to the internet (`--no-resolve-links`,
+ * `--no-check-links`) is decided here from the user's flags, then handed to the
+ * shared factories rather than defaulted inside an adapter.
+ */
+function compositionOptions(options: CliOptions): SourceCompositionOptions {
+  return {
+    fixturePath: options.fixturePath,
+    newsletterDir: options.newsletterDir,
+    linkCachePath: options.linkCachePath,
+    livenessCachePath: options.livenessCachePath,
+    resolveLinks: options.resolveLinks,
+    checkLinks: options.checkLinks,
     concurrency: options.concurrency,
     timeoutMs: options.timeoutMs,
+    logger: consoleLogger,
     now: () => new Date(),
   };
+}
 
+function buildLinkChecker(options: CliOptions): LinkChecker | undefined {
+  return buildSharedLinkChecker(compositionOptions(options));
+}
+
+function buildSources(options: CliOptions): BuiltSources {
   let newsletter: NewsletterJobSource | null = null;
-
-  const factories: Readonly<Record<SelectableSourceId, () => JobSource>> = {
-    fixture: () =>
-      createFixtureJobSource({ filePath: options.fixturePath, now: () => new Date() }),
-
-    adzuna: () => {
-      // Credentials are validated here, before a single request is issued.
-      const credentials = loadAdzunaCredentials();
-      return createAdzunaJobSource({
-        appId: credentials.appId,
-        appKey: credentials.appKey,
-        logger: consoleLogger,
-        ...(credentials.baseUrl === undefined ? {} : { baseUrl: credentials.baseUrl }),
-      });
+  const factories = buildSourceFactories(compositionOptions(options), {
+    onNewsletter: (source) => {
+      newsletter = source;
     },
-
-    manfred: () =>
-      createManfredJobSource({
-        logger: consoleLogger,
-        timeoutMs: options.timeoutMs,
-        concurrency: options.concurrency,
-        now: () => new Date(),
-      }),
-
-    greenhouse: () =>
-      createGreenhouseJobSource({ ...boardOptions, companies: companiesFor('greenhouse') }),
-    lever: () => createLeverJobSource({ ...boardOptions, companies: companiesFor('lever') }),
-    ashby: () => createAshbyJobSource({ ...boardOptions, companies: companiesFor('ashby') }),
-    smartrecruiters: () =>
-      createSmartRecruitersJobSource({
-        ...boardOptions,
-        companies: companiesFor('smartrecruiters'),
-      }),
-
-    landingjobs: () =>
-      createLandingJobsSource({
-        logger: consoleLogger,
-        timeoutMs: options.timeoutMs,
-        now: () => new Date(),
-      }),
-
-    arbeitnow: () =>
-      createArbeitnowJobSource({
-        logger: consoleLogger,
-        timeoutMs: options.timeoutMs,
-        now: () => new Date(),
-      }),
-
-    newsletter: () => {
-      newsletter = createNewsletterJobSource({
-        directory: options.newsletterDir,
-        logger: consoleLogger,
-        now: () => new Date(),
-        linkResolver: buildLinkResolver(options),
-      });
-      return newsletter;
-    },
-  };
+  });
 
   const sources = options.sources.map((id) => factories[id]());
   return { sources, newsletter };

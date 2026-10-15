@@ -30,11 +30,11 @@ Prepare the project for its first safe public push without publishing personal d
   - Remove or ignore generated link/liveness caches and obsolete generated reports.
   - Evidence: removed `scripts/scrape-newsletter.ts`, `data/newsletter-2026-09-06.txt` (identical duplicate of `data/newsletters/` copy) and the `scrape:newsletter` npm script; added synthetic `packages/core/tests/fixtures/juniorjobs-digest.synthetic.txt` (212 tokens anonymized) and repointed `juniorjobs-digest.test.ts` (20/20); `data/newsletters/*` ignored except README; README updated; typecheck OK; tests core 980, web 84. Commit: 77b1d77.
 
-- [ ] 3. Consolidate critical architecture debt
+- [x] 3. Consolidate critical architecture debt
   - Eliminate avoidable duplication between CLI and web source composition where a bounded shared seam is safe.
   - Preserve the dependency direction `adapters -> app -> ports -> domain`.
   - Keep single-user local persistence explicit and document its multi-process limit.
-  - Evidence: pending.
+  - Evidence: new `adapters/pipeline/source-composition.ts` holds the single source-factory table, link resolver and link checker builders; `cli/main.ts` and `queue-pipeline-runner.ts` now only inject logger/clock (CLI keeps its provenance hook). Added `pipeline-source-composition.test.ts` (5 tests). README documents the module and the multi-process limit. typecheck OK; core 985, web 84, e2e 62 passed. Dependency direction unchanged (architecture purity test passes).
 
 - [ ] 4. Define the safe source boundary
   - Document supported official APIs, employer ATS endpoints, email alerts, and manual import.

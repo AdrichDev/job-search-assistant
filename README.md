@@ -478,6 +478,8 @@ packages/core/src/
       html-text.ts        Description-field decoder (no HTML parser dependency)
       greenhouse-board.ts / lever-board.ts / ashby-board.ts
     fixture/         Offline adapter reading committed sample data
+    pipeline/        source-composition.ts: the ONE table turning source ids into
+                     JobSources, shared by the CLI and the web fetch button
     output/          JSON queue writer + zod-validated reader
     persistence/     JSON application log with atomic writes
     logging/         Console logger (writes to stderr)
@@ -881,6 +883,6 @@ company do **not**. Anything this misses stays in the queue as a visible duplica
 - **The fixture source ignores `what` and `where`.** Every query returns the whole sample catalogue. This is what makes the offline demo collapse 105 postings into 14 unique ones.
 - **Sample ad copy is in Spanish.** That is the language of the market this parses; the code, comments and interface are English.
 - **Apply-tracking needs JavaScript.** The Apply anchor always opens the posting, but the click is only *recorded* when JS is enabled. Setting an outcome works without JS — it is a plain form post.
-- **The application log is single-process safe, not multi-process safe.** Writes are atomic and serialized within one Node process. Running the CLI and the web app at the same moment could still lose a write. Acceptable for a single-user local tool; it is the reason the repository interface exists.
+- **The application log is single-process safe, not multi-process safe.** Writes are atomic and serialized within one Node process. Running the CLI and the web app at the same moment could still lose a write; run only one at a time. Acceptable for a single-user local tool; it is the reason the repository interface exists. The same limit applies to the queue, liveness and link caches.
 - **Response rates over small samples are noise.** The panel says so explicitly below 10 applications, and always shows the denominator next to the percentage.
 - **`next` pins an internal `postcss@8.4.31`** with known advisories. They concern build-time processing of attacker-supplied CSS; all CSS here is authored in-repo. Fixing it requires Next 16 (a breaking upgrade), so it is accepted rather than forced.
