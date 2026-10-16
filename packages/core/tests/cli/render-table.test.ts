@@ -177,7 +177,44 @@ describe('renderRunSummary', () => {
     // has to say which one fired rather than reporting a single total.
     expect(summary).toContain('Filtered out 1 of 4');
     expect(summary).toContain('1 not software');
-    expect(summary).toContain('0 not junior-eligible');
+    expect(summary).toContain('0 outside Madrid/remote-from-Spain');
+    expect(summary).toContain('0 asking for over 2 years');
+    expect(summary).toContain('0 senior/lead/manager');
+  });
+
+  it('breaks the hard eligibility exclusions down by code', () => {
+    const gated = queue({
+      totalRelevant: 4,
+      totalJuniorEligible: 1,
+      excluded: [
+        excluded({ excludedBy: 'location_incompatible' }),
+        excluded({ excludedBy: 'experience_over_limit' }),
+        excluded({ excludedBy: 'experience_over_limit' }),
+        excluded({ excludedBy: 'seniority_excluded' }),
+      ],
+    });
+    const summary = renderRunSummary(gated);
+
+    expect(summary).toContain('1 outside Madrid/remote-from-Spain');
+    expect(summary).toContain('2 asking for over 2 years');
+    expect(summary).toContain('1 senior/lead/manager');
+  });
+
+  it('labels each hard eligibility code in the excluded table', () => {
+    const output = renderExcludedTable(
+      queue({
+        excluded: [
+          excluded({ excludedBy: 'location_incompatible', reason: 'on-site outside Madrid (barcelona)' }),
+          excluded({ excludedBy: 'experience_over_limit' }),
+          excluded({ excludedBy: 'seniority_excluded' }),
+        ],
+      }),
+    );
+
+    expect(output).toContain('location');
+    expect(output).toContain('experience');
+    expect(output).toContain('seniority');
+    expect(output).toContain('barcelona');
   });
 
   it('reports the full offer count next to the shown count', () => {

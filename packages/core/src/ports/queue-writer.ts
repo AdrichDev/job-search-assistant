@@ -102,7 +102,21 @@ export interface QueueEntry {
  * answered 404 or 410. Nothing about the candidate or the vacancy failed - the
  * vacancy simply is not there any more.
  */
-export type ExclusionFilter = 'software_relevance' | 'junior_eligibility' | 'dead_link';
+export type ExclusionFilter =
+  | 'software_relevance'
+  /**
+   * LEGACY. Written by queues produced before the unified hard eligibility
+   * filter split this verdict into the three stable codes below. Still readable
+   * and still counted as "not junior", never produced by a new run.
+   */
+  | 'junior_eligibility'
+  /** Unified hard filter: explicit location outside Madrid/nearby/remote-from-Spain. */
+  | 'location_incompatible'
+  /** Unified hard filter: explicit requirement above the 2-year ceiling. */
+  | 'experience_over_limit'
+  /** Unified hard filter: senior/lead/manager role without a junior qualifier. */
+  | 'seniority_excluded'
+  | 'dead_link';
 
 /**
  * A posting one of the two filters removed from the queue.

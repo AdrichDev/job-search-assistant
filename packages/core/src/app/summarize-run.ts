@@ -1,4 +1,4 @@
-import type { JobQueue } from '../ports/queue-writer.js';
+import type { ExcludedEntry, JobQueue } from '../ports/queue-writer.js';
 import type { FetchRunSummary } from '../ports/run-state-store.js';
 import type { PersistQueueResult } from './persist-queue.js';
 
@@ -25,9 +25,13 @@ export function summarizeRun(
   const excludedNotSoftware = queue.excluded.filter(
     (entry) => entry.excludedBy === 'software_relevance',
   ).length;
-  const excludedNotJunior = queue.excluded.filter(
-    (entry) => entry.excludedBy === 'junior_eligibility',
-  ).length;
+  const count = (code: ExcludedEntry['excludedBy']): number =>
+    queue.excluded.filter((entry) => entry.excludedBy === code).length;
+  const excludedByLocation = count('location_incompatible');
+  const excludedByExperience = count('experience_over_limit');
+  const excludedBySeniority = count('seniority_excluded');
+  // Legacy `junior_eligibility` entries stay counted here so an old queue still adds up.
+  const excludedNotJunior = excludedByExperience + excludedBySeniority + count('junior_eligibility');
   const removedAsGone = queue.excluded.filter((entry) => entry.excludedBy === 'dead_link').length;
 
   /*
@@ -52,6 +56,9 @@ export function summarizeRun(
     duplicatesRemoved: queue.duplicatesRemoved,
     excludedNotSoftware,
     excludedNotJunior,
+    excludedByLocation,
+    excludedByExperience,
+    excludedBySeniority,
     removedAsGone,
     offersAvailable,
     failedSources,

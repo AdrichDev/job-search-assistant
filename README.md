@@ -171,18 +171,19 @@ The E2E harness enforces this in code rather than by convention: every request t
 
 ## The core design decision
 
-**Wide intake, two hard filters, no ranking.**
+**Wide intake, three hard filters, no ranking.**
 
-Intake stays deliberately wide: no stack filtering, no seniority filtering, no location filtering at the query. Everything the sources return enters the pipeline.
+Intake stays deliberately wide: sources fetch their own results without pretending that query parameters are a complete eligibility policy. The unified gates run after ingestion, so every source is judged by the same rules.
 
-Then exactly two filters run, and there is no third:
+Exactly three gates run after deduplication:
 
 | | Filter | Rule | Bias |
 |---|--------|------|------|
 | **A** | Software relevance | Is this software-engineering work at all? A dentist, a sales executive and a treasury clerk are not ranked lower — they are not in the list. | Biased toward inclusion: a role word in the *title* is proof on its own. |
-| **B** | Junior eligibility | Does the posting explicitly disqualify a first-job candidate? Only two things count: a rank word in the **title** (`senior`, `lead`, `principal`, `staff`, `head of`, `architect`, `arquitecto`, `director`, `jefe de`), or a stated requirement of **3+ years**. | Strongly biased toward inclusion: **silence means yes**. |
+| **B** | Location eligibility | Keep Madrid and nearby locations, hybrid roles in Madrid, remote work performable from Spain, and unknown locations. Exclude explicitly incompatible cities/countries. | Unknown location is kept; incompatible locations get an auditable exclusion reason. |
+| **C** | Junior eligibility | Exclude explicit senior, lead or manager roles and requirements of **3+ years**. Keep junior, entry, graduate, trainee, associate and unknown seniority/experience. | Strongly biased toward inclusion: **silence means yes**. |
 
-Filter B's asymmetry is the whole design. A junior job wrongly dropped is an opportunity that is invisible, to you and to us, permanently. A mid-level job wrongly shown costs eight words of reading. Those two errors are not equal, so the filter is not symmetric: it never guesses, and "seniority unclear" is always resolved in your favour.
+Every hard exclusion carries a stable audit code (`location_incompatible`, `experience_over_limit` or `seniority_excluded`) and the run summary breaks those counts down. A junior job wrongly dropped is an opportunity that is invisible, to you and to us, permanently. Unknown evidence is therefore kept rather than guessed.
 
 **What is deliberately absent: any score threshold, any top-N cut, any "only show the good ones".**
 
@@ -201,7 +202,7 @@ The score survives as an audit trail you can open per offer:
 
 If you disagree with it, you can see exactly which dimension caused it and change one number in `packages/core/src/config/scoring-config.ts`. It changes the number; it does not change what you see or in what order.
 
-Filter B's vocabulary is separate, in `packages/core/src/config/junior-filter-config.ts`. It deliberately does **not** reuse the scoring `seniorTerms` list: that list is tuned to apply a soft penalty and contains terms like `manager` and `amplia experiencia`, which are fine as a nudge and far too blunt as a delete.
+The hard-gate vocabulary is separate from scoring in `packages/core/src/config/junior-filter-config.ts` and `packages/core/src/domain/hard-eligibility.ts`. Scoring remains an explanatory ranking trail; it never overrides a hard exclusion. A title containing `manager` is excluded unless it is explicitly junior, entry-level, graduate, trainee or associate.
 
 ## Application tracking
 

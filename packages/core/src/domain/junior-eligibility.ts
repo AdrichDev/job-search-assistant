@@ -37,6 +37,25 @@ export interface JuniorFilterConfig {
   readonly disqualifyingTitleTerms: readonly string[];
   /** Stated years at or above this count disqualify. */
   readonly maxYearsRequired: number;
+  /**
+   * Title words that make a role a management role (`manager`, `gerente`).
+   * Optional so older hand-built configs keep compiling; absent means none.
+   */
+  readonly managerTitleTerms?: readonly string[];
+  /**
+   * Title words that rescue a management title (`junior`, `associate`,
+   * `graduate`, `trainee`, `entry level`). They never rescue a title that
+   * already hit a `disqualifyingTitleTerms` rank such as `senior` or `lead`.
+   */
+  readonly managerExemptTitleTerms?: readonly string[];
+  /**
+   * Terms that place a posting explicitly OUTSIDE Spain (countries, foreign
+   * cities). Used only by the hard locality rule, only against the location
+   * field, and only when no Spain/Madrid/worldwide wording accompanies them.
+   */
+  readonly foreignLocationTerms?: readonly string[];
+  /** Wording that makes a remote role performable from Spain (`europe`, `worldwide`). */
+  readonly worldwideLocationTerms?: readonly string[];
 }
 
 export interface JuniorEligibility {

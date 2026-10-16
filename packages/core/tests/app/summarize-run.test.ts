@@ -90,6 +90,9 @@ const QUEUE: JobQueue = {
     excluded('x2', 'software_relevance'),
     excluded('x3', 'junior_eligibility'),
     excluded('x4', 'dead_link'),
+    excluded('x5', 'location_incompatible'),
+    excluded('x6', 'experience_over_limit'),
+    excluded('x7', 'seniority_excluded'),
   ],
   jobs: [job('a'), job('b')],
 };
@@ -118,7 +121,10 @@ describe('summarizeRun', () => {
       totalUnique: 120,
       duplicatesRemoved: 17,
       excludedNotSoftware: 2,
-      excludedNotJunior: 1,
+      excludedNotJunior: 3,
+      excludedByLocation: 1,
+      excludedByExperience: 1,
+      excludedBySeniority: 1,
       removedAsGone: 1,
     });
   });

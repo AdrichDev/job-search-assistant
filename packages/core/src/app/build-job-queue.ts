@@ -1,10 +1,8 @@
 import { indexApplicationsByJobId, type Application } from '../domain/application.js';
 import { dedupeJobs } from '../domain/dedupe.js';
 import type { Job } from '../domain/job.js';
-import {
-  judgeJuniorEligibility,
-  type JuniorFilterConfig,
-} from '../domain/junior-eligibility.js';
+import { judgeHardEligibility } from '../domain/hard-eligibility.js';
+import type { JuniorFilterConfig } from '../domain/junior-eligibility.js';
 import {
   describeLivenessRemoval,
   isProvablyGone,
@@ -327,9 +325,15 @@ export async function buildJobQueue(
     }
     relevant.push(entry);
 
-    const verdict = judgeJuniorEligibility(entry.job, deps.juniorFilterConfig);
-    if (!verdict.eligible) {
-      excluded.push(excludedEntry(entry, 'junior_eligibility', verdict.reason));
+    // Filter B is the unified hard eligibility filter: locality, experience and
+    // seniority, with one stable exclusion code per rule.
+    const verdict = judgeHardEligibility(
+      entry.job,
+      deps.juniorFilterConfig,
+      deps.scoringConfig.location,
+    );
+    if (!verdict.eligible && verdict.code !== null) {
+      excluded.push(excludedEntry(entry, verdict.code, verdict.reason));
       continue;
     }
     eligible.push(entry);
@@ -337,6 +341,8 @@ export async function buildJobQueue(
 
   const notSoftware = excluded.filter((entry) => entry.excludedBy === 'software_relevance').length;
   const notJunior = excluded.length - notSoftware;
+  const byCode = (code: ExcludedEntry['excludedBy']): number =>
+    excluded.filter((entry) => entry.excludedBy === code).length;
 
   if (notSoftware > 0) {
     deps.logger.info(
@@ -345,7 +351,9 @@ export async function buildJobQueue(
   }
   if (notJunior > 0) {
     deps.logger.info(
-      `${notJunior} posting(s) excluded as not junior-eligible; ${eligible.length} remain`,
+      `${notJunior} posting(s) excluded by the hard eligibility filter ` +
+        `(${byCode('location_incompatible')} location, ${byCode('experience_over_limit')} experience, ` +
+        `${byCode('seniority_excluded')} seniority); ${eligible.length} remain`,
     );
   }
 

@@ -253,3 +253,14 @@ describe('liveness copy', () => {
     expect(ES.card.unverifiedBadgeTitle).not.toBe(ES.card.sampleBadgeTitle);
   });
 });
+
+describe('source provenance copy', () => {
+  it('has Spanish labels for every known source id and a fallback for unknown ones', () => {
+    for (const id of ['arbeitnow', 'ashby', 'fixture', 'greenhouse', 'landingjobs', 'lever', 'manfred', 'smartrecruiters']) {
+      expect(ES.source.labels[id]).toBeTruthy();
+    }
+    expect(ES.source.unknown('abc')).toContain('abc');
+    expect(ES.source.unknown('')).not.toContain('()');
+    expect(ES.queue.sourceOption('Lever', 3)).toBe('Lever (3)');
+  });
+});

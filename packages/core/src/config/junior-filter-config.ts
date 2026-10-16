@@ -71,4 +71,76 @@ export const DEFAULT_JUNIOR_FILTER_CONFIG: JuniorFilterConfig = {
    * two seconds of scrolling.
    */
   maxYearsRequired: 3,
+  /*
+   * `manager` WAS rejected above as a blanket delete, and it still is: the hard
+   * eligibility filter excludes it only when the title carries no junior-level
+   * word. "Junior Project Manager" and "Associate Product Manager" survive;
+   * "Engineering Manager" does not.
+   */
+  managerTitleTerms: ['manager', 'gerente'],
+  managerExemptTitleTerms: [
+    'junior',
+    'jr',
+    'entry level',
+    'entry-level',
+    'graduate',
+    'trainee',
+    'associate',
+    'becario',
+    'becaria',
+    'practicas',
+  ],
+
+  /**
+   * Explicitly foreign locations. Matched against the location FIELD only, so a
+   * body that says "our US customers" can never delete a Madrid posting.
+   */
+  foreignLocationTerms: [
+    'united states',
+    'usa',
+    'u.s.',
+    'united kingdom',
+    'uk',
+    'england',
+    'london',
+    'germany',
+    'berlin',
+    'munich',
+    'france',
+    'paris',
+    'portugal',
+    'lisbon',
+    'lisboa',
+    'porto',
+    'netherlands',
+    'amsterdam',
+    'ireland',
+    'dublin',
+    'italy',
+    'milan',
+    'poland',
+    'warsaw',
+    'canada',
+    'mexico',
+    'argentina',
+    'brazil',
+    'india',
+    'australia',
+    'singapore',
+    'switzerland',
+    'zurich',
+    'sweden',
+    'stockholm',
+    'denmark',
+    'copenhagen',
+    'belgium',
+    'brussels',
+    'austria',
+    'vienna',
+    'colombia',
+    'chile',
+    'latam',
+  ],
+
+  worldwideLocationTerms: ['worldwide', 'anywhere', 'global', 'europe', 'emea', 'eu', 'european union'],
 };

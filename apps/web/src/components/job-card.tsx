@@ -6,6 +6,7 @@ import { DismissButton } from '@/components/dismiss-button';
 import { OutcomeForm } from '@/components/outcome-form';
 import { ScoreBreakdown } from '@/components/score-breakdown';
 import { ES, cvVariantLabel } from '@/copy/es';
+import { entrySourceLabels } from '@/lib/source-labels';
 
 /**
  * One vacancy.
@@ -73,6 +74,7 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
    * badge on every card of an offline run, which says nothing and costs the
    * badge all of its meaning for the cases where it does.
    */
+  const sourceLabels = entrySourceLabels(entry);
   const isUnverified = entry.liveness?.verdict === 'unverified';
 
   return (
@@ -112,6 +114,11 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
               {ageLabel(entry.postedAt, now)}
               {salary !== null && ` · ${salary}`}
               {entry.contractType !== null && ` · ${entry.contractType}`}
+            </p>
+
+            <p className="mt-1 text-xs text-slate-600" data-testid="job-sources">
+              <span className="font-medium">{ES.source.cardLabel(sourceLabels.length)}:</span>{' '}
+              {sourceLabels.length === 0 ? ES.source.noSources : sourceLabels.join(' · ')}
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5">

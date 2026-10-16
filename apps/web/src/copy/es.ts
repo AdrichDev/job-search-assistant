@@ -217,9 +217,31 @@ export const ES = {
     noMatches: 'Ninguna oferta coincide con estos filtros.',
     noMatchesHint: 'Prueba a borrar el texto de búsqueda o a poner los filtros en «Todas».',
     cvOptionAll: 'Todas las versiones',
+    sourceLabel: 'Fuente',
+    sourceOptionAll: (total: number) => `Todas las fuentes (${total})`,
+    sourceOption: (label: string, count: number) => `${label} (${count})`,
     statusOptionAll: 'Todas las ofertas',
     statusOptionPending: 'Sin postular',
     statusOptionApplied: 'Ya postuladas',
+  },
+
+  /* Source provenance ---------------------------------------------------- */
+  source: {
+    /** Solo fuentes con adaptador real; nada de portales que no soportamos. */
+    labels: {
+      arbeitnow: 'Arbeitnow',
+      ashby: 'Ashby',
+      fixture: 'Ejemplo (catálogo)',
+      greenhouse: 'Greenhouse',
+      landingjobs: 'Landing.jobs',
+      lever: 'Lever',
+      manfred: 'Manfred',
+      smartrecruiters: 'SmartRecruiters',
+    } as Readonly<Record<string, string>>,
+    unknown: (sourceId: string) =>
+      sourceId.length === 0 ? 'Fuente desconocida' : `Fuente desconocida (${sourceId})`,
+    cardLabel: (count: number) => (count === 1 ? 'Fuente' : 'Fuentes'),
+    noSources: 'Fuente no registrada',
   },
 
   /* Empty / degraded queue --------------------------------------------- */
@@ -391,8 +413,10 @@ export const ES = {
       }`,
     filteredNotSoftware: (count: number) =>
       `${count} descartadas por no ser ofertas de desarrollo de software`,
+    filteredByLocation: (count: number) =>
+      `${count} descartadas por estar fuera de Madrid y no ser remoto desde España`,
     filteredNotJunior: (count: number) =>
-      `${count} descartadas por pedir explícitamente un perfil sénior`,
+      `${count} descartadas por pedir más de 2 años de experiencia o un perfil sénior, lead o manager`,
     removedAsGone: (count: number) =>
       `${count} eliminadas porque su enlace ya no existe (HTTP 404 o 410)`,
     available: (count: number) =>

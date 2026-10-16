@@ -30,8 +30,14 @@ export interface FetchRunSummary {
   readonly duplicatesRemoved: number;
   /** Removed by filter A. */
   readonly excludedNotSoftware: number;
-  /** Removed by filter B. */
+  /** Removed by filter B on experience or seniority (includes legacy `junior_eligibility`). */
   readonly excludedNotJunior: number;
+  /** Removed by the hard locality rule (`location_incompatible`). */
+  readonly excludedByLocation: number;
+  /** Of `excludedNotJunior`: explicit requirement above 2 years. */
+  readonly excludedByExperience: number;
+  /** Of `excludedNotJunior`: senior/lead/manager role. */
+  readonly excludedBySeniority: number;
   /** Removed because the address answered HTTP 404 or 410. */
   readonly removedAsGone: number;
   /** Offers the human can actually see, net of the dead-link removals. */

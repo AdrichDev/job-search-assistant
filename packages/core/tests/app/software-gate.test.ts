@@ -148,7 +148,10 @@ describe('exclusion is never silent', () => {
 
   it('separates the two filters in the audit trail', async () => {
     const queue = await runRealQueue();
-    const byJunior = queue.excluded.filter((entry) => entry.excludedBy === 'junior_eligibility');
+    const byJunior = queue.excluded.filter(
+      (entry) =>
+        entry.excludedBy === 'seniority_excluded' || entry.excludedBy === 'experience_over_limit',
+    );
 
     expect(byJunior.map((entry) => entry.title)).toEqual(
       expect.arrayContaining([

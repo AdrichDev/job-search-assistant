@@ -102,6 +102,9 @@ export function renderRankedTable(queue: JobQueue): string {
 const EXCLUSION_LABELS: Readonly<Record<ExcludedEntry['excludedBy'], string>> = {
   software_relevance: 'not-tech',
   junior_eligibility: 'not-junior',
+  location_incompatible: 'location',
+  experience_over_limit: 'experience',
+  seniority_excluded: 'seniority',
   dead_link: 'dead-link',
 };
 
@@ -270,7 +273,7 @@ export function renderSampleDataNotice(queue: JobQueue): string | null {
     everything
       ? '  This is a demo run. For real vacancies use --source=all, or --source=boards'
       : '  Re-run to replace them: --source=all, or --source=boards',
-    '  if generic aggregator is out of quota.',
+    '  if another source is temporarily out of quota.',
     '='.repeat(78),
   ].join('\n');
 }
@@ -450,14 +453,20 @@ export function renderRunSummary(queue: JobQueue): string {
     const notTech = queue.excluded.filter(
       (entry) => entry.excludedBy === 'software_relevance',
     ).length;
-    const notJunior = queue.excluded.filter(
-      (entry) => entry.excludedBy === 'junior_eligibility',
-    ).length;
+    const countOf = (code: ExcludedEntry['excludedBy']): number =>
+      queue.excluded.filter((entry) => entry.excludedBy === code).length;
+    const notLocal = countOf('location_incompatible');
+    const tooExperienced = countOf('experience_over_limit');
+    const tooSenior = countOf('seniority_excluded');
+    // Legacy queues carry the pre-split verdict; it still reads as "not junior".
+    const notJunior = countOf('junior_eligibility') + tooExperienced + tooSenior;
     // The dead-link count is reported separately rather than folded in, because
     // it is not a filter verdict: those postings qualified and then vanished.
     lines.push(
-      `Filtered out ${notTech + notJunior} of ${queue.totalUnique}: ` +
-        `${notTech} not software, ${notJunior} not junior-eligible` +
+      `Filtered out ${notTech + notJunior + notLocal} of ${queue.totalUnique}: ` +
+        `${notTech} not software, ${notLocal} outside Madrid/remote-from-Spain, ` +
+        `${tooExperienced} asking for over 2 years, ${tooSenior} senior/lead/manager` +
+        (countOf('junior_eligibility') === 0 ? '' : `, ${countOf('junior_eligibility')} not junior-eligible`) +
         (removedAsDead === 0 ? '' : `; plus ${removedAsDead} removed as gone (404/410)`),
     );
   }

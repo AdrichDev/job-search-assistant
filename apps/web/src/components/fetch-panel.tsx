@@ -92,6 +92,7 @@ function RunSummary({ summary }: { summary: FetchRunSummary }) {
         <li>{ES.fetch.fetched(summary.totalFetched)}</li>
         <li>{ES.fetch.deduped(summary.totalUnique, summary.duplicatesRemoved)}</li>
         <li>{ES.fetch.filteredNotSoftware(summary.excludedNotSoftware)}</li>
+        <li>{ES.fetch.filteredByLocation(summary.excludedByLocation)}</li>
         <li>{ES.fetch.filteredNotJunior(summary.excludedNotJunior)}</li>
         {summary.removedAsGone > 0 && <li>{ES.fetch.removedAsGone(summary.removedAsGone)}</li>}
         <li className="font-medium text-slate-900">{ES.fetch.available(summary.offersAvailable)}</li>

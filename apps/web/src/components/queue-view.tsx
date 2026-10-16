@@ -5,6 +5,7 @@ import type { QueueEntry } from '@job-queue/core/domain';
 import { EmptyQueue } from '@/components/empty-queue';
 import { JobCard } from '@/components/job-card';
 import { ES } from '@/copy/es';
+import { matchesSource, sourceOptions } from '@/lib/source-labels';
 
 /**
  * Filtering happens in the browser over data the server already sent.
@@ -55,17 +56,23 @@ export function QueueView({
 }) {
   const [cvVariant, setCvVariant] = useState<string>('all');
   const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>('all');
+  const [source, setSource] = useState<string>('all');
   const [search, setSearch] = useState('');
 
   const searchId = useId();
   const cvId = useId();
   const appliedId = useId();
+  const sourceId = useId();
+  const sources = useMemo(() => sourceOptions(entries), [entries]);
 
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
 
     return entries.filter((entry) => {
       if (cvVariant !== 'all' && entry.cvVariant !== cvVariant) {
+        return false;
+      }
+      if (!matchesSource(entry, source)) {
         return false;
       }
       const isApplied = entry.applicationStatus !== 'not_applied';
@@ -77,7 +84,7 @@ export function QueueView({
       }
       return matchesSearch(entry, needle);
     });
-  }, [entries, cvVariant, appliedFilter, search]);
+  }, [entries, cvVariant, source, appliedFilter, search]);
 
   return (
     <section aria-labelledby="queue-heading" id="queue" className="scroll-mt-4">
@@ -130,6 +137,25 @@ export function QueueView({
                 {CV_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={sourceId} className="text-xs font-medium text-slate-600">
+                {ES.queue.sourceLabel}
+              </label>
+              <select
+                id={sourceId}
+                value={source}
+                onChange={(event) => setSource(event.target.value)}
+                className={FIELD}
+              >
+                <option value="all">{ES.queue.sourceOptionAll(entries.length)}</option>
+                {sources.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {ES.queue.sourceOption(option.label, option.count)}
                   </option>
                 ))}
               </select>

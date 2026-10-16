@@ -55,6 +55,10 @@ const runSummarySchema = z.object({
   duplicatesRemoved: z.number(),
   excludedNotSoftware: z.number(),
   excludedNotJunior: z.number(),
+  // Defaulted: state files written before the unified hard filter lack these.
+  excludedByLocation: z.number().default(0),
+  excludedByExperience: z.number().default(0),
+  excludedBySeniority: z.number().default(0),
   removedAsGone: z.number(),
   offersAvailable: z.number(),
   failedSources: z.array(

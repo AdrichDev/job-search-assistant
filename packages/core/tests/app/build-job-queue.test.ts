@@ -55,7 +55,7 @@ const BAD_JOB = makeJob({
   externalId: 'b1',
   title: 'Software Engineer',
   company: 'Globex',
-  location: 'Barcelona',
+  location: 'Madrid',
   description: 'Java y Spring. Fluent English required.',
   postedAt: daysAgo(25),
 });
@@ -283,7 +283,7 @@ describe('buildJobQueue', () => {
       { ...deps, sources: [stubSource('alpha', [GOOD_JOB, BAD_JOB, NON_SOFTWARE_JOB])] },
     );
 
-    // BAD_JOB is a bad FIT (Barcelona, C1, off-lane stack) but a real software
+    // BAD_JOB is a bad FIT (C1, off-lane stack) but a real software
     // job that says nothing disqualifying. Neither filter may touch it.
     expect(queue.jobs.map((entry) => entry.id)).toContain(BAD_JOB.id);
     expect(queue.excluded.map((entry) => entry.id)).toEqual([NON_SOFTWARE_JOB.id]);
@@ -296,9 +296,48 @@ describe('buildJobQueue', () => {
     );
 
     expect(queue.jobs.map((entry) => entry.id)).toEqual([GOOD_JOB.id]);
-    expect(queue.excluded.map((entry) => entry.excludedBy)).toEqual(['junior_eligibility']);
+    expect(queue.excluded.map((entry) => entry.excludedBy)).toEqual(['seniority_excluded']);
     expect(queue.totalRelevant).toBe(2);
     expect(queue.totalJuniorEligible).toBe(1);
+  });
+
+  it('excludes an out-of-area posting with a location code, whatever the source', async () => {
+    const barcelona = makeJob({
+      sourceId: 'beta',
+      externalId: 'bcn',
+      title: 'Desarrollador Junior',
+      company: 'Soho',
+      location: 'Barcelona',
+      description: 'React y TypeScript. Presencial.',
+    });
+    const queue = await buildJobQueue(
+      { queries: [QUERY] },
+      { ...deps, sources: [stubSource('alpha', [GOOD_JOB]), stubSource('beta', [barcelona])] },
+    );
+
+    expect(queue.jobs.map((entry) => entry.id)).toEqual([GOOD_JOB.id]);
+    expect(queue.excluded.map((entry) => [entry.id, entry.excludedBy])).toEqual([
+      [barcelona.id, 'location_incompatible'],
+    ]);
+    expect(queue.excluded[0]?.reason).toMatch(/barcelona/);
+  });
+
+  it('excludes an over-limit experience posting with its own code and keeps unstated years', async () => {
+    const experienced = makeJob({
+      sourceId: 'alpha',
+      externalId: 'exp',
+      title: 'Desarrollador Backend',
+      company: 'Wayne',
+      location: 'Madrid',
+      description: 'Java y Spring. Se requieren 4 anos de experiencia.',
+    });
+    const queue = await buildJobQueue(
+      { queries: [QUERY] },
+      { ...deps, sources: [stubSource('alpha', [GOOD_JOB, experienced])] },
+    );
+
+    expect(queue.jobs.map((entry) => entry.id)).toEqual([GOOD_JOB.id]);
+    expect(queue.excluded.map((entry) => entry.excludedBy)).toEqual(['experience_over_limit']);
   });
 
   it('counts an excluded posting in totalUnique but not in the surfaced limit', async () => {

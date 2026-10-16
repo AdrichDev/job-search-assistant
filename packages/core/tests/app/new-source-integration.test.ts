@@ -220,7 +220,7 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
         {
           title: 'Senior Software Engineer',
           company: 'Joko',
-          location: 'Barcelona, España',
+          location: 'Madrid, España',
           url: 'https://www.getmanfred.com/ofertas-empleo/8379/joko-senior-software-engineer-jun26',
         },
       ]),
@@ -228,7 +228,7 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
         {
           title: 'Junior Software Engineer',
           company: 'Joko',
-          location: 'Barcelona',
+          location: 'Madrid',
           url: 'https://jobs.smartrecruiters.com/Joko/744000148470111-junior-software-engineer',
         },
       ]),
@@ -262,7 +262,7 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
         {
           title: '.NET Developer',
           company: 'CENTRALIA',
-          location: 'Santander, España',
+          location: 'Madrid, España',
           url: 'https://www.getmanfred.com/ofertas-empleo/8457/grupo-gof-net-developer-ago26',
         },
       ]),
@@ -270,7 +270,7 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
         {
           title: '.NET Developer',
           company: 'Grupo GOF',
-          location: 'Santander, Spain',
+          location: 'Madrid, Spain',
           url: 'https://www.arbeitnow.com/jobs/companies/grupo-gof/net-developer-santander-11111',
         },
       ]),
@@ -314,14 +314,14 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
         {
           title: 'DATEV Techniker',
           company: 'Jessyworks',
-          location: 'Munich',
+          location: 'Madrid',
           url: 'https://www.arbeitnow.com/jobs/companies/jessyworks/datev-18836',
           externalId: 'datev-18836',
         },
         {
           title: 'DATEV Techniker',
           company: 'Jessyworks',
-          location: 'Munich',
+          location: 'Madrid',
           url: 'https://www.arbeitnow.com/jobs/companies/jessyworks/datev-18836',
           externalId: 'datev-18836',
         },

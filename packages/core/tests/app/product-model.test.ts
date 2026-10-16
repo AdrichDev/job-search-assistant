@@ -150,7 +150,7 @@ describe('Filter B - junior eligible, biased toward inclusion', () => {
     const senior = queue.excluded.find((entry) => entry.id === SENIOR_TECH.id);
     const dentist = queue.excluded.find((entry) => entry.id === DENTIST.id);
 
-    expect(senior?.excludedBy).toBe('junior_eligibility');
+    expect(senior?.excludedBy).toBe('seniority_excluded');
     expect(dentist?.excludedBy).toBe('software_relevance');
   });
 
@@ -182,12 +182,11 @@ describe('no score-based exclusion or limiting', () => {
   });
 
   it('keeps a low-scoring posting that both filters accepted', async () => {
-    // Bad fit for this candidate: other city, advanced English, foreign
-    // language ad. All of that costs SCORE, and none of it may cost a slot.
+    // Bad fit for this candidate: advanced English, foreign language ad. All of that costs SCORE, and none of it may cost a slot.
     const poorFit = makeJob({
       title: 'Software Engineer',
       company: 'Faraway',
-      location: 'Vigo',
+      location: 'Madrid',
       description: 'Fluent English required. We are looking for you to join our team with Java.',
       postedAt: daysAgo(1),
     });

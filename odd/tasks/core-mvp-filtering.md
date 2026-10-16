@@ -15,9 +15,9 @@ Turn the current aggregation infrastructure into an operational MVP: only useful
 
 ## Tasks
 - [x] T1 (S1) Remove Adzuna end-to-end. Route: inline after bounded map. Commit: d7fb62c. Evidence: removed adapter, schema, credentials, category contract, source selection, composition factory, exports, help/docs and dedicated tests; `.env.example` has no Adzuna variables; no Adzuna refs remain outside the ODD log; typecheck passed; core 968 and web 85 tests passed.
-- [ ] T2 (S2) Remove JuniorJobs/newsletter ingestion end-to-end. Route: inline after bounded map. Commit: pending
-- [ ] T3 (S3-S5, S7) Build the unified hard eligibility filter and audit reasons. Route: test-first. Commit: pending
-- [ ] T4 (S6) Show and filter source provenance in the web UI. Route: test-first. Commit: pending
+- [x] T2 (S2) Remove JuniorJobs/newsletter ingestion end-to-end. Route: inline after bounded map. Included in the final combined commit; evidence: adapters/config/CLI/tests/docs removed, grep clean, typecheck and full suites passed.
+- [x] T3 (S3-S5, S7) Build the unified hard eligibility filter and audit reasons. Route: test-first. Included in the final combined commit; evidence: locality/experience/seniority gates, stable audit codes, CLI/web counts, 932 core tests and web/core typechecks passed.
+- [x] T4 (S6) Show and filter source provenance in the web UI. Route: test-first. Included in the final combined commit; evidence: source labels/fallback/count helpers, card display, source filter, 94 web tests and web typecheck passed.
 - [ ] T5 (S8) Update docs/help, run full verification, and record remaining core debt. Route: inline + independent verification when available. Commit: pending
 
 ## Log
@@ -25,3 +25,7 @@ Turn the current aggregation infrastructure into an operational MVP: only useful
 - L2 (decision): Locality = "Madrid + remoto desde España (recomendado)".
 - L3 (decision): Experience = "Máximo 2 años; desconocido entra (recomendado)".
 - L4 (decision): Seniority = "Excluir senior/lead/manager (recomendado)".
+- L5 (implementation): T2 removed JuniorJobs/newsletter ingestion; local untracked data/newsletters files were excluded from commits to preserve user data.
+- L6 (implementation): T3 added a post-ingestion hard eligibility gate for locality, experience and seniority with stable exclusion codes and run/UI counts; unknown evidence remains eligible.
+- L7 (implementation): T4 exposes stable source labels on every web card and filters the queue by source while retaining multi-source vacancies.
+- L8 (verification): Core and web typechecks passed; focused T3/T4 checks passed; core suite passed with 932 tests and web suite with 94 tests. Final workspace-wide verification remains T5 work.
