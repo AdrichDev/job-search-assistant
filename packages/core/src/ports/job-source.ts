@@ -4,14 +4,6 @@ import type { Job } from '../domain/job.js';
 export interface JobSourceQuery {
   readonly what: string;
   readonly where: string;
-  /**
-   * Board-side employment-sector filter (Adzuna: the `category` tag, e.g.
-   * `it-jobs`). This narrows the DOMAIN, not the stack: it keeps dentistry and
-   * call centres out of the intake without ever preferring one technology over
-   * another. Omitted means "every sector", which is what the fixture source and
-   * the older tests use.
-   */
-  readonly category?: string;
   readonly maxDaysOld: number;
   readonly resultsPerPage: number;
   readonly maxPages: number;

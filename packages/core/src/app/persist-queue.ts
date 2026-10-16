@@ -9,7 +9,7 @@ import type { JobQueue, QueueWriter, SourceReport } from '../ports/queue-writer.
  * the file on disk is safe to replace (see `json-application-repository`): real
  * history is worth more than a clean-looking write. That asymmetry was never
  * applied to the queue, and it cost 25 real postings the first time every
- * Adzuna query answered HTTP 429 - the run collected nothing, reported the
+ * a search provider query answered HTTP 429 - the run collected nothing, reported the
  * degradation correctly, and then wrote the emptiness straight over the data.
  *
  * The rule, in one sentence:

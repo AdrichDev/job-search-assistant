@@ -53,10 +53,10 @@ describe('createJsonApplicationRepository - reading', () => {
 
 describe('createJsonApplicationRepository - source ids', () => {
   it('round-trips the source ids through the file', async () => {
-    await repository.record({ ...DRAFT, sourceIds: ['adzuna', 'manfred'] });
+    await repository.record({ ...DRAFT, sourceIds: ['aggregator', 'manfred'] });
     const reread = createJsonApplicationRepository({ filePath });
 
-    expect((await reread.list())[0]?.sourceIds).toEqual(['adzuna', 'manfred']);
+    expect((await reread.list())[0]?.sourceIds).toEqual(['aggregator', 'manfred']);
   });
 
   it('loads a legacy log without source ids as an empty list', async () => {

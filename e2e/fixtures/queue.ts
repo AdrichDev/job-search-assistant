@@ -222,7 +222,7 @@ const SEEDS: readonly Omit<EntrySeed, 'url'>[] = [
     location: 'Remoto',
     cvVariant: 'general',
     externalId: '882301',
-    sourceId: 'adzuna',
+    sourceId: 'aggregator',
     score: 47.9,
     stack: ['git'],
   },
@@ -240,7 +240,7 @@ function honestUrl(seed: Omit<EntrySeed, 'url'>): string {
     case 'lever':
       return `https://jobs.lever.co/kubolabs/${seed.externalId}`;
     default:
-      return `https://www.adzuna.es/land/ad/${seed.externalId}`;
+      return `https://www.aggregator.es/land/ad/${seed.externalId}`;
   }
 }
 
@@ -258,7 +258,7 @@ function honestUrl(seed: Omit<EntrySeed, 'url'>): string {
  * is not a property any `z.string().url()` can see.
  */
 function fabricatedUrl(seed: Omit<EntrySeed, 'url'>): string {
-  return `https://www.adzuna.es/details/${encodeURIComponent(seed.title)}`;
+  return `https://www.aggregator.es/details/${encodeURIComponent(seed.title)}`;
 }
 
 function build(
@@ -342,7 +342,7 @@ export const EMPTY_QUEUE: QueueFile = build([], [
  */
 export const DEGRADED_QUEUE: QueueFile = build([], [
   {
-    sourceId: 'adzuna',
+    sourceId: 'aggregator',
     query: 'junior developer',
     status: 'failed',
     fetched: 0,

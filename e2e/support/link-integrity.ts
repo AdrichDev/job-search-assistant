@@ -12,7 +12,7 @@ import {
  *
  * It used to. It held the whole rule set - placeholder hosts, placeholder
  * hrefs, the `isTitleDerived` check - written after thirteen "Aplicar" buttons
- * shipped pointing at `https://www.adzuna.es/details/<job title>`, all
+ * shipped pointing at `https://www.aggregator.es/details/<job title>`, all
  * returning HTTP 403.
  *
  * The rules were correct. Their ADDRESS was the defect. Living in the browser

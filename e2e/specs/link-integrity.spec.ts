@@ -6,7 +6,7 @@ import { FABRICATED_URL_QUEUE, HEALTHY_QUEUE, HEALTHY_TITLES } from '../fixtures
  * The regression test for the defect that motivated this suite.
  *
  * Thirteen apply buttons shipped pointing at
- * `https://www.adzuna.es/details/<url-encoded job title>`. Every one returned
+ * `https://www.aggregator.es/details/<url-encoded job title>`. Every one returned
  * HTTP 403. 626 unit tests were green the whole time, because not one of them
  * rendered the page and looked at a link.
  *
@@ -118,7 +118,7 @@ test.describe('apply link integrity', () => {
     for (const problem of problems) {
       expect(() => new URL(problem.href)).not.toThrow();
       expect(new URL(problem.href).protocol).toBe('https:');
-      expect(problem.href).toContain('adzuna.es');
+      expect(problem.href).toContain('aggregator.es');
     }
   });
 

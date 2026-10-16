@@ -9,16 +9,16 @@ import { DEFAULT_QUEUE_PATH } from '../src/config/paths.js';
  * ====================================================================
  *
  * This script used to restore `output/queue.json` from the 25 postings recorded
- * in `tests/fixtures/real-adzuna-run.ts`. The titles, companies and dates in
+ * in `tests/fixtures/real-market-run.ts`. The titles, companies and dates in
  * that fixture are real. The URLs were not: the fixture never captured them, so
  * it manufactured one per posting out of the job TITLE -
  *
- *   https://www.adzuna.es/details/Optima%20Solutions%20Junior%20Power%20Platform%20Developer
+ *   https://www.aggregator.es/details/Optima%20Solutions%20Junior%20Power%20Platform%20Developer
  *
  * - and this script wrote all of them into the queue the web UI reads. Every
  * apply button pointed at an HTTP 403. The real link the live API had returned,
  *
- *   https://www.adzuna.es/details/5874810786?utm_medium=api&utm_source=5327d1be
+ *   https://www.aggregator.es/details/5874810786?utm_medium=api&utm_source=5327d1be
  *
  * had been discarded, and no copy of it survives anywhere in this repository.
  *
@@ -48,7 +48,7 @@ import { DEFAULT_QUEUE_PATH } from '../src/config/paths.js';
  *
  *   npm start -- --source=boards
  *
- * If Adzuna's quota has recovered, `--source=all` includes it again. Both paths
+ * If generic aggregator's quota has recovered, `--source=all` includes it again. Both paths
  * produce URLs that came from the provider, which is the only kind this
  * pipeline is allowed to show.
  */
@@ -57,7 +57,7 @@ const MESSAGE = `
 REFUSING to seed ${DEFAULT_QUEUE_PATH}.
 
 Why:
-  The recorded Adzuna run in tests/fixtures/real-adzuna-run.ts has no URLs.
+  The recorded generic aggregator run in tests/fixtures/real-market-run.ts has no URLs.
   They were never captured, and no copy exists in this repository. Seeding
   from it would require inventing a link per posting - which is precisely
   the defect that shipped 13 dead apply buttons.
@@ -68,7 +68,7 @@ Why:
 
 What to run instead:
   npm start -- --source=boards      Greenhouse + Lever + Ashby. No API key, no quota.
-  npm start -- --source=all         Adds Adzuna, if its free quota has recovered.
+  npm start -- --source=all         Adds generic aggregator, if its free quota has recovered.
 
 The fixture is still used - it is the regression corpus for the
 software-relevance gate, which does not read URLs. It is simply not, and can

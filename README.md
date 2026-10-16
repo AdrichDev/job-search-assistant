@@ -41,28 +41,17 @@ To run against the live company boards — **no API key, no signup, no credentia
 npm run start:boards      # Greenhouse + Lever + Ashby
 ```
 
-To use the live Adzuna Spain API instead:
-
-```bash
-cp .env.example .env      # then fill in ADZUNA_APP_ID / ADZUNA_APP_KEY
-npm start -- --source=adzuna
-```
-
-Free credentials: <https://developer.adzuna.com/>
-
 ## Sources
 
 | Source | Kind | Key needed | How coverage is decided |
 |--------|------|-----------|-------------------------|
 | `fixture` | Committed sample data | No | The catalogue in `data/sample-jobs.json` |
-| `adzuna` | Search API (Spain) | Yes | The search plan in `config/search-plan.ts` |
 | `greenhouse` | Per-company boards | No | The company list in `config/company-boards.ts` |
 | `lever` | Per-company boards | No | Same list |
 | `ashby` | Per-company boards | No | Same list |
 | `newsletter` | Saved job-alert emails | No | The files you put in `data/newsletters/` |
 
-The first five are documented JSON APIs. The sixth reads text files off your own
-disk. Nothing here scrapes an HTML page or parses one.
+The live providers use documented JSON endpoints. The newsletter source reads text files off your own disk. Nothing here scrapes an HTML page or drives a browser.
 
 ## Job alerts by email — the widest-reaching source
 
@@ -214,7 +203,7 @@ npm start -- --source=newsletter --no-resolve-links   # no network at all
 npm start -- --source=all                             # newsletters plus every other REAL source
 ```
 
-> **`--source=all` means every REAL source** — Adzuna, the three company boards
+> **`--source=all` means every REAL source** — a search API, the three company boards
 > and the newsletter. It does **not** include `fixture`, and `fixture` may not
 > share a run with a real source. See [Sample data](#sample-data-never-shares-a-run-with-real-vacancies).
 
@@ -314,14 +303,14 @@ Newsletter links: 212 unique, 199 resolved to the employer's posting, 13 kept as
 ### Which locations survive the board filter
 
 A company board hands back its **entire** board — all 618 Stripe postings worldwide included — so the
-narrowing Adzuna does server-side with `where` has to happen in the adapter. `DEFAULT_BOARD_LOCATION_FILTER`
+narrowing a search API does server-side with `where` has to happen in the adapter. `DEFAULT_BOARD_LOCATION_FILTER`
 keeps anything mentioning a Spanish city or Spain itself, including `Spain (Remote)`, `Remote - Spain`
 and `Madrid HQ, ES`.
 
 It is deliberately generous inside Spain: a Barcelona posting is kept and then ranked down by the location
 dimension, rather than deleted where you could never see or argue with the decision. It narrows **where**,
 never **what** — the software-relevance gate still judges every posting afterwards, exactly as it does an
-Adzuna one.
+a search API one.
 
 ## Workspace layout
 
@@ -339,7 +328,7 @@ Shared runtime data lives at the workspace root: `data/` (fixture, application l
 
 See [docs/sources.md](docs/sources.md) for the full safe source boundary: allowed routes, rejected routes and the intended route per portal.
 
-This project does **not** touch LinkedIn. No scraping, no automation, no login, no LinkedIn HTTP calls. LinkedIn's User Agreement §8.2 prohibits automated access, and the penalty is a permanent account ban — an unacceptable risk for someone whose job search depends on that account. The same rule applies to Adzuna, Greenhouse, Lever, Ashby and every other board: they are read through their public APIs and never driven through a browser.
+This project does **not** touch LinkedIn. No scraping, no automation, no login, no LinkedIn HTTP calls. LinkedIn's User Agreement §8.2 prohibits automated access, and the penalty is a permanent account ban — an unacceptable risk for someone whose job search depends on that account. The same rule applies to a search API, Greenhouse, Lever, Ashby and every other board: they are read through their public APIs and never driven through a browser.
 
 **Where the browser-automation line actually sits.** The ban is on automating *someone else's* site. Driving a browser against *our own* app on localhost is a different act with none of the same consequences, and it is how the E2E suite works. The two rules together:
 
@@ -477,7 +466,6 @@ packages/core/src/
                    ApplicationRepository, Logger, JobQueue DTO
     identity.ts      Cross-source identity: canonical company + title
   adapters/
-    adzuna/          Adzuna Spain HTTP adapter (zod-validated)
     boards/          Per-company board adapters, all zod-validated
       board-http.ts       Bounded concurrency, per-request timeout, User-Agent
       board-location.ts   Location narrowing (never stack filtering)
@@ -520,7 +508,7 @@ It walks the real import graph from `domain-index.ts` and fails on any node buil
 
 | Flag | Default | Meaning |
 |------|---------|---------|
-| `--source=LIST` | `fixture` | Comma-separated: `fixture`, `adzuna`, `greenhouse`, `lever`, `ashby`, `newsletter`. Shortcuts: `boards` (the three company boards), `all` (every **real** source: `adzuna,greenhouse,lever,ashby,newsletter`). `fixture` is never in a shortcut and may not share a run with a real source |
+| `--source=LIST` | `fixture` | Comma-separated supported source ids. Shortcuts: `boards` (configured company ATS providers) and `all` (every supported real source). `fixture` is never in a shortcut and may not share a run with a real source |
 | `--limit=N` | *off* | Truncate the list to N rows. **Off by default** — every offer that passed both filters is shown. Opt-in only, for keeping a huge exploratory run readable. |
 | `--explain=N` | `3` | How many entries get a full score breakdown |
 | `--concurrency=N` | `4` | Simultaneous company-board requests |
@@ -566,7 +554,7 @@ It did. `--source=all` used to expand to *every selectable source*, fixture
 included, so the documented command produced:
 
 ```
-Contributed: fixture 105, adzuna 1, greenhouse 64, lever 14, ashby 29, newsletter 221
+Contributed: fixture 105, greenhouse 64, lever 14, ashby 29, newsletter 221
 
   #1  Trainee Software Developer   Kubo Labs   Madrid   85.8
       link: https://example-board.test/offers/fx-010
@@ -629,13 +617,10 @@ A dead source degrades the run; it never aborts it.
 
 | Failure | Behaviour |
 |---------|-----------|
-| Adzuna returns a non-2xx | That query is reported as `failed`, other sources continue |
-| Adzuna returns an unknown payload shape | Same — the envelope is zod-validated before use |
 | A single offer is malformed | That offer is skipped and logged; the page still yields the rest |
 | **One company board 404s** | Absorbed. Logged, listed as a `degradedTargets` entry on the source report, and the other boards' postings are kept. It does **not** mark the run degraded |
 | **Every board of one provider fails** | That provider is reported as `failed`; the other providers continue |
 | A board hangs | Aborted after `--timeout` and treated as that board failing |
-| `ADZUNA_APP_ID` missing | Fails fast at startup, before any request, and points you at `--source=fixture` |
 | Application log unreadable | Warned; every job renders as not-applied rather than blanking the page |
 
 ### Why one dead board is not a "degraded run"
@@ -688,13 +673,10 @@ refusing there would let one permanently flaky query freeze the queue forever.
 defect, not an outage.
 
 It used to rewrite `output/queue.json` from the 25 postings recorded in
-`packages/core/tests/fixtures/real-adzuna-run.ts`. The titles, companies and dates in that
 fixture are real. **The URLs were not** — the fixture never captured them, so it built one
 per posting out of the job *title*:
 
 ```
-https://www.adzuna.es/details/Optima%20Solutions%20Junior%20Power%20Platform%20Developer   -> HTTP 403
-https://www.adzuna.es/details/5874810786?utm_medium=api&utm_source=5327d1be                -> HTTP 200 (the real one, now lost)
 ```
 
 All 13 seeded apply buttons were dead links. A seeded queue is indistinguishable from a real
@@ -706,7 +688,6 @@ empty screen wins. Run a real source instead:
 
 ```bash
 npm start -- --source=boards     # Greenhouse + Lever + Ashby. No API key, no quota.
-npm start -- --source=all        # Adds Adzuna, if its free quota has recovered.
 ```
 
 The fixture is still used: it is the regression corpus for the software-relevance gate,
@@ -757,7 +738,6 @@ cd e2e && npx playwright test --ui
 This suite exists because of a specific, shipped, humiliating defect: **every apply button in the UI pointed at a fabricated URL and returned HTTP 403.** The address was built by pasting the job title into a path:
 
 ```
-https://www.adzuna.es/details/Junior%20Frontend%20Developer
 ```
 
 626 tests were green while that was live. Not one of them was wrong — and not one of them ever rendered the page, looked at a link and clicked it. They verified internals. The user clicked the buttons and found nothing.
@@ -836,9 +816,9 @@ These are extension points, not missing features. This slice does not build them
 
 ## Cross-source dedupe: why it is deliberately conservative
 
-Once the same vacancy can arrive from Adzuna **and** from the company's own board, it arrives with a
-different id, a different URL (one is an Adzuna redirect) and often a different title — `Frontend Engineer`
-on Greenhouse, `Frontend Engineer (m/f/d)` on Adzuna. The original three dedupe keys all miss it.
+Once the same vacancy can arrive from a search API **and** from the company's own board, it arrives with a
+different id, a different URL (one is a search API redirect) and often a different title — `Frontend Engineer`
+on Greenhouse, `Frontend Engineer (m/f/d)` on a search API. The original three dedupe keys all miss it.
 
 The governing rule, which decides every design choice here:
 
@@ -863,7 +843,7 @@ then require an **exact** match on what remains, anchored on the employer.
 Two extra safeguards:
 
 - **No employer, no merge.** With a blank company the key returns `null` rather than degrading into
-  `::junior developer::madrid`, which would collapse every anonymous posting in the queue into one. Adzuna
+  `::junior developer::madrid`, which would collapse every anonymous posting in the queue into one. a search API
   reaches that state on its own — its schema defaults `company` to the empty string, which is how
   recruiter-posted ads routinely arrive.
 - **A parenthetical is dropped only when *every* word inside it is known noise.** `(Madrid)` goes,
@@ -881,7 +861,7 @@ company do **not**. Anything this misses stays in the queue as a visible duplica
 - **Company boards contribute few *junior engineering* roles.** A real 3-provider run over 28 boards returned 105 postings → 103 unique → 51 passed the software gate → **14** passed the junior filter. The rest were sales, marketing, finance and operations, or explicitly senior/principal/staff engineering roles. Company boards are the whole company, and the companies on this list hire mostly seniors.
 - **The newsletter source supports exactly one sender.** The JuniorJobs digest, because that is the only format a real saved email exists for. Everything else is skipped by name. This is the design, not a to-do — see [Why only one sender works today](#why-only-one-sender-works-today).
 - **A newsletter posting has no description beyond the sender's one-line sentence.** The junior filter therefore judges it almost entirely on the title. In practice this makes the filter *more permissive* for this source, which is the safe direction: on the real digest it excluded 0 of 200 postings on seniority, and the software gate did all the work (83 excluded).
-- **A newsletter cannot tell you the city.** The digest states a country and sometimes "100% remoto", so `location` is country-level. That means a newsletter posting will usually *not* cross-source-merge with the same vacancy from Adzuna, which reports `Madrid`. That is the conservative failure — a duplicate you scroll past, rather than a real vacancy deleted.
+- **A newsletter cannot tell you the city.** The digest states a country and sometimes "100% remoto", so `location` is country-level. That means a newsletter posting will usually *not* cross-source-merge with the same vacancy from a search API, which reports `Madrid`. That is the conservative failure — a duplicate you scroll past, rather than a real vacancy deleted.
 - **Link resolution cannot resolve everything.** A real run resolved 199 of 212 links. The rest were expired postings and career sites that block automated requests; all 13 kept the newsletter's own link, which is what the user would have clicked anyway.
 - **A kept original link can still be dead, and nothing says so yet.** When the shortener's destination answers 404 or 403 the resolver correctly refuses to point at it and keeps the newsletter's URL — but the shortener passes that status through, so the apply button is a 404 the pipeline knows about and does not surface. The `status` is recorded in `.link-cache.json`; it is not yet carried into the queue, the CLI audit or the UI. The link audit is deliberately provenance-only and makes no requests, so it cannot see this either. This is the largest remaining hole in the apply-link guarantee.
 - **A resolved link is a link the employer answered, not a vacancy that is still open.** The pipeline does not verify that a posting is live, for newsletters or for any other source. A digest a week old will contain a few closed roles.
@@ -893,3 +873,4 @@ company do **not**. Anything this misses stays in the queue as a visible duplica
 - **The application log is single-process safe, not multi-process safe.** Writes are atomic and serialized within one Node process. Running the CLI and the web app at the same moment could still lose a write; run only one at a time. Acceptable for a single-user local tool; it is the reason the repository interface exists. The same limit applies to the queue, liveness and link caches.
 - **Response rates over small samples are noise.** The panel says so explicitly below 10 applications, and always shows the denominator next to the percentage.
 - **`next` pins an internal `postcss@8.4.31`** with known advisories. They concern build-time processing of attacker-supplied CSS; all CSS here is authored in-repo. Fixing it requires Next 16 (a breaking upgrade), so it is accepted rather than forced.
+

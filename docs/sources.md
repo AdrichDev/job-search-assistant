@@ -8,7 +8,7 @@ portal the author uses.
 
 | Route | What it is | Example in this repo |
 |-------|-----------|----------------------|
-| **Official API** | A documented, public or key-based job API used within its terms | `adzuna`, `manfred`, `smartrecruiters` |
+| **Official API** | A documented, public job API used within its terms | `manfred`, `smartrecruiters` |
 | **Employer ATS endpoint** | The public JSON a company's own careers page is built on | `greenhouse`, `lever`, `ashby` |
 | **Email alerts** | Job-alert emails the user receives and saves locally as text | `newsletter` (JuniorJobs digest) |
 | **Manual import** | The user copies a posting or alert by hand into a local file | `data/newsletters/` |

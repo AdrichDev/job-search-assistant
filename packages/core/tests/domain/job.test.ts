@@ -5,7 +5,7 @@ import { makeJob, daysAgo } from '../helpers/make-job.js';
 describe('createJob', () => {
   it('trims fields and records the originating source', () => {
     const job = createJob({
-      sourceId: 'adzuna',
+      sourceId: 'aggregator',
       externalId: '999',
       title: '  Junior Frontend Developer  ',
       company: '  ACME  ',
@@ -19,7 +19,7 @@ describe('createJob', () => {
     expect(job.company).toBe('ACME');
     expect(job.url).toBe('https://example.com/1');
     expect(job.sources).toEqual([
-      { sourceId: 'adzuna', externalId: '999', url: 'https://example.com/1' },
+      { sourceId: 'aggregator', externalId: '999', url: 'https://example.com/1' },
     ]);
   });
 

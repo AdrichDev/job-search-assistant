@@ -15,13 +15,13 @@ import { createJob, type JobDraft } from '../../src/domain/job.js';
 
 function draft(overrides: Partial<JobDraft> = {}): JobDraft {
   return {
-    sourceId: 'adzuna',
+    sourceId: 'aggregator',
     externalId: '5874810786',
     title: 'Desarrollador Junior',
     company: 'ACME',
     location: 'Madrid',
     description: 'React y TypeScript.',
-    url: 'https://www.adzuna.es/details/5874810786',
+    url: 'https://www.aggregator.es/details/5874810786',
     postedAt: new Date('2026-09-08T00:00:00.000Z'),
     ...overrides,
   };
@@ -29,7 +29,7 @@ function draft(overrides: Partial<JobDraft> = {}): JobDraft {
 
 describe('createJob URL validation', () => {
   it('accepts an absolute https URL from the source', () => {
-    expect(createJob(draft()).url).toBe('https://www.adzuna.es/details/5874810786');
+    expect(createJob(draft()).url).toBe('https://www.aggregator.es/details/5874810786');
   });
 
   it('accepts an absolute http URL', () => {
@@ -55,7 +55,7 @@ describe('createJob URL validation', () => {
   });
 
   it('names the source and the title, so the failure is diagnosable', () => {
-    expect(() => createJob(draft({ url: '' }))).toThrow(/adzuna/);
+    expect(() => createJob(draft({ url: '' }))).toThrow(/aggregator/);
     expect(() => createJob(draft({ url: '' }))).toThrow(/Desarrollador Junior/);
   });
 

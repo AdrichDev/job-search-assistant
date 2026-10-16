@@ -1,7 +1,7 @@
 import { createJob, type Job } from '../../src/domain/job.js';
 
 /**
- * The 25 postings a real `npm start -- --source=adzuna` run surfaced on
+ * The 25 postings a real `npm start -- --source=aggregator` run surfaced on
  * 2026-09-08.
  *
  * ====================================================================
@@ -12,12 +12,12 @@ import { createJob, type Job } from '../../src/domain/job.js';
  * recovered from anything in this repository - the live run's real links, of
  * the form
  *
- *   https://www.adzuna.es/details/5874810786?utm_medium=api&utm_source=...
+ *   https://www.aggregator.es/details/5874810786?utm_medium=api&utm_source=...
  *
  * exist nowhere on disk. This file previously papered over that by building a
  * URL out of the job TITLE:
  *
- *   url: `https://www.adzuna.es/details/${encodeURIComponent(posting.title)}`
+ *   url: `https://www.aggregator.es/details/${encodeURIComponent(posting.title)}`
  *
  * Every one of those answered HTTP 403, and `scripts/seed-queue.ts` wrote all
  * 13 of them into `output/queue.json`, where they became apply buttons a human
@@ -37,7 +37,7 @@ import { createJob, type Job } from '../../src/domain/job.js';
  * real:
  *
  * - `title`, `company` and `postedAt` are copied byte-for-byte from that run.
- * - Adzuna only returns a truncated snippet of the description, and the queue
+ * - generic aggregator only returns a truncated snippet of the description, and the queue
  *   file does not persist it. So the body here is NOT the original ad text. It
  *   is the exact set of technical keywords that run recorded in
  *   `requirements.matchedStack` for each posting - nothing added, nothing
@@ -68,7 +68,7 @@ interface RealPosting {
 
 export const REAL_RUN_NOW = new Date('2026-09-08T08:27:53.081Z');
 
-export const REAL_ADZUNA_RUN: readonly RealPosting[] = [
+export const REAL_AGGREGATOR_RUN: readonly RealPosting[] = [
   {
     title: 'Optima Solutions Junior Power Platform Developer',
     company: 'PPG',
@@ -277,14 +277,14 @@ export const REAL_ADZUNA_RUN: readonly RealPosting[] = [
  *
  * A probe URL has to exist because the domain now refuses to mint a `Job`
  * without one - correctly. It is therefore chosen to be UNMISTAKABLE: it names
- * itself a probe, it cannot be confused with an Adzuna link, and if one ever
+ * itself a probe, it cannot be confused with an generic aggregator link, and if one ever
  * escapes into a user-facing artifact it fails instantly and visibly rather
  * than returning a plausible-looking 403 that somebody argues about for a day.
  *
  * The index, not the title, is the discriminator. Deriving anything URL-shaped
  * from a title is the exact habit this whole change exists to break.
  */
-const SCORING_PROBE_URL = (index: number) => `https://scoring-probe.invalid/adzuna/${index}`;
+const SCORING_PROBE_URL = (index: number) => `https://scoring-probe.invalid/aggregator/${index}`;
 
 /**
  * Turns a recorded posting into a `Job` FOR SCORING ASSERTIONS ONLY.
@@ -296,10 +296,10 @@ const SCORING_PROBE_URL = (index: number) => `https://scoring-probe.invalid/adzu
  * what produced the defect.
  */
 export function scoringProbeJob(posting: RealPosting): Job {
-  const index = REAL_ADZUNA_RUN.indexOf(posting);
+  const index = REAL_AGGREGATOR_RUN.indexOf(posting);
 
   return createJob({
-    sourceId: 'adzuna',
+    sourceId: 'aggregator',
     externalId: `probe-${index}`,
     title: posting.title,
     company: posting.company,
@@ -312,11 +312,11 @@ export function scoringProbeJob(posting: RealPosting): Job {
 
 /** Every recorded posting as a scoring probe. Never a queue. */
 export function scoringProbeJobs(): readonly Job[] {
-  return REAL_ADZUNA_RUN.map(scoringProbeJob);
+  return REAL_AGGREGATOR_RUN.map(scoringProbeJob);
 }
 
 export function realPostingByTitle(fragment: string): RealPosting {
-  const found = REAL_ADZUNA_RUN.find((posting) => posting.title.includes(fragment));
+  const found = REAL_AGGREGATOR_RUN.find((posting) => posting.title.includes(fragment));
   if (found === undefined) {
     throw new Error(`No real posting matches "${fragment}"`);
   }

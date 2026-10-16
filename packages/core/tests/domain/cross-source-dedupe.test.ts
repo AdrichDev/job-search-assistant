@@ -83,15 +83,15 @@ describe('canonicalTitle', () => {
 });
 
 describe('cross-source dedupe', () => {
-  it('MERGES the same vacancy arriving from Adzuna and from a company board', () => {
+  it('MERGES the same vacancy arriving from generic aggregator and from a company board', () => {
     const result = dedupeJobs([
       makeJob({
-        sourceId: 'adzuna',
+        sourceId: 'aggregator',
         externalId: 'ad-1',
         title: 'Frontend Engineer (m/f/d)',
         company: 'Cabify S.L.',
         location: 'Madrid, Comunidad de Madrid, Spain',
-        url: 'https://www.adzuna.es/land/ad/1234',
+        url: 'https://www.aggregator.es/land/ad/1234',
       }),
       makeJob({
         sourceId: 'greenhouse',
@@ -106,14 +106,14 @@ describe('cross-source dedupe', () => {
     expect(result.jobs).toHaveLength(1);
     expect(result.duplicatesRemoved).toBe(1);
     expect(result.jobs[0]?.sources.map((ref) => ref.sourceId).sort()).toEqual([
-      'adzuna',
+      'aggregator',
       'greenhouse',
     ]);
   });
 
   it('MERGES across a trailing-location difference', () => {
     const result = dedupeJobs([
-      makeJob({ sourceId: 'adzuna', externalId: '1', title: 'Backend Developer - Madrid', company: 'ACME', location: 'Madrid' }),
+      makeJob({ sourceId: 'aggregator', externalId: '1', title: 'Backend Developer - Madrid', company: 'ACME', location: 'Madrid' }),
       makeJob({ sourceId: 'lever', externalId: '2', title: 'Backend Developer', company: 'ACME', location: 'Madrid' }),
     ]);
     expect(result.jobs).toHaveLength(1);
@@ -169,7 +169,7 @@ describe('cross-source dedupe', () => {
   it('keeps the board URL when the aggregator arrived first', () => {
     // Whichever survives, the candidate must still be able to click through.
     const [survivor] = dedupeJobs([
-      makeJob({ sourceId: 'adzuna', externalId: '1', title: 'Frontend Engineer (m/f/d)', company: 'Cabify', location: 'Madrid', url: 'https://adzuna.test/1' }),
+      makeJob({ sourceId: 'aggregator', externalId: '1', title: 'Frontend Engineer (m/f/d)', company: 'Cabify', location: 'Madrid', url: 'https://aggregator.test/1' }),
       makeJob({ sourceId: 'greenhouse', externalId: '2', title: 'Frontend Engineer', company: 'Cabify', location: 'Madrid', url: 'https://job-boards.greenhouse.io/cabify/jobs/2' }),
     ]).jobs;
 
@@ -180,7 +180,7 @@ describe('cross-source dedupe', () => {
 
   it('stays transitive: three spellings of one vacancy collapse to one entry', () => {
     const result = dedupeJobs([
-      makeJob({ sourceId: 'adzuna', externalId: '1', title: 'Frontend Engineer (m/f/d)', company: 'Cabify S.L.', location: 'Madrid, Spain' }),
+      makeJob({ sourceId: 'aggregator', externalId: '1', title: 'Frontend Engineer (m/f/d)', company: 'Cabify S.L.', location: 'Madrid, Spain' }),
       makeJob({ sourceId: 'greenhouse', externalId: '2', title: 'Frontend Engineer', company: 'Cabify', location: 'Madrid' }),
       makeJob({ sourceId: 'lever', externalId: '3', title: 'Frontend Engineer - Madrid', company: 'CABIFY', location: 'Madrid' }),
     ]);

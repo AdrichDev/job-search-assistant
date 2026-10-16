@@ -15,9 +15,9 @@ export interface DedupeResult {
  * different source with a different id.
  *
  * The fourth one is what makes MULTI-SOURCE dedupe work. Once the same vacancy
- * can arrive from Adzuna and from the company's own Greenhouse board, all three
+ * can arrive from a search provider and from the company's own Greenhouse board, all three
  * of the original keys miss it: the ids differ, the URLs differ (one is an
- * Adzuna redirect), and the exact-title fingerprint differs because one of them
+ * a search provider redirect), and the exact-title fingerprint differs because one of them
  * appended `(m/f/d)`. `crossSourceKey` strips the decoration boards are known
  * to add and then demands an exact match - and returns `null` rather than a
  * loose key whenever it has no employer to anchor on. See `identity.ts` for why
@@ -31,7 +31,7 @@ function keysFor(job: Job): string[] {
    * degrades into `::junior developer::madrid` - a key that happily merges two
    * unrelated anonymous postings into one and deletes a real vacancy.
    *
-   * Adzuna reaches that state on its own: its schema defaults `company` to the
+   * a search provider reaches that state on its own: its schema defaults `company` to the
    * empty string, which is how recruiter-posted ads routinely arrive. So an
    * anonymous posting is deduped only by URL and by source reference - both of
    * which still collapse the same ad seen twice on two pages, because that is

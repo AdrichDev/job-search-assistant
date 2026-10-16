@@ -40,7 +40,7 @@ export interface QueuePipelineRunnerOptions extends SourceCompositionOptions {
 /**
  * A source that exists only to fail on demand.
  *
- * Used when a source cannot even be CONSTRUCTED - in practice, Adzuna with no
+ * Used when a source cannot even be CONSTRUCTED - in practice, a search provider with no
  * credentials configured. Throwing during construction would abort the whole
  * run before a single board was asked, which would let one missing API key cost
  * the user every free source as well.

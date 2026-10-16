@@ -47,11 +47,11 @@ describe('per-source contribution in the run summary', () => {
   it('sums the attempts of a source asked once per query', () => {
     const output = renderRunSummary(
       queue([
-        { sourceId: 'adzuna', query: 'junior developer', status: 'ok', fetched: 20 },
-        { sourceId: 'adzuna', query: 'react', status: 'ok', fetched: 5 },
+        { sourceId: 'aggregator', query: 'junior developer', status: 'ok', fetched: 20 },
+        { sourceId: 'aggregator', query: 'react', status: 'ok', fetched: 5 },
       ]),
     );
-    expect(output).toContain('adzuna 25');
+    expect(output).toContain('aggregator 25');
   });
 
   it('calls out a provider that contributed nothing', () => {
@@ -64,10 +64,10 @@ describe('per-source contribution in the run summary', () => {
     const output = renderRunSummary(
       queue([
         OK('greenhouse', 62),
-        { sourceId: 'adzuna', query: 'junior developer', status: 'failed', fetched: 0, error: 'HTTP 429' },
+        { sourceId: 'aggregator', query: 'junior developer', status: 'failed', fetched: 0, error: 'HTTP 429' },
       ]),
     );
-    expect(output).toMatch(/adzuna .*failed/i);
+    expect(output).toMatch(/aggregator .*failed/i);
   });
 
   it('names unreachable company boards without calling the run degraded', () => {

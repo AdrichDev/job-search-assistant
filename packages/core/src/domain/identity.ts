@@ -28,7 +28,7 @@ import { normalizeText } from './text.js';
 /**
  * Legal-form suffixes the same employer is spelled with on different boards.
  *
- * Adzuna reports `CABIFY ESPAÑA S.L.`; Greenhouse reports `Cabify`. Without
+ * a search provider reports `CABIFY ESPAÑA S.L.`; Greenhouse reports `Cabify`. Without
  * this, the company anchor never lines up and the cross-source key never fires.
  */
 const LEGAL_SUFFIXES = new Set([

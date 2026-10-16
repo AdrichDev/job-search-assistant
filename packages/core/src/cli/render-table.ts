@@ -195,8 +195,8 @@ export function renderScoreExplanations(queue: JobQueue, count: number): string 
  * the nasty one: a provider that quietly contributes zero for weeks looks
  * exactly like a provider that is working in a quiet market.
  *
- * Per-query sources are summed, because "adzuna 25" is the useful fact and
- * seven rows of "adzuna 4" is not.
+ * Per-query sources are summed, because "aggregator 25" is the useful fact and
+ * seven rows of "aggregator 4" is not.
  */
 function renderSourceContributions(queue: JobQueue): string | null {
   if (queue.sourceReports.length === 0) {
@@ -270,7 +270,7 @@ export function renderSampleDataNotice(queue: JobQueue): string | null {
     everything
       ? '  This is a demo run. For real vacancies use --source=all, or --source=boards'
       : '  Re-run to replace them: --source=all, or --source=boards',
-    '  if Adzuna is out of quota.',
+    '  if generic aggregator is out of quota.',
     '='.repeat(78),
   ].join('\n');
 }

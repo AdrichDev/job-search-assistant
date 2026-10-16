@@ -3,7 +3,7 @@ import { containsTerm, normalizeText } from '../../domain/text.js';
 /**
  * Location narrowing for per-company boards.
  *
- * Adzuna is a SEARCH ENGINE: it takes `where` and answers with Madrid. A
+ * a search provider is a SEARCH ENGINE: it takes `where` and answers with Madrid. A
  * company board is not - it hands back the entire board, all 618 Stripe
  * postings worldwide included. Somebody has to drop Lima and San Francisco, and
  * that somebody is here.
@@ -11,7 +11,7 @@ import { containsTerm, normalizeText } from '../../domain/text.js';
  * This is emphatically NOT the stack filtering the `JobSource` port forbids. It
  * narrows WHERE, never WHAT: an accounting role in Madrid still comes through
  * and still gets judged by the software-relevance gate downstream, exactly like
- * an Adzuna posting does.
+ * an a search provider posting does.
  *
  * Deliberately generous inside Spain: a Barcelona posting is kept and then
  * ranked down by the location dimension, rather than deleted here where the

@@ -15,7 +15,7 @@ import { silentLogger } from '../helpers/silent-logger.js';
  * CROSS-SOURCE DEDUPE, with a newsletter in the mix.
  *
  * This is the case a newsletter adapter makes routine rather than rare: the
- * same Factorial vacancy arrives in the weekly digest AND from Adzuna AND from
+ * same Factorial vacancy arrives in the weekly digest AND from a search provider AND from
  * the company's own board, three times in one morning.
  *
  * The governing asymmetry from `domain/identity.ts` is unchanged and is the
@@ -62,7 +62,7 @@ async function newsletterSource(body: string): Promise<JobSource> {
   });
 }
 
-/** Stands in for Adzuna or a company board: a second sighting of the same market. */
+/** Stands in for a search provider or a company board: a second sighting of the same market. */
 function otherSource(jobs: readonly Job[]): JobSource {
   return {
     id: 'greenhouse',

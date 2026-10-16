@@ -7,7 +7,7 @@
  * These rules were written in `e2e/support/link-integrity.ts` after thirteen
  * "Aplicar" buttons shipped pointing at
  *
- *     https://www.adzuna.es/details/<encodeURIComponent(job title)>
+ *     https://www.aggregator.es/details/<encodeURIComponent(job title)>
  *
  * All thirteen returned HTTP 403. The rules were right. Their ADDRESS was
  * wrong: living in the browser suite, they could only ever be applied to queues

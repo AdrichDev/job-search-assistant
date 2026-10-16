@@ -180,12 +180,12 @@ describe('startFetch', () => {
     const { runner, fail } = deferredRunner();
     const started = await startFetch(deps(runner));
 
-    fail(new Error('Adzuna key expired'));
+    fail(new Error('generic aggregator key expired'));
     await started.completion;
 
     expect(await readFetchState(deps(runner))).toMatchObject({
       status: 'failed',
-      error: 'Adzuna key expired',
+      error: 'generic aggregator key expired',
     });
 
     const { runner: next, finish } = deferredRunner();
@@ -319,7 +319,7 @@ describe('a failed run and the existing queue', () => {
       jobs: [],
       sourceReports: [
         {
-          sourceId: 'adzuna',
+          sourceId: 'aggregator',
           query: 'junior developer',
           status: 'failed',
           fetched: 0,

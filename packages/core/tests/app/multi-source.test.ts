@@ -94,7 +94,7 @@ describe('multi-source isolation', () => {
       {
         ...deps,
         sources: [
-          failing('adzuna', 'HTTP 429'),
+          failing('aggregator', 'HTTP 429'),
           perQuerySource('fixture', [job('fixture', 'Junior React Developer')]),
           failing('lever', 'HTTP 500'),
           boardSource('greenhouse', [job('greenhouse', 'Junior Backend Developer')]),
@@ -105,7 +105,7 @@ describe('multi-source isolation', () => {
 
     expect(queue.jobs).toHaveLength(3);
     const byId = new Map(queue.sourceReports.map((report) => [report.sourceId, report]));
-    expect(byId.get('adzuna')?.status).toBe('failed');
+    expect(byId.get('aggregator')?.status).toBe('failed');
     expect(byId.get('lever')?.status).toBe('failed');
     expect(byId.get('fixture')?.status).toBe('ok');
     expect(byId.get('greenhouse')?.status).toBe('ok');
@@ -164,7 +164,7 @@ describe('per-run sources', () => {
   it('still asks a per-query source once per query', async () => {
     let calls = 0;
     const source: JobSource = {
-      id: 'adzuna',
+      id: 'aggregator',
       fetchJobs: async () => {
         calls += 1;
         return [];
@@ -340,7 +340,7 @@ describe('the pipeline stays whole across sources', () => {
 
   it('dedupes across a per-query source and a per-run source', async () => {
     const shared = makeJob({
-      sourceId: 'adzuna',
+      sourceId: 'aggregator',
       externalId: 'ad-1',
       title: 'Frontend Engineer (m/f/d)',
       company: 'Cabify S.L.',
@@ -360,7 +360,7 @@ describe('the pipeline stays whole across sources', () => {
 
     const queue = await buildJobQueue(
       { queries: [QUERY] },
-      { ...deps, sources: [perQuerySource('adzuna', [shared]), boardSource('greenhouse', [board])] },
+      { ...deps, sources: [perQuerySource('aggregator', [shared]), boardSource('greenhouse', [board])] },
     );
 
     expect(queue.totalFetched).toBe(2);

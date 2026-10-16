@@ -5,16 +5,16 @@ import { DEFAULT_JUNIOR_FILTER_CONFIG } from '../../src/config/junior-filter-con
 import { DEFAULT_SCORING_CONFIG } from '../../src/config/scoring-config.js';
 import type { JobSource, JobSourceQuery } from '../../src/ports/job-source.js';
 import {
-  REAL_ADZUNA_RUN,
+  REAL_AGGREGATOR_RUN,
   REAL_RUN_NOW,
   realPostingByTitle,
   scoringProbeJob,
   scoringProbeJobs,
-} from '../fixtures/real-adzuna-run.js';
+} from '../fixtures/real-market-run.js';
 import { silentLogger } from '../helpers/silent-logger.js';
 
 /**
- * Regression suite for FILTER A: 11 of the 25 postings a live Adzuna run
+ * Regression suite for FILTER A: 11 of the 25 postings a live generic aggregator run
  * returned were not software jobs, and a dentist scored 56.8/100.
  *
  * Scope note, because the product gained a second filter after this suite was
@@ -39,7 +39,7 @@ const QUERY: JobSourceQuery = {
 
 async function runRealQueue() {
   const jobs = scoringProbeJobs();
-  const source: JobSource = { id: 'adzuna', fetchJobs: async () => jobs };
+  const source: JobSource = { id: 'aggregator', fetchJobs: async () => jobs };
   return buildJobQueue(
     { queries: [QUERY] },
     {
@@ -83,7 +83,7 @@ describe('the dentist regression', () => {
 });
 
 describe('every non-software posting from the real run', () => {
-  const nonSoftware = REAL_ADZUNA_RUN.filter((posting) => !posting.software);
+  const nonSoftware = REAL_AGGREGATOR_RUN.filter((posting) => !posting.software);
 
   it.each(nonSoftware.map((posting) => [posting.title] as const))(
     'excludes %s',
@@ -96,7 +96,7 @@ describe('every non-software posting from the real run', () => {
 });
 
 describe('every genuine software posting from the real run', () => {
-  const software = REAL_ADZUNA_RUN.filter((posting) => posting.software);
+  const software = REAL_AGGREGATOR_RUN.filter((posting) => posting.software);
 
   /*
    * "Passes the gate", not "reaches the list".
@@ -134,11 +134,11 @@ describe('weak stack match is not the same as irrelevant', () => {
 describe('exclusion is never silent', () => {
   it('reports how many postings the gate removed and why', async () => {
     const queue = await runRealQueue();
-    const expected = REAL_ADZUNA_RUN.filter((posting) => !posting.software).length;
+    const expected = REAL_AGGREGATOR_RUN.filter((posting) => !posting.software).length;
     const byGate = queue.excluded.filter((entry) => entry.excludedBy === 'software_relevance');
 
     expect(byGate).toHaveLength(expected);
-    expect(queue.totalRelevant).toBe(REAL_ADZUNA_RUN.length - expected);
+    expect(queue.totalRelevant).toBe(REAL_AGGREGATOR_RUN.length - expected);
     for (const entry of byGate) {
       expect(entry.reason.length).toBeGreaterThan(0);
       expect(entry.url.length).toBeGreaterThan(0);

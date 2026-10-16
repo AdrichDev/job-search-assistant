@@ -1,11 +1,9 @@
-import { loadAdzunaCredentials } from '../../config/env.js';
 import { companiesFor } from '../../config/company-boards.js';
 import { DEFAULT_NEWSLETTER_LINK_CONCURRENCY } from '../../config/newsletter.js';
 import type { SelectableSourceId } from '../../cli/source-selection.js';
 import type { JobSource } from '../../ports/job-source.js';
 import type { LinkChecker } from '../../ports/link-checker.js';
 import type { Logger } from '../../ports/logger.js';
-import { createAdzunaJobSource } from '../adzuna/adzuna-job-source.js';
 import { createArbeitnowJobSource } from '../arbeitnow/arbeitnow-job-source.js';
 import { createAshbyJobSource } from '../boards/ashby-board.js';
 import { createGreenhouseJobSource } from '../boards/greenhouse-board.js';
@@ -101,8 +99,8 @@ export function buildLinkChecker(options: SourceCompositionOptions): LinkChecker
 /**
  * One lazy factory per selectable source.
  *
- * Lazy so a source that cannot be constructed (Adzuna without credentials)
- * fails only when selected, and each caller decides how to isolate that failure.
+ * Lazy so sources are constructed only when selected and one unavailable
+ * provider can still be isolated by the caller.
  */
 export function buildSourceFactories(
   options: SourceCompositionOptions,
@@ -113,17 +111,6 @@ export function buildSourceFactories(
 
   return {
     fixture: () => createFixtureJobSource({ filePath: options.fixturePath, now }),
-
-    adzuna: () => {
-      // Credentials are validated here, before a single request is issued.
-      const credentials = loadAdzunaCredentials();
-      return createAdzunaJobSource({
-        appId: credentials.appId,
-        appKey: credentials.appKey,
-        logger,
-        ...(credentials.baseUrl === undefined ? {} : { baseUrl: credentials.baseUrl }),
-      });
-    },
 
     manfred: () => createManfredJobSource({ logger, timeoutMs, concurrency, now }),
 

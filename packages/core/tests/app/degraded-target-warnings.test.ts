@@ -72,7 +72,7 @@ describe('write decision with per-board degradation', () => {
 
   it('keeps the degraded-run warning for an actually failed source query', () => {
     const decision = decideQueueWrite({
-      sourceReports: [ok('greenhouse'), failed('adzuna')],
+      sourceReports: [ok('greenhouse'), failed('aggregator')],
       incomingJobCount: 25,
       existing: { kind: 'present', jobCount: 20 },
     });
@@ -84,7 +84,7 @@ describe('write decision with per-board degradation', () => {
   it('still refuses to overwrite real postings when everything failed and nothing came back', () => {
     // The original data-loss guard, unchanged by any of this.
     const decision = decideQueueWrite({
-      sourceReports: [failed('adzuna'), failed('greenhouse')],
+      sourceReports: [failed('aggregator'), failed('greenhouse')],
       incomingJobCount: 0,
       existing: { kind: 'present', jobCount: 25 },
     });

@@ -14,8 +14,8 @@ describe('dedupeJobs', () => {
 
   it('collapses the same vacancy seen twice on different pages', () => {
     const result = dedupeJobs([
-      makeJob({ sourceId: 'adzuna', externalId: '1', title: 'Junior Dev', company: 'ACME' }),
-      makeJob({ sourceId: 'adzuna', externalId: '1', title: 'Junior Dev', company: 'ACME' }),
+      makeJob({ sourceId: 'aggregator', externalId: '1', title: 'Junior Dev', company: 'ACME' }),
+      makeJob({ sourceId: 'aggregator', externalId: '1', title: 'Junior Dev', company: 'ACME' }),
     ]);
     expect(result.jobs).toHaveLength(1);
     expect(result.duplicatesRemoved).toBe(1);
@@ -24,12 +24,12 @@ describe('dedupeJobs', () => {
   it('collapses the same vacancy arriving from two different sources', () => {
     const result = dedupeJobs([
       makeJob({
-        sourceId: 'adzuna',
+        sourceId: 'aggregator',
         externalId: 'a-1',
         title: 'Desarrollador Júnior',
         company: 'ACME S.L.',
         location: 'Madrid, Comunidad de Madrid, Spain',
-        url: 'https://adzuna.example/1',
+        url: 'https://aggregator.example/1',
       }),
       makeJob({
         sourceId: 'fixture',
@@ -46,17 +46,17 @@ describe('dedupeJobs', () => {
 
   it('accumulates every source reference on the surviving job', () => {
     const [survivor] = dedupeJobs([
-      makeJob({ sourceId: 'adzuna', externalId: 'a-1', url: 'https://a.example/1' }),
+      makeJob({ sourceId: 'aggregator', externalId: 'a-1', url: 'https://a.example/1' }),
       makeJob({ sourceId: 'fixture', externalId: 'f-9', url: 'https://f.example/9' }),
     ]).jobs;
 
-    expect(survivor?.sources.map((ref) => ref.sourceId).sort()).toEqual(['adzuna', 'fixture']);
+    expect(survivor?.sources.map((ref) => ref.sourceId).sort()).toEqual(['aggregator', 'fixture']);
   });
 
   it('does not duplicate an identical source reference', () => {
     const [survivor] = dedupeJobs([
-      makeJob({ sourceId: 'adzuna', externalId: 'a-1' }),
-      makeJob({ sourceId: 'adzuna', externalId: 'a-1' }),
+      makeJob({ sourceId: 'aggregator', externalId: 'a-1' }),
+      makeJob({ sourceId: 'aggregator', externalId: 'a-1' }),
     ]).jobs;
     expect(survivor?.sources).toHaveLength(1);
   });

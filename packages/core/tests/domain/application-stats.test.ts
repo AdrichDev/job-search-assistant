@@ -62,14 +62,14 @@ describe('computeApplicationStats', () => {
 
   it('attributes conversion to every source and keeps legacy applications auditable', () => {
     const stats = computeApplicationStats([
-      application('frontend', 'interview', ['adzuna', 'manfred']),
-      application('general', 'rejected', ['adzuna']),
+      application('frontend', 'interview', ['aggregator', 'manfred']),
+      application('general', 'rejected', ['aggregator']),
       application('microsoft', 'no_reply'),
     ]);
 
     expect(stats.bySource).toEqual([
       {
-        sourceId: 'adzuna',
+        sourceId: 'aggregator',
         applied: 2,
         responses: 2,
         advances: 1,

@@ -86,7 +86,7 @@ describe('recordApplication', () => {
 
   it('captures the source ids of the vacancy from the SERVER queue', async () => {
     const sources = [
-      { sourceId: 'adzuna', externalId: '1', url: 'https://example.test/a' },
+      { sourceId: 'aggregator', externalId: '1', url: 'https://example.test/a' },
       { sourceId: 'manfred', externalId: '2', url: 'https://example.test/b' },
     ];
     const result = await recordApplication(
@@ -96,7 +96,7 @@ describe('recordApplication', () => {
 
     expect(result.status).toBe('recorded');
     if (result.status === 'recorded') {
-      expect(result.application.sourceIds).toEqual(['adzuna', 'manfred']);
+      expect(result.application.sourceIds).toEqual(['aggregator', 'manfred']);
     }
   });
 

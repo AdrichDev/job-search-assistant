@@ -5,8 +5,7 @@
  * combinations the candidate actually needs are real:
  *
  *   --source=fixture              offline demo data, no network, no keys
- *   --source=boards               the three company boards, and deliberately
- *                                 NOT Adzuna, whose free quota is exhausted
+ *   --source=boards               the configured company ATS boards
  *   --source=greenhouse,ashby     one bad provider excluded for a run
  *   --source=newsletter           saved job-alert emails, no network at all
  *   --source=all                  every REAL source
@@ -16,7 +15,7 @@
  * `all` used to mean "every selectable source", fixture included. The user ran
  * the documented `npm start -- --source=all` and got:
  *
- *   Contributed: fixture 105, adzuna 1, greenhouse 64, lever 14, ashby 29, ...
+ *   Contributed: fixture 105, greenhouse 64, lever 14, ashby 29, ...
  *
  *   #1  Trainee Software Developer  Kubo Labs  Madrid  85.8
  *       link: https://example-board.test/offers/fx-010
@@ -66,7 +65,6 @@
 
 export type SelectableSourceId =
   | 'fixture'
-  | 'adzuna'
   | 'manfred'
   | 'greenhouse'
   | 'lever'
@@ -114,7 +112,6 @@ export const REAL_SOURCE_IDS: readonly SelectableSourceId[] = [
   // First because it is the best match for this candidate: the Spanish tech
   // market, in Spanish, and the only source that publishes a salary.
   'manfred',
-  'adzuna',
   ...BOARD_SOURCE_IDS,
   // These two are European rather than Spanish and are near the bottom for
   // that reason. See their adapters for the measured Spanish yield - it is

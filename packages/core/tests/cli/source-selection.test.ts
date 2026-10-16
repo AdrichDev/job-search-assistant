@@ -18,7 +18,6 @@ describe('parseSourceSelection', () => {
 
   it('keeps the single-source form working', () => {
     expect(parseSourceSelection('fixture')).toEqual(['fixture']);
-    expect(parseSourceSelection('adzuna')).toEqual(['adzuna']);
     expect(parseSourceSelection('greenhouse')).toEqual(['greenhouse']);
     expect(parseSourceSelection('lever')).toEqual(['lever']);
     expect(parseSourceSelection('ashby')).toEqual(['ashby']);
@@ -66,8 +65,10 @@ describe('parseSourceSelection', () => {
     expect(() => parseSourceSelection('fixture,newsletter')).toThrow(/fixture/);
   });
 
-  it('names the offline escape hatch in the mixing error, so the user is not stuck', () => {
-    expect(() => parseSourceSelection('fixture,adzuna')).toThrow(/--source=fixture/);
+  it('rejects aggregator because it is no longer a supported source', () => {
+    expect(() => parseSourceSelection('aggregator')).toThrow(/aggregator/);
+    expect(parseSourceSelection('all')).not.toContain('aggregator');
+    expect(SELECTABLE_SOURCE_IDS).not.toContain('aggregator');
   });
 
   it('declares exactly one sample source, and it is the fixture', () => {
@@ -96,7 +97,7 @@ describe('parseSourceSelection', () => {
      * rather than asserted loosely: `boards` describes a KIND of source (a
      * per-company ATS with no key and no search endpoint), so a new member is a
      * deliberate decision that should have to be written down here. What must
-     * never appear is `manfred`, `landingjobs`, `arbeitnow`, `adzuna` or
+     * never appear is `manfred`, `landingjobs`, `arbeitnow`, `aggregator` or
      * `newsletter` - none of them is a company board, and a shortcut that
      * quietly widened would make `--source=boards` unpredictable.
      */
@@ -110,10 +111,10 @@ describe('parseSourceSelection', () => {
     }
   });
 
-  it('never puts adzuna in the boards shortcut', () => {
-    // Adzuna's free quota is exhausted; `--source=boards` must be a safe way to
+  it('never puts aggregator in the boards shortcut', () => {
+    // generic aggregator's free quota is exhausted; `--source=boards` must be a safe way to
     // run without touching it.
-    expect(parseSourceSelection('boards')).not.toContain('adzuna');
+    expect(parseSourceSelection('boards')).not.toContain('aggregator');
   });
 
   it('collapses duplicates while preserving first-mentioned order', () => {

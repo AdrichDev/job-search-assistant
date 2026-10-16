@@ -13,7 +13,7 @@ import { REFERENCE_NOW } from '../helpers/make-job.js';
 /**
  * The data-loss regression suite.
  *
- * Context: a real run hit HTTP 429 on every Adzuna query, collected nothing,
+ * Context: a real run hit HTTP 429 on every generic aggregator query, collected nothing,
  * printed "Degraded run" - and then wrote an empty queue over 25 real postings.
  *
  * The rule these tests pin down is one sentence:
@@ -28,11 +28,11 @@ import { REFERENCE_NOW } from '../helpers/make-job.js';
 
 function report(status: 'ok' | 'failed', query: string, fetched = 0): SourceReport {
   return {
-    sourceId: 'adzuna',
+    sourceId: 'aggregator',
     query,
     status,
     fetched,
-    ...(status === 'failed' ? { error: 'Adzuna request failed with HTTP 429 (page 1)' } : {}),
+    ...(status === 'failed' ? { error: 'generic aggregator request failed with HTTP 429 (page 1)' } : {}),
   };
 }
 

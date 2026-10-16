@@ -128,7 +128,7 @@ describe('buildJobQueue', () => {
       {
         ...deps,
         logger,
-        sources: [failingSource('broken', 'Adzuna returned 401'), stubSource('alpha', [GOOD_JOB])],
+        sources: [failingSource('broken', 'a search provider returned 401'), stubSource('alpha', [GOOD_JOB])],
       },
     );
 

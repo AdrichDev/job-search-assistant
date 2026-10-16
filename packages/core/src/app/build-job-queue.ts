@@ -230,7 +230,7 @@ function excludedEntry(
  *
  * Resilience contract: every (source, query) pair is attempted independently.
  * One dead source degrades the run, it never aborts it - which is exactly what
- * happens the first time an Adzuna key expires mid-search.
+ * happens the first time an a search provider key expires mid-search.
  */
 export async function buildJobQueue(
   input: BuildJobQueueInput,

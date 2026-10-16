@@ -13,7 +13,7 @@ import { WORKSPACE_ROOT, resolveDataPath } from './paths.js';
  * human browses, and it is machinery rather than content.
  *
  * NOT inside `data/newsletters/`. Liveness is checked for every source, because
- * a Greenhouse or Adzuna posting closes exactly as often as a shortened one -
+ * a Greenhouse or a search provider posting closes exactly as often as a shortened one -
  * it just does so without a redirect to make it obvious.
  */
 export const DEFAULT_LIVENESS_CACHE_PATH = resolveDataPath(

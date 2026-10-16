@@ -81,7 +81,7 @@ describe('the title-derived rule - the original defect', () => {
   it('rejects an address that IS the job title', () => {
     // The thirteen buttons that shipped: valid, absolute, https, real host,
     // and entirely synthesised from a field the pipeline happened to have.
-    const url = `https://www.adzuna.es/details/${encodeURIComponent('Junior Frontend Developer')}`;
+    const url = `https://www.aggregator.es/details/${encodeURIComponent('Junior Frontend Developer')}`;
 
     expect(isTitleDerived(new URL(url), 'Junior Frontend Developer')).toBe(true);
     expect(

@@ -37,7 +37,7 @@ export interface FixtureJobSourceOptions {
  * Offline source backed by committed sample data.
  *
  * Why it exists: the pipeline, its tests and the CLI demo must all run with no
- * API key and no network. It is also the contract fixture the Adzuna adapter is
+ * API key and no network. It is also the contract fixture the a search provider adapter is
  * measured against.
  *
  * Known simplification: `what` and `where` are ignored. Every query returns the

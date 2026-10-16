@@ -156,12 +156,12 @@ describe('renderRunSummary', () => {
   it('flags a degraded run and names the failing source', () => {
     const degraded = queue({
       sourceReports: [
-        { sourceId: 'adzuna', query: 'junior developer', status: 'failed', fetched: 0, error: 'HTTP 401' },
+        { sourceId: 'aggregator', query: 'junior developer', status: 'failed', fetched: 0, error: 'HTTP 401' },
       ],
     });
     const output = renderRunSummary(degraded);
     expect(output).toContain('Degraded run');
-    expect(output).toContain('adzuna');
+    expect(output).toContain('aggregator');
     expect(output).toContain('HTTP 401');
   });
 
@@ -286,8 +286,8 @@ describe('renderLinkAudit', () => {
       jobs: [
         entry({
           title: 'Desarrollador Junior Frontend',
-          url: `https://www.adzuna.es/details/${encodeURIComponent('Desarrollador Junior Frontend')}`,
-          sources: realSources('adzuna'),
+          url: `https://www.aggregator.es/details/${encodeURIComponent('Desarrollador Junior Frontend')}`,
+          sources: realSources('aggregator'),
         }),
       ],
     });

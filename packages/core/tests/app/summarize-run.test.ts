@@ -78,7 +78,7 @@ const QUEUE: JobQueue = {
   sourceReports: [
     { sourceId: 'greenhouse', query: '(all company boards)', status: 'ok', fetched: 40 },
     {
-      sourceId: 'adzuna',
+      sourceId: 'aggregator',
       query: 'junior developer',
       status: 'failed',
       fetched: 0,
@@ -134,7 +134,7 @@ describe('summarizeRun', () => {
 
   it('names every source query that failed, with its error', () => {
     expect(summarizeRun(QUEUE, WRITTEN).failedSources).toEqual([
-      { sourceId: 'adzuna', query: 'junior developer', error: 'HTTP 429 Too Many Requests' },
+      { sourceId: 'aggregator', query: 'junior developer', error: 'HTTP 429 Too Many Requests' },
     ]);
   });
 

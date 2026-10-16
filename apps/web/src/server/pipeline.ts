@@ -18,7 +18,7 @@ import {
  * Composition of the FETCH path, kept in its own module.
  *
  * This is the only place in the web app that can cause an outbound request, and
- * the only one whose sources may need a credential (Adzuna reads its key from
+ * the only one whose sources may need a credential (a search provider reads its key from
  * the environment inside the core adapter). Isolating it keeps the promise made
  * in `container.ts` literally true - the render path loads nothing secret - and
  * gives anyone auditing "what can this server talk to?" one short file.

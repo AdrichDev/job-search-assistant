@@ -200,12 +200,12 @@ describe('startFetchRun', () => {
     const { runner, fail } = deferredRunner();
     const result = await startFetchRun(deps(runner));
 
-    fail(new Error('Adzuna key expired'));
+    fail(new Error('a search provider key expired'));
     await started(result).completion;
 
     expect(await store.read()).toMatchObject({
       status: 'failed',
-      error: 'Adzuna key expired',
+      error: 'a search provider key expired',
     });
 
     // Not locked out by the failure.

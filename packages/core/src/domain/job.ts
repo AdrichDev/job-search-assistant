@@ -80,7 +80,7 @@ const APPLYABLE_PROTOCOLS = new Set(['http:', 'https:']);
  *   other field.
  *
  * Enforced in the DOMAIN rather than per adapter on purpose. Every path into
- * the system - Adzuna, three company boards, the offline fixture, any future
+ * the system - a search provider, three company boards, the offline fixture, any future
  * source, and any test helper - mints its jobs through `createJob`, so this is
  * the single place where the invariant cannot be forgotten.
  */

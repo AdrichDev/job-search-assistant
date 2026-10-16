@@ -99,7 +99,7 @@ Usage:
   npm start -- --source=boards                Run the three company boards (no API key needed)
   npm start -- --source=greenhouse,ashby      Run a subset of providers
   npm start -- --source=newsletter            Read saved job-alert emails
-  npm start -- --source=all                   Every real source, including Adzuna
+  npm start -- --source=all                   Every supported real source
 
 Options:
   --source=LIST                 Comma-separated. One or more of:
@@ -111,7 +111,6 @@ Options:
                                                   publishes a salary range. Small: the API
                                                   returns 1645 offers but only ~18 are open,
                                                   the rest are a closed archive.
-                                  adzuna          Adzuna Spain search API (needs a key)
                                   greenhouse      Greenhouse company boards
                                   lever           Lever company boards
                                   ashby           Ashby company boards
@@ -125,9 +124,9 @@ Options:
                                                   located in Spain. Remote roles are kept.
                                   newsletter      saved job-alert emails in data/newsletters/
                                 Shortcuts: 'boards' = greenhouse,lever,ashby,smartrecruiters
-                                           'all'    = every REAL source above (manfred,adzuna,
-                                             greenhouse,lever,ashby,smartrecruiters,
-                                             landingjobs,arbeitnow,newsletter)
+                                           'all'    = every REAL source above (manfred,greenhouse,
+                                             lever,ashby,smartrecruiters,landingjobs,
+                                             arbeitnow,newsletter)
                                 'fixture' is NEVER included in a shortcut and may not
                                 share a run with a real source: demo postings competing
                                 for position in a list you act on is the defect this

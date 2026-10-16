@@ -93,7 +93,6 @@ async function runPipeline(sources: readonly JobSource[]): Promise<JobQueue> {
 function sourcesFor(ids: readonly SelectableSourceId[]): readonly JobSource[] {
   const factories: Readonly<Record<SelectableSourceId, () => JobSource>> = {
     fixture: () => createFixtureJobSource({ filePath: DEFAULT_FIXTURE_PATH, now: () => NOW }),
-    adzuna: () => stubSource('adzuna', ['https://www.adzuna.es/details/4881029371']),
     greenhouse: () =>
       stubSource('greenhouse', ['https://job-boards.greenhouse.io/factorial/jobs/6633404003']),
     lever: () =>

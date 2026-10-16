@@ -7,7 +7,7 @@ import { DEFAULT_BOARD_LOCATION_FILTER } from '../../../src/config/company-board
 
 /**
  * Company boards are not search engines: they hand back the ENTIRE board, so
- * the location narrowing that Adzuna does server-side has to happen here.
+ * the location narrowing that a search provider does server-side has to happen here.
  *
  * This is a location filter, never a stack filter - the port contract still
  * forbids an adapter from deciding which technologies deserve to compete.

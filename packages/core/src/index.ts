@@ -178,7 +178,6 @@ export {
 } from './app/update-application-outcome.js';
 
 /* Adapters ------------------------------------------------------------ */
-export { createAdzunaJobSource } from './adapters/adzuna/adzuna-job-source.js';
 export { createAshbyJobSource } from './adapters/boards/ashby-board.js';
 export { createGreenhouseJobSource } from './adapters/boards/greenhouse-board.js';
 export { createLeverJobSource } from './adapters/boards/lever-board.js';
@@ -271,7 +270,7 @@ export {
   WORKSPACE_ROOT,
 } from './config/paths.js';
 export { DEFAULT_SCORING_CONFIG } from './config/scoring-config.js';
-export { ADZUNA_IT_CATEGORY, DEFAULT_SEARCH_PLAN } from './config/search-plan.js';
+export { DEFAULT_SEARCH_PLAN } from './config/search-plan.js';
 export {
   BOARD_PROVIDER_IDS,
   COMPANY_BOARDS,
