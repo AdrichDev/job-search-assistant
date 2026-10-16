@@ -14,7 +14,7 @@ Turn the current aggregation infrastructure into an operational MVP: only useful
 - S8. Update CLI help, README/source docs, tests and fixtures alongside behavior. Preserve manual application; do not add portal scraping or automatic application.
 
 ## Tasks
-- [ ] T1 (S1) Remove Adzuna end-to-end. Route: inline after bounded map. Commit: pending
+- [x] T1 (S1) Remove Adzuna end-to-end. Route: inline after bounded map. Commit: d7fb62c. Evidence: removed adapter, schema, credentials, category contract, source selection, composition factory, exports, help/docs and dedicated tests; `.env.example` has no Adzuna variables; no Adzuna refs remain outside the ODD log; typecheck passed; core 968 and web 85 tests passed.
 - [ ] T2 (S2) Remove JuniorJobs/newsletter ingestion end-to-end. Route: inline after bounded map. Commit: pending
 - [ ] T3 (S3-S5, S7) Build the unified hard eligibility filter and audit reasons. Route: test-first. Commit: pending
 - [ ] T4 (S6) Show and filter source provenance in the web UI. Route: test-first. Commit: pending
