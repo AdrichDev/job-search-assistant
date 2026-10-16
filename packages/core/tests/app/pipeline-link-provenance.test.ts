@@ -1,10 +1,6 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { buildJobQueue } from '../../src/app/build-job-queue.js';
 import { createFixtureJobSource } from '../../src/adapters/fixture/fixture-job-source.js';
-import { createNewsletterJobSource } from '../../src/adapters/newsletter/newsletter-job-source.js';
 import { parseSourceSelection, type SelectableSourceId } from '../../src/cli/source-selection.js';
 import { DEFAULT_FIXTURE_PATH } from '../../src/config/paths.js';
 import { DEFAULT_JUNIOR_FILTER_CONFIG } from '../../src/config/junior-filter-config.js';
@@ -128,10 +124,6 @@ function sourcesFor(ids: readonly SelectableSourceId[]): readonly JobSource[] {
         'https://www.arbeitnow.com/jobs/companies/jessyworks/datev-techniker-operations-manager-remote-vollzeit-teilzeit-munich-18836',
       ]),
 
-    newsletter: () =>
-      stubSource('newsletter', [
-        'https://careers.idealista.com/jobs/8103848-android-product-engineer',
-      ]),
   };
 
   return ids.map((id) => factories[id]());
@@ -160,7 +152,7 @@ describe('link provenance of a PIPELINE-PRODUCED queue', () => {
   });
 
   it('PASSES on a queue the pipeline built from real source addresses', async () => {
-    const queue = await runPipeline(sourcesFor(['greenhouse', 'lever', 'ashby', 'newsletter']));
+    const queue = await runPipeline(sourcesFor(['greenhouse', 'lever', 'ashby']));
 
     expect(queue.jobs.length).toBeGreaterThan(0);
 
@@ -258,83 +250,5 @@ describe('link provenance of a PIPELINE-PRODUCED queue', () => {
 
     expect(countSampleDataEntries(queue.jobs)).toBe(queue.jobs.length);
     expect(auditQueueLinks(queue).length).toBeGreaterThan(0);
-  });
-});
-
-describe('link provenance of a queue built from a real saved newsletter', () => {
-  let directory: string;
-
-  const DIGEST = [
-    '🇪🇸 Empezamos España y resto de Europa:',
-    '1. 🚨 *Empieza las novedades Factorial, que busca a un GTM Engineer: https://juniorjobs.short.gy/2sxqtb*',
-    '2. 🚨🧑‍💻 *Idealista necesita encontrar a un Android Product Engineer, 100% en remoto: https://juniorjobs.short.gy/Ha5kML*',
-    '3. 🚨 *Red Points busca a un Backend Developer: https://juniorjobs.short.gy/nhamUo*',
-    '',
-    'juniorjobs.short.gy',
-  ].join('\n');
-
-  beforeAll(async () => {
-    directory = await mkdtemp(join(tmpdir(), 'jq-provenance-'));
-    await writeFile(join(directory, 'newsletter-2026-09-06.txt'), DIGEST, 'utf8');
-  });
-
-  afterAll(async () => {
-    await rm(directory, { recursive: true, force: true });
-  });
-
-  it('keeps the sender addresses clean when nothing resolves', async () => {
-    // The offline path: the resolver could follow nothing, so every posting
-    // carries the shortener the newsletter wrote. That is second best and it is
-    // honest - the link redirects. The audit must not flag it.
-    const queue = await runPipeline([
-      createNewsletterJobSource({
-        directory,
-        logger: silentLogger,
-        now: () => NOW,
-      }),
-    ]);
-
-    expect(queue.jobs.length).toBeGreaterThan(0);
-    expect(auditQueueLinks(queue)).toHaveLength(0);
-    expect(countSampleDataEntries(queue.jobs)).toBe(0);
-  });
-
-  it('keeps the resolved employer addresses clean too', async () => {
-    const destinations: Readonly<Record<string, string>> = {
-      'https://juniorjobs.short.gy/2sxqtb':
-        'https://job-boards.greenhouse.io/factorial/jobs/6633404003',
-      'https://juniorjobs.short.gy/Ha5kML':
-        'https://careers.idealista.com/jobs/8103848-android-product-engineer',
-      'https://juniorjobs.short.gy/nhamUo':
-        'https://jobs.smartrecruiters.com/RedPoints1/744000147215471-backend-developer',
-    };
-
-    const queue = await runPipeline([
-      createNewsletterJobSource({
-        directory,
-        logger: silentLogger,
-        now: () => NOW,
-        linkResolver: {
-          async resolve(urls) {
-            return new Map(
-              urls.map((url) => [
-                url,
-                {
-                  originalUrl: url,
-                  finalUrl: destinations[url] ?? url,
-                  resolved: destinations[url] !== undefined,
-                  status: 200,
-                  error: null,
-                },
-              ]),
-            );
-          },
-        },
-      }),
-    ]);
-
-    expect(queue.jobs.length).toBeGreaterThan(0);
-    expect(queue.jobs.every((job) => !job.url.includes('short.gy'))).toBe(true);
-    expect(auditQueueLinks(queue)).toHaveLength(0);
   });
 });

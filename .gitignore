@@ -31,9 +31,6 @@ data/.fetch-run.*.tmp
 # Generated link evidence and raw personal job-alert inputs.
 data/.link-liveness.json
 data/.link-liveness.*.tmp
-data/newsletters/*
-!data/newsletters/README.md
-
 # Personal candidate details belong only in the local override.
 candidate-profile.local.json
 

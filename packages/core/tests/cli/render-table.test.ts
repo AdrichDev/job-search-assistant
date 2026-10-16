@@ -295,10 +295,10 @@ describe('renderLinkAudit', () => {
     expect(renderLinkAudit(fabricated)).toContain('title-derived');
   });
 
-  it('accepts an unresolved newsletter shortener, which redirects and is not a guess', () => {
+  it('accepts an unresolved greenhouse shortener, which redirects and is not a guess', () => {
     const shortened = queue({
       jobs: [
-        entry({ url: 'https://juniorjobs.short.gy/2sxqtb', sources: realSources('newsletter') }),
+        entry({ url: 'https://jobs.example.test/2sxqtb', sources: realSources('greenhouse') }),
       ],
     });
 
@@ -337,7 +337,7 @@ describe('the liveness report', () => {
     id: 'amazon::systems developer engineer::madrid',
     title: 'Systems Developer Engineer, Security Integrations Group',
     company: 'Amazon',
-    url: 'https://juniorjobs.short.gy/hh6WWK',
+    url: 'https://jobs.example.test/hh6WWK',
     excludedBy: 'dead_link',
     scoreBeforeGate: 61.2,
     softwareRelevance: 0.9,

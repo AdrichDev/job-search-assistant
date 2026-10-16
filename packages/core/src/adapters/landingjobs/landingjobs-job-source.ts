@@ -42,7 +42,7 @@ import type { Logger } from '../../ports/logger.js';
  * There is no company field. The employer is still in the payload - it is the
  * `/at/<employer>/` segment of the posting's own URL - so it is read from
  * there. That is a derivation from a reported field, not an invention, and it
- * is the same posture the newsletter adapter takes with resolved links. When
+ * is the same posture the greenhouse adapter takes with resolved links. When
  * the URL does not have that shape the company stays EMPTY, which `dedupe.ts`
  * already handles by refusing to merge on it.
  */

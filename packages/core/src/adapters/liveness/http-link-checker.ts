@@ -9,7 +9,7 @@ import type { Logger } from '../../ports/logger.js';
  * becoming crawling.
  *
  * This is the only new outbound traffic in the pipeline, and it is aimed at
- * every source rather than just the newsletter: a Greenhouse posting closes
+ * every source rather than just the greenhouse: a Greenhouse posting closes
  * exactly as often as a shortened one, it just does so without a redirect to
  * make it obvious. So the same restraint the board adapters and the link
  * resolver already observe applies here, enforced mechanically:
@@ -93,7 +93,7 @@ const cacheFileSchema = z.record(cachedLivenessSchema);
  *
  * Twelve hours, which is chosen against a daily habit rather than pulled from
  * the air: the candidate runs this in the morning, and re-running an hour later
- * to see a new newsletter must not re-ask two hundred careers pages. A posting
+ * to see a new greenhouse must not re-ask two hundred careers pages. A posting
  * that closes at noon is caught the next morning, and the cost of that lag is
  * one wasted click - the cheap side of the asymmetry.
  */
@@ -122,7 +122,7 @@ function errorMessage(cause: unknown): string {
 /*
  * THERE IS NO PASSTHROUGH CHECKER HERE, and its absence is deliberate.
  *
- * The newsletter resolver next door has one, because "hand every link back
+ * The greenhouse resolver next door has one, because "hand every link back
  * unchanged" is a real behaviour that produces real output. "Check nothing" is
  * not: it produces no records, which is indistinguishable from a checker whose
  * every request came back empty.
@@ -159,7 +159,7 @@ function defaultFetch(): LinkCheckFetch {
        * FOLLOW, because the question is the one a candidate's browser asks:
        * "if I click this, do I land on a posting?"
        *
-       * It matters more than it looks. `juniorjobs.short.gy/hh6WWK` answers 302
+       * It matters more than it looks. `jobs.example.test/hh6WWK` answers 302
        * on its own - a perfectly healthy-looking shortener - and following it
        * lands on `amazon.jobs/en/jobs/10431349/...` which answers 404. Checking
        * without following would have called that posting alive and left a dead

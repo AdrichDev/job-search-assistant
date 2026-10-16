@@ -28,7 +28,7 @@ export interface LinkChecker {
    * How much traffic this actually cost, drained by the caller for the report.
    *
    * Same `take*` convention as `JobSource.takeDegradedTargets` and
-   * `NewsletterJobSource.takeLinkProvenance`: the pipeline collects the number,
+   * `GreenhouseJobSource.takeLinkProvenance`: the pipeline collects the number,
    * the CLI prints it, and nobody has to thread a counter through the use case.
    *
    * Optional so a test double can be three lines.

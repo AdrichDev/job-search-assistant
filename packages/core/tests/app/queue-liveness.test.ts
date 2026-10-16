@@ -73,7 +73,7 @@ function scriptedChecker(
 
 function softwareJob(overrides: { externalId: string; title: string; company: string; url: string }): Job {
   return makeJob({
-    sourceId: 'newsletter',
+    sourceId: 'greenhouse',
     description:
       'Desarrollo de software con React, TypeScript y Node. Perfil junior, sin experiencia previa requerida.',
     postedAt: daysAgo(1),
@@ -85,7 +85,7 @@ async function runPipeline(jobs: readonly Job[], checker?: LinkChecker) {
   return buildJobQueue(
     { queries: [QUERY], candidateName: 'Adrian' },
     {
-      sources: [stubSource('newsletter', jobs)],
+      sources: [stubSource('greenhouse', jobs)],
       scoringConfig: DEFAULT_SCORING_CONFIG,
       juniorFilterConfig: DEFAULT_JUNIOR_FILTER_CONFIG,
       logger: silentLogger,
@@ -99,7 +99,7 @@ const DEAD = softwareJob({
   externalId: 'dead-1',
   title: 'Systems Developer Engineer',
   company: 'Amazon',
-  url: 'https://juniorjobs.short.gy/hh6WWK',
+  url: 'https://jobs.example.test/hh6WWK',
 });
 
 const LIVE = softwareJob({
@@ -209,13 +209,13 @@ describe('the CaixaBank Tech regression', () => {
     externalId: 'caixa-fs',
     title: 'Software Engineer Full Stack (Junior)',
     company: 'CaixaBank Tech',
-    url: 'https://juniorjobs.short.gy/2LZYe1',
+    url: 'https://jobs.example.test/2LZYe1',
   });
   const JAVA_PYTHON = softwareJob({
     externalId: 'caixa-jp',
     title: 'Software Engineer Java + Python (Junior)',
     company: 'CaixaBank Tech',
-    url: 'https://juniorjobs.short.gy/P0VA3R',
+    url: 'https://jobs.example.test/P0VA3R',
   });
 
   it('keeps both roles when the destination resets the connection', async () => {
@@ -314,7 +314,7 @@ describe('removal is visible, never silent', () => {
     await buildJobQueue(
       { queries: [QUERY], candidateName: 'Adrian' },
       {
-        sources: [stubSource('newsletter', [DEAD, LIVE])],
+        sources: [stubSource('greenhouse', [DEAD, LIVE])],
         scoringConfig: DEFAULT_SCORING_CONFIG,
         juniorFilterConfig: DEFAULT_JUNIOR_FILTER_CONFIG,
         logger,
@@ -360,7 +360,7 @@ describe('checking only what will actually be shown', () => {
      * about it is pure waste.
      */
     const dentist = makeJob({
-      sourceId: 'newsletter',
+      sourceId: 'greenhouse',
       externalId: 'dentist',
       title: 'Higienista dental',
       company: 'Clinica',
@@ -440,7 +440,7 @@ describe('when the liveness check fails wholesale', () => {
     await buildJobQueue(
       { queries: [QUERY], candidateName: 'Adrian' },
       {
-        sources: [stubSource('newsletter', [DEAD, LIVE])],
+        sources: [stubSource('greenhouse', [DEAD, LIVE])],
         scoringConfig: DEFAULT_SCORING_CONFIG,
         juniorFilterConfig: DEFAULT_JUNIOR_FILTER_CONFIG,
         logger,

@@ -2,10 +2,6 @@ import { consoleLogger } from '../adapters/logging/console-logger.js';
 import { createJsonFileQueueReader } from '../adapters/output/json-file-queue-reader.js';
 import { createJsonFileQueueWriter } from '../adapters/output/json-file-queue-writer.js';
 import { createJsonApplicationRepository } from '../adapters/persistence/json-application-repository.js';
-import type {
-  LinkProvenance,
-  NewsletterJobSource,
-} from '../adapters/newsletter/newsletter-job-source.js';
 import {
   buildLinkChecker as buildSharedLinkChecker,
   buildSourceFactories,
@@ -42,8 +38,6 @@ import {
 
 interface BuiltSources {
   readonly sources: readonly JobSource[];
-  /** Kept so the run can report link provenance. `null` when not selected. */
-  readonly newsletter: NewsletterJobSource | null;
 }
 
 /**
@@ -56,10 +50,7 @@ interface BuiltSources {
 function compositionOptions(options: CliOptions): SourceCompositionOptions {
   return {
     fixturePath: options.fixturePath,
-    newsletterDir: options.newsletterDir,
-    linkCachePath: options.linkCachePath,
     livenessCachePath: options.livenessCachePath,
-    resolveLinks: options.resolveLinks,
     checkLinks: options.checkLinks,
     concurrency: options.concurrency,
     timeoutMs: options.timeoutMs,
@@ -73,67 +64,8 @@ function buildLinkChecker(options: CliOptions): LinkChecker | undefined {
 }
 
 function buildSources(options: CliOptions): BuiltSources {
-  let newsletter: NewsletterJobSource | null = null;
-  const factories = buildSourceFactories(compositionOptions(options), {
-    onNewsletter: (source) => {
-      newsletter = source;
-    },
-  });
-
-  const sources = options.sources.map((id) => factories[id]());
-  return { sources, newsletter };
-}
-
-/**
- * WHERE EVERY NEWSLETTER LINK CAME FROM.
- *
- * Printed rather than buried, because this source is the one place in the
- * pipeline where the address shown to the user can legitimately differ from the
- * address the payload carried. That difference has to be visible, and it has to
- * be visible as a count the user can sanity-check against the job list.
- *
- * The durable record is the link cache on disk; this is its summary.
- */
-function renderLinkProvenance(
-  provenance: readonly LinkProvenance[],
-  options: CliOptions,
-): string | null {
-  if (provenance.length === 0) {
-    return null;
-  }
-
-  const resolved = provenance.filter((entry) => entry.resolved).length;
-  const kept = provenance.length - resolved;
-
-  const lines = [
-    `Newsletter links: ${provenance.length} unique, ${resolved} resolved to the employer's ` +
-      `posting, ${kept} kept as the original newsletter link.`,
-  ];
-
-  /*
-   * "Zero resolved" is now a fact that needs explaining rather than the norm.
-   *
-   * The defect report read exactly like this - "212 unique, 0 resolved" - and
-   * the line gave the reader no way to tell an opt-out from a total outage. It
-   * says which one it is now.
-   */
-  if (!options.resolveLinks) {
-    lines.push(
-      '  Resolution was OFF for this run (--no-resolve-links), so every apply button ' +
-        'points at the newsletter\'s own tracking redirect rather than the employer.',
-    );
-    return lines.join('\n');
-  }
-
-  const failures = provenance.filter((entry) => !entry.resolved && entry.error !== null);
-  if (failures.length > 0) {
-    lines.push(
-      `  ${failures.length} link(s) could not be resolved and were left exactly as the ` +
-        'newsletter wrote them - never replaced with a guess.',
-    );
-  }
-
-  return lines.join('\n');
+  const factories = buildSourceFactories(compositionOptions(options));
+  return { sources: options.sources.map((id) => factories[id]()) };
 }
 
 async function main(argv: readonly string[]): Promise<number> {
@@ -186,14 +118,6 @@ async function main(argv: readonly string[]): Promise<number> {
 
   console.log('');
   console.log(renderRunSummary(queue));
-  const provenance = renderLinkProvenance(
-    built.newsletter?.takeLinkProvenance() ?? [],
-    options,
-  );
-  if (provenance !== null) {
-    console.log(provenance);
-  }
-
   /*
    * THE TWO HONESTY CHECKS, printed before the list rather than after it.
    *

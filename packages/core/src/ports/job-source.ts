@@ -54,7 +54,7 @@ export interface JobSource {
    *
    * A per-run source is never asked a search term, so the report cannot print
    * one - it has to print what actually happened instead. That sentence is
-   * different per source ("all company boards" vs "all saved newsletters"), and
+   * different per source ("all company boards" vs "all saved greenhouses"), and
    * getting it wrong is not cosmetic: the run summary is where the user reads
    * WHY a source failed, and a label naming a thing that was never touched
    * sends them to debug the wrong system.

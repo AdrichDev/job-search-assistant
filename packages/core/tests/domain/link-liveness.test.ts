@@ -105,8 +105,8 @@ describe('what counts as reachable', () => {
  * Both of these are real, currently-open junior vacancies at CaixaBank Tech
  * that the candidate is qualified for. They were measured on 2026-09-10:
  *
- *   https://juniorjobs.short.gy/2LZYe1 -> caixabanktech.com/es/job/junior-software-engineer-full-stack/
- *   https://juniorjobs.short.gy/P0VA3R -> caixabanktech.com/es/job/junior-software-engineer-java-python/
+ *   https://jobs.example.test/2LZYe1 -> caixabanktech.com/es/job/junior-software-engineer-full-stack/
+ *   https://jobs.example.test/P0VA3R -> caixabanktech.com/es/job/junior-software-engineer-java-python/
  *
  * The shortener answers 302. Following it, `caixabanktech.com` answers Node's
  * fetch with `read ECONNRESET` - to HEAD and to GET alike - while a browser and
@@ -117,12 +117,12 @@ describe('what counts as reachable', () => {
  */
 describe('the CaixaBank Tech regression', () => {
   const CAIXABANK = [
-    { title: 'Software Engineer Full Stack (Junior)', url: 'https://juniorjobs.short.gy/2LZYe1' },
-    { title: 'Software Engineer Java + Python (Junior)', url: 'https://juniorjobs.short.gy/P0VA3R' },
+    { title: 'Software Engineer Full Stack (Junior)', url: 'https://jobs.example.test/2LZYe1' },
+    { title: 'Software Engineer Java + Python (Junior)', url: 'https://jobs.example.test/P0VA3R' },
   ];
 
   it.each(CAIXABANK)('keeps "$title" when the shortener answers 302', ({ url }) => {
-    expect(url).toContain('short.gy');
+    expect(url).toContain('example.test');
     expect(isProvablyGone(record(302))).toBe(false);
   });
 

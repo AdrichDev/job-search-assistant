@@ -7,7 +7,6 @@
  *   --source=fixture              offline demo data, no network, no keys
  *   --source=boards               the configured company ATS boards
  *   --source=greenhouse,ashby     one bad provider excluded for a run
- *   --source=newsletter           saved job-alert emails, no network at all
  *   --source=all                  every REAL source
  *
  * ## The line this module now draws, and why
@@ -71,8 +70,7 @@ export type SelectableSourceId =
   | 'ashby'
   | 'smartrecruiters'
   | 'landingjobs'
-  | 'arbeitnow'
-  | 'newsletter';
+  | 'arbeitnow';
 
 /**
  * The company-board providers: per-company APIs, no key, no search endpoint.
@@ -102,9 +100,9 @@ export const SAMPLE_SOURCE_IDS: readonly SelectableSourceId[] = ['fixture'];
 /**
  * Sources that report live vacancies. `all` means EXACTLY these.
  *
- * Order is the order the run summary prints, and it ends with the newsletter
+ * Order is the order the run summary prints, and it ends with the greenhouse
  * for one practical reason: it is the only source whose input a human has to
- * have produced. A run that finds an empty `data/newsletters/` should read as
+ * have produced. A run that finds an empty `data/greenhouses/` should read as
  * "you have not saved any alerts yet", which is easier to see at the bottom of
  * the report than in the middle of it.
  */
@@ -119,7 +117,6 @@ export const REAL_SOURCE_IDS: readonly SelectableSourceId[] = [
   // comment nobody reads twice.
   'landingjobs',
   'arbeitnow',
-  'newsletter',
 ];
 
 /**

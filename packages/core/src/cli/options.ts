@@ -1,12 +1,10 @@
 import { DEFAULT_BOARD_CONCURRENCY, DEFAULT_BOARD_TIMEOUT_MS } from '../adapters/boards/board-http.js';
-import { NEWSLETTER_PARSERS } from '../adapters/newsletter/newsletter-job-source.js';
 import {
   DEFAULT_APPLICATION_LOG_PATH,
   DEFAULT_FIXTURE_PATH,
   DEFAULT_QUEUE_PATH,
 } from '../config/paths.js';
 import { DEFAULT_LIVENESS_CACHE_PATH } from '../config/liveness.js';
-import { DEFAULT_NEWSLETTER_DIR, DEFAULT_NEWSLETTER_LINK_CACHE } from '../config/newsletter.js';
 import { parseSourceSelection, type SelectableSourceId } from './source-selection.js';
 
 /**
@@ -38,29 +36,6 @@ export interface CliOptions {
   /** Simultaneous company-board requests. Small: these endpoints are free. */
   readonly concurrency: number;
   readonly timeoutMs: number;
-  /** Folder of saved job-alert emails read by `--source=newsletter`. */
-  readonly newsletterDir: string;
-  /**
-   * Follow each newsletter tracking link to the employer's real posting.
-   *
-   * ON by default, and that default is a fix rather than a preference.
-   *
-   * The newsletter links to itself: every entry in the real digest points at
-   * `juniorjobs.short.gy/<token>`, which 301s to the employer's posting. With
-   * resolution off, the queue's apply buttons are somebody else's tracking
-   * redirects - one of which was already observed answering 404 - and the run
-   * reported "212 unique, 0 resolved" while looking perfectly healthy.
-   *
-   * The reasons it was originally opt-in have not disappeared; they were just
-   * outweighed. It is still the only traffic this source generates, so the
-   * safeguards all stay (one HEAD per unique link, GET retry, bounded
-   * concurrency, hard timeout, disk cache, failure keeps the original) and
-   * `--no-resolve-links` turns it off for an offline or quota-conscious run.
-   * What changed is which way the default leans: towards the address the user
-   * can actually apply at.
-   */
-  readonly resolveLinks: boolean;
-  readonly linkCachePath: string;
   /**
    * Ask every surfaced posting's address whether it is still serving something,
    * and REMOVE the ones that answer 404 or 410.
@@ -74,7 +49,7 @@ export interface CliOptions {
    *
    * This is a different question from `resolveLinks`, and the two are
    * deliberately independent flags. Resolution asks "which address do we show?"
-   * and applies only to the newsletter. Liveness asks "is that address still
+   * and applies only to the greenhouse. Liveness asks "is that address still
    * serving?" and applies to every source, because a Greenhouse posting closes
    * as often as a shortened one and does it more quietly.
    *
@@ -98,7 +73,6 @@ Usage:
   npm run start:offline                       Run against the committed SAMPLE data (no API key)
   npm start -- --source=boards                Run the three company boards (no API key needed)
   npm start -- --source=greenhouse,ashby      Run a subset of providers
-  npm start -- --source=newsletter            Read saved job-alert emails
   npm start -- --source=all                   Every supported real source
 
 Options:
@@ -122,11 +96,10 @@ Options:
                                   arbeitnow       arbeitnow.com, European. Berlin/London/
                                                   Paris dominated: 2 of 800 postings were
                                                   located in Spain. Remote roles are kept.
-                                  newsletter      saved job-alert emails in data/newsletters/
                                 Shortcuts: 'boards' = greenhouse,lever,ashby,smartrecruiters
                                            'all'    = every REAL source above (manfred,greenhouse,
                                              lever,ashby,smartrecruiters,landingjobs,
-                                             arbeitnow,newsletter)
+                                             arbeitnow)
                                 'fixture' is NEVER included in a shortcut and may not
                                 share a run with a real source: demo postings competing
                                 for position in a list you act on is the defect this
@@ -140,23 +113,9 @@ Options:
   --out=PATH                    Where to write the queue. Default: output/queue.json.
   --fixture=PATH                Sample data file. Default: data/sample-jobs.json.
   --applications=PATH           Application log. Default: data/applications.json.
-  --newsletters=PATH            Folder of saved job-alert emails.
-                                Default: data/newsletters.
-  --no-resolve-links            Do NOT follow newsletter tracking links (e.g. short.gy)
-                                to the employer's real posting. Resolution is ON by
-                                default because the shortener is not an address the
-                                candidate can apply at. Turn it off for an offline run
-                                or to spend no requests at all. One HEAD request per
-                                unique link, cached to disk, so a repeat run is free.
-                                A failed lookup keeps the original link - it never
-                                invents one.
-  --resolve-links               Accepted and now a no-op: this is the default.
-  --link-cache=PATH             Where resolved links are remembered, and the
-                                record of which URL was original and which was
-                                resolved. Default: data/newsletters/.link-cache.json.
   --no-check-links              Do NOT check whether the postings still exist.
                                 Checking is ON by default and applies to EVERY
-                                source, not just the newsletter. One HEAD request
+                                source, not just the greenhouse. One HEAD request
                                 per unique apply URL, bounded and cached to disk
                                 with a TTL, so a repeat run is nearly free.
 
@@ -179,11 +138,6 @@ Options:
 
 Company-board coverage comes from src/config/company-boards.ts - see the notes
 there for how to add an employer.
-
-Newsletter coverage comes from the parsers registered in
-src/adapters/newsletter/newsletter-job-source.ts - see newsletter-parser.ts for
-what you must supply to add a sender. Supported today:
-${NEWSLETTER_PARSERS.map((parser) => `  - ${parser.senderDescription}`).join('\n')}
 `.trim();
 
 function readOption(argv: readonly string[], name: string): string | undefined {
@@ -202,17 +156,6 @@ function readNumber(argv: readonly string[], name: string, fallback: number): nu
     throw new Error(`--${name} must be a non-negative integer, received "${raw}"`);
   }
   return parsed;
-}
-
-/**
- * Whether this run follows newsletter tracking links.
- *
- * The negative wins when both forms are present. Someone who typed the opt-out
- * meant it, and silently preferring the affirmative would send requests a human
- * explicitly asked us not to send.
- */
-function resolveLinksFrom(argv: readonly string[]): boolean {
-  return !argv.includes('--no-resolve-links');
 }
 
 /**
@@ -240,9 +183,6 @@ export function parseCliOptions(argv: readonly string[]): CliOptions {
     outputPath: readOption(argv, 'out') ?? DEFAULT_QUEUE_PATH,
     fixturePath: readOption(argv, 'fixture') ?? DEFAULT_FIXTURE_PATH,
     applicationLogPath: readOption(argv, 'applications') ?? DEFAULT_APPLICATION_LOG_PATH,
-    newsletterDir: readOption(argv, 'newsletters') ?? DEFAULT_NEWSLETTER_DIR,
-    resolveLinks: resolveLinksFrom(argv),
-    linkCachePath: readOption(argv, 'link-cache') ?? DEFAULT_NEWSLETTER_LINK_CACHE,
     checkLinks: checkLinksFrom(argv),
     livenessCachePath: readOption(argv, 'liveness-cache') ?? DEFAULT_LIVENESS_CACHE_PATH,
   };

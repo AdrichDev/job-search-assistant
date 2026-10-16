@@ -49,9 +49,7 @@ npm run start:boards      # Greenhouse + Lever + Ashby
 | `greenhouse` | Per-company boards | No | The company list in `config/company-boards.ts` |
 | `lever` | Per-company boards | No | Same list |
 | `ashby` | Per-company boards | No | Same list |
-| `newsletter` | Saved job-alert emails | No | The files you put in `data/newsletters/` |
 
-The live providers use documented JSON endpoints. The newsletter source reads text files off your own disk. Nothing here scrapes an HTML page or drives a browser.
 
 ## Job alerts by email — the widest-reaching source
 
@@ -147,171 +145,6 @@ These four ATS are used by venture-backed product companies. Spanish consultanci
 careers pages, InfoJobs and Tecnoempleo. **Adding slugs cannot reach them; that needs a different
 source.** Don't spend another sweep re-proving it.
 
-## Reading job alerts from your inbox
-
-No programming needed. Four steps.
-
-### 1. Subscribe to an alert
-
-On any job site you care about, look for **"job alerts"**, **"crear alerta"**,
-**"saved search"** or **"avísame de nuevas ofertas"**. Subscribe with your normal
-email address. This is the only step that happens outside this project, and it is
-the step that decides your coverage.
-
-### 2. Wait for an email to arrive
-
-You need a real one. Do not guess at the format — see
-[Why only one sender works today](#why-only-one-sender-works-today).
-
-### 3. Save the email text into `data/newsletters/`
-
-Open the email, select the whole message body, copy it, and paste it into a new
-file:
-
-```
-data/newsletters/juniorjobs-2026-09-06.txt
-```
-
-Two things matter:
-
-- **Save it verbatim.** Do not tidy it up, retype it or delete the emoji. The
-  parser was written against the real formatting; the quirks are the spec.
-- **Put the date in the file name** as `YYYY-MM-DD`. That is what the pipeline
-  uses as the posting date, and therefore what decides whether an offer counts as
-  recent. Without a date it falls back to the file's modification time.
-
-You can keep as many files in there as you like. All of them are read.
-
-> **Privacy:** everything in `data/newsletters/` except its `README.md` is
-> git-ignored. Saved alerts and the link cache are personal input and never
-> enter the repository. The parser tests use the synthetic digest
-> `packages/core/tests/fixtures/juniorjobs-digest.synthetic.txt`.
-
-### Your candidate profile (local, optional)
-
-The committed default profile is fictional (`Alex Example`). To rank for yourself,
-copy `candidate-profile.example.json` to `candidate-profile.local.json` at the
-repository root and edit it. The local file is git-ignored, may contain only the
-fields you want to override, and a malformed file fails the run with a clear
-error instead of silently using other data.
-
-### 4. Run it
-
-```bash
-npm start -- --source=newsletter                      # follows the tracking links (default)
-npm start -- --source=newsletter --no-resolve-links   # no network at all
-npm start -- --source=all                             # newsletters plus every other REAL source
-```
-
-> **`--source=all` means every REAL source** — a search API, the three company boards
-> and the newsletter. It does **not** include `fixture`, and `fixture` may not
-> share a run with a real source. See [Sample data](#sample-data-never-shares-a-run-with-real-vacancies).
-
-Then `npm run dev` to see the result in the web UI, exactly like any other source.
-
-### Why only one sender works today
-
-**Supported right now: the JuniorJobs weekly digest** — numbered Spanish entries
-with `juniorjobs.short.gy` links. That is the only newsletter a real saved sample
-exists for, and that is the only reason it is the only one supported.
-
-Any other file you drop in the folder is **skipped, by name, with a message**:
-
-```
-warn  [newsletter] michael-page-alert.txt: no registered parser recognised this file.
-      Supported senders today: JuniorJobs weekly digest (...)
-```
-
-That is the correct behaviour, not a gap waiting to be filled in with guesswork.
-A parser written against an *imagined* email format produces rows that look
-completely plausible and are wrong — which is precisely how this project once
-shipped [thirteen fabricated URLs](#the-rule-this-enforces). So the rule is:
-
-> **A parser may only be written against a real saved email.**
-
-**To add a sender, this is what you must supply:**
-
-1. A **real saved alert email** from that sender, verbatim, saved locally in
-   `data/newsletters/`. Not a description of it, not a screenshot, not an
-   example you wrote. One real file. The committed test fixture is then a
-   **synthetic copy** that keeps the real structure and quirks but replaces
-   personal data and tracking tokens (see the JuniorJobs fixture).
-2. Which parts of it are the **employer**, the **job title** and the **link** —
-   or just the file, if that is readable from it.
-3. Ideally **two** emails from the same sender, so the parser is written against
-   what varies rather than against one lucky message.
-
-With that in hand the work is one file implementing `NewsletterParser` plus one
-line registering it. The checklist lives in
-`packages/core/src/adapters/newsletter/newsletter-parser.ts`.
-
-### The links, and why they are the risky part
-
-Newsletters do not link to jobs. They link to **themselves** — every entry in the
-sample points at `juniorjobs.short.gy/<token>`, which redirects to the employer's
-real posting.
-
-The rule, unchanged from the rest of the pipeline:
-
-> **The URL comes from the newsletter payload, or the posting does not exist.**
-
-- An entry with **no link is dropped**, with a warning naming it. The real sample
-  contains exactly one of these, where the sender pasted the job title over the
-  link. It is not repaired, not defaulted, and not turned into a search URL.
-- **Resolution is ON by default.** Each tracking link is followed to the
-  employer's real address, because a `short.gy` redirect is not an address the
-  candidate can apply at — it belongs to a third party, and one of them was
-  already observed answering 404. Use `--no-resolve-links` for an offline or
-  quota-conscious run. Every safeguard is unchanged: **one `HEAD` request per
-  unique link** (one `GET` retry for servers that refuse `HEAD`), **no page body
-  read**, bounded concurrency, a hard timeout, and a disk cache so a re-run
-  costs nothing. `--resolve-links` is still accepted and is now a no-op.
-- **A failed lookup keeps the newsletter's own link.** Never a guess. The
-  shortener opens the posting in a browser perfectly well; a fabricated "real"
-  URL does not.
-
-Every resolution is recorded in `data/newsletters/.link-cache.json`, which is
-both the cache and the **provenance record** — open it to see which URL the
-newsletter gave and which one the queue shows:
-
-```json
-{
-  "https://juniorjobs.short.gy/2sxqtb": {
-    "finalUrl": "https://careers.factorialhr.com/job_posting/gtm-engineer-factorial-it-304580?utm_source=juniorjobs",
-    "status": 200,
-    "resolved": true,
-    "resolvedAt": "2026-09-08T15:31:12.443Z"
-  }
-}
-```
-
-The run also prints a one-line summary:
-
-```
-Newsletter links: 212 unique, 199 resolved to the employer's posting, 13 kept as the original newsletter link.
-```
-
-### What the newsletter source does *not* do
-
-- It never opens a job page. Seniority is decided by the same junior filter every
-  other source goes through, from the title and the newsletter's own wording.
-- It never filters by country. The digest already ships a curated
-  "Spain + rest of Europe" section, and the pipeline's rule is that location
-  *ranks* an offer and never deletes it. A German remote role stays in the list,
-  scored lower, where you can see it and disagree.
-
-### Which locations survive the board filter
-
-A company board hands back its **entire** board — all 618 Stripe postings worldwide included — so the
-narrowing a search API does server-side with `where` has to happen in the adapter. `DEFAULT_BOARD_LOCATION_FILTER`
-keeps anything mentioning a Spanish city or Spain itself, including `Spain (Remote)`, `Remote - Spain`
-and `Madrid HQ, ES`.
-
-It is deliberately generous inside Spain: a Barcelona posting is kept and then ranked down by the location
-dimension, rather than deleted where you could never see or argue with the decision. It narrows **where**,
-never **what** — the software-relevance gate still judges every posting afterwards, exactly as it does an
-a search API one.
-
 ## Workspace layout
 
 Three npm workspaces:
@@ -322,7 +155,6 @@ Three npm workspaces:
 | `apps/web` | Next.js App Router UI. Server-side reads only; it holds no credentials. |
 | `e2e` | Browser tests that drive the real app. No production code depends on it. |
 
-Shared runtime data lives at the workspace root: `data/` (fixture, application log, saved newsletters) and `output/` (generated queue). Both locations can be relocated with an environment variable — see [State isolation](#state-isolation-the-suite-cannot-touch-your-data).
 
 ## What it will never do
 
@@ -516,11 +348,7 @@ It walks the real import graph from `domain-index.ts` and fails on any node buil
 | `--out=PATH` | `output/queue.json` | Where to write the queue |
 | `--fixture=PATH` | `data/sample-jobs.json` | Sample data file |
 | `--applications=PATH` | `data/applications.json` | Application log |
-| `--newsletters=PATH` | `data/newsletters` | Folder of saved job-alert emails |
-| `--no-resolve-links` | *off* | Do **not** follow newsletter tracking links. Resolution is **on by default**, because a `short.gy` redirect is not an address the candidate can apply at. One `HEAD` per unique link, cached to disk; a failure keeps the original link and never invents one. |
-| `--resolve-links` | — | Accepted, now a no-op: this is the default |
-| `--link-cache=PATH` | `data/newsletters/.link-cache.json` | Resolved links, and the record of which URL was original and which was resolved |
-| `--no-check-links` | *off* | Do **not** check whether the postings still exist. Checking is **on by default** and covers **every source**, not just the newsletter. One `HEAD` per unique apply URL, bounded and TTL-cached, so a repeat run is nearly free. A posting is **removed only on HTTP 404 or 410**; 403, 401, 429, every 3xx, every 5xx, timeouts, connection resets and DNS failures all **keep** it and mark it unverified. A run with no network removes nothing. |
+| `--no-check-links` | *off* | Do **not** check whether the postings still exist. Checking is **on by default** for every source. One `HEAD` per unique apply URL, bounded and TTL-cached, so a repeat run is nearly free. A posting is **removed only on HTTP 404 or 410**; 403, 401, 429, every 3xx, every 5xx, timeouts, connection resets and DNS failures all **keep** it and mark it unverified. A run with no network removes nothing. |
 | `--check-links` | — | Accepted, now a no-op: this is the default |
 | `--liveness-cache=PATH` | `data/.link-liveness.json` | Liveness verdicts, and the evidence for every posting the pipeline removed |
 | `--help` | — | Usage |
@@ -554,7 +382,7 @@ It did. `--source=all` used to expand to *every selectable source*, fixture
 included, so the documented command produced:
 
 ```
-Contributed: fixture 105, greenhouse 64, lever 14, ashby 29, newsletter 221
+Contributed: fixture 105, greenhouse 64, lever 14, ashby 29
 
   #1  Trainee Software Developer   Kubo Labs   Madrid   85.8
       link: https://example-board.test/offers/fx-010
@@ -807,7 +635,6 @@ These are extension points, not missing features. This slice does not build them
 |------|-------|---------------|
 | More job boards | `JobSource` in `ports/job-source.ts` | InfoJobs, Tecnoempleo, RemoteOK — add an adapter, register it in the CLI. No domain change. |
 | More company-board ATSs | `BoardProvider` in `adapters/boards/board-job-source.ts` | Workable, SmartRecruiters, Recruitee — supply a URL builder and a payload parser; fan-out, concurrency, timeouts, location filtering and failure isolation are already shared. |
-| More newsletter senders | `NewsletterParser` in `adapters/newsletter/newsletter-parser.ts` | Michael Page, LinkedIn, InfoJobs and any other alert email — **but only once you supply a real saved sample.** File reading, format detection, link handling, provenance and per-file failure isolation are already shared. See [Why only one sender works today](#why-only-one-sender-works-today). |
 | CV / cover-letter tailoring | `cvVariant` on every queue entry | The winning lane is already computed and persisted for every job |
 | SQLite instead of a JSON file | `ApplicationRepository` in `ports/application-repository.ts` | One new adapter. Idempotency is already part of the port contract, so no caller changes. |
 | Empirical weight retuning | `Application.scoreAtApply` + `outcome` | The labelled dataset this layer exists to produce. Nothing consumes it yet. |
@@ -859,15 +686,6 @@ company do **not**. Anything this misses stays in the queue as a visible duplica
 - **The seniority body-penalty has false positives.** `"trabajarás junto a un equipo senior"` costs a junior posting a few points. The penalty is deliberately weaker for body matches than for title matches, but it is not zero.
 - **Cross-source dedupe is exact-after-canonicalization, so it misses reworded reposts on purpose.** See below.
 - **Company boards contribute few *junior engineering* roles.** A real 3-provider run over 28 boards returned 105 postings → 103 unique → 51 passed the software gate → **14** passed the junior filter. The rest were sales, marketing, finance and operations, or explicitly senior/principal/staff engineering roles. Company boards are the whole company, and the companies on this list hire mostly seniors.
-- **The newsletter source supports exactly one sender.** The JuniorJobs digest, because that is the only format a real saved email exists for. Everything else is skipped by name. This is the design, not a to-do — see [Why only one sender works today](#why-only-one-sender-works-today).
-- **A newsletter posting has no description beyond the sender's one-line sentence.** The junior filter therefore judges it almost entirely on the title. In practice this makes the filter *more permissive* for this source, which is the safe direction: on the real digest it excluded 0 of 200 postings on seniority, and the software gate did all the work (83 excluded).
-- **A newsletter cannot tell you the city.** The digest states a country and sometimes "100% remoto", so `location` is country-level. That means a newsletter posting will usually *not* cross-source-merge with the same vacancy from a search API, which reports `Madrid`. That is the conservative failure — a duplicate you scroll past, rather than a real vacancy deleted.
-- **Link resolution cannot resolve everything.** A real run resolved 199 of 212 links. The rest were expired postings and career sites that block automated requests; all 13 kept the newsletter's own link, which is what the user would have clicked anyway.
-- **A kept original link can still be dead, and nothing says so yet.** When the shortener's destination answers 404 or 403 the resolver correctly refuses to point at it and keeps the newsletter's URL — but the shortener passes that status through, so the apply button is a 404 the pipeline knows about and does not surface. The `status` is recorded in `.link-cache.json`; it is not yet carried into the queue, the CLI audit or the UI. The link audit is deliberately provenance-only and makes no requests, so it cannot see this either. This is the largest remaining hole in the apply-link guarantee.
-- **A resolved link is a link the employer answered, not a vacancy that is still open.** The pipeline does not verify that a posting is live, for newsletters or for any other source. A digest a week old will contain a few closed roles.
-- **Filter B reads the title for rank words, and the whole posting for years.** A body saying "you will work alongside our senior engineers" does not disqualify anything; a body saying "3 years of experience" does. `manager` and `responsable de` were considered for the title list and rejected as genuinely ambiguous in this market.
-- **The offline sample catalogue is invented data with non-resolving URLs** (`example-board.test`). It can no longer reach a real run at all (`--source=all` excludes it and mixing is refused), and wherever it *is* surfaced the CLI and the UI both mark it — banner plus per-row `[SAMPLE]` / `Ejemplo` badge. See [Sample data](#sample-data-never-shares-a-run-with-real-vacancies).
-- **The fixture source ignores `what` and `where`.** Every query returns the whole sample catalogue. This is what makes the offline demo collapse 105 postings into 14 unique ones.
 - **Sample ad copy is in Spanish.** That is the language of the market this parses; the code, comments and interface are English.
 - **Apply-tracking needs JavaScript.** The Apply anchor always opens the posting, but the click is only *recorded* when JS is enabled. Setting an outcome works without JS — it is a plain form post.
 - **The application log is single-process safe, not multi-process safe.** Writes are atomic and serialized within one Node process. Running the CLI and the web app at the same moment could still lose a write; run only one at a time. Acceptable for a single-user local tool; it is the reason the repository interface exists. The same limit applies to the queue, liveness and link caches.

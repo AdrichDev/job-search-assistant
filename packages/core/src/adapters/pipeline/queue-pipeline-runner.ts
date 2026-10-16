@@ -27,9 +27,8 @@ import {
  * button cannot overwrite a good queue with a broken run's emptiness.
  *
  * The source factory table now lives in `source-composition.ts` and is shared
- * with `cli/main.ts`. The CLI is deliberately NOT folded onto this runner: it
- * renders eight report sections and drains newsletter link provenance, which
- * would grow this module from "run the pipeline" to "know how a terminal reads it".
+ * with `cli/main.ts`. The CLI is deliberately NOT folded onto this runner because
+ * it renders the terminal report sections.
  */
 
 export interface QueuePipelineRunnerOptions extends SourceCompositionOptions {

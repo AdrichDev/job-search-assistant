@@ -12,41 +12,6 @@ import { parseCliOptions } from '../../src/cli/options.js';
  * apply buttons. The parser is a pure function in its own module now.
  */
 
-describe('link resolution defaults', () => {
-  it('RESOLVES BY DEFAULT: the documented command must not ship tracking links', () => {
-    /*
-     * The defect. `npm start -- --source=all` reported:
-     *
-     *   Newsletter links: 212 unique, 0 resolved to the employer's posting,
-     *   212 kept as the original newsletter link.
-     *
-     * Every apply button was a `juniorjobs.short.gy/...` redirect, one of which
-     * had already been observed answering 404. The safe default is the one that
-     * gives the user the employer's own address.
-     */
-    expect(parseCliOptions(['--source=newsletter']).resolveLinks).toBe(true);
-    expect(parseCliOptions([]).resolveLinks).toBe(true);
-  });
-
-  it('honours the explicit opt-out for an offline or quota-conscious run', () => {
-    expect(parseCliOptions(['--no-resolve-links']).resolveLinks).toBe(false);
-    expect(parseCliOptions(['--source=newsletter', '--no-resolve-links']).resolveLinks).toBe(false);
-  });
-
-  it('still accepts the old --resolve-links flag instead of rejecting a documented command', () => {
-    // It is now a no-op, but a README, a shell history and a saved script all
-    // still carry it. Erroring on it would break a command that asks for
-    // precisely the behaviour that is now the default.
-    expect(parseCliOptions(['--resolve-links']).resolveLinks).toBe(true);
-  });
-
-  it('lets the opt-out win when both flags are passed', () => {
-    // The user typing the negative form last meant it. Silently preferring the
-    // affirmative would send requests somebody explicitly asked us not to send.
-    expect(parseCliOptions(['--resolve-links', '--no-resolve-links']).resolveLinks).toBe(false);
-  });
-});
-
 /**
  * The liveness flag follows `--no-resolve-links` exactly, and for the same
  * reason: the useful behaviour is the default, and the opt-out exists for an
@@ -73,18 +38,6 @@ describe('link liveness defaults', () => {
     expect(parseCliOptions(['--check-links']).checkLinks).toBe(true);
   });
 
-  it('does not confuse the two independent opt-outs', () => {
-    // `--no-resolve-links` and `--no-check-links` answer different questions:
-    // "which address do we show?" and "is that address still serving?". Turning
-    // one off must not quietly turn the other off.
-    const noResolve = parseCliOptions(['--no-resolve-links']);
-    expect(noResolve.resolveLinks).toBe(false);
-    expect(noResolve.checkLinks).toBe(true);
-
-    const noCheck = parseCliOptions(['--no-check-links']);
-    expect(noCheck.resolveLinks).toBe(true);
-    expect(noCheck.checkLinks).toBe(false);
-  });
 
   it('defaults the liveness cache next to the data, not inside output/', () => {
     // `output/` is disposable and git-ignored. The record of which postings
@@ -118,8 +71,6 @@ describe('the rest of the options', () => {
       '--out=/tmp/q.json',
       '--fixture=/tmp/f.json',
       '--applications=/tmp/a.json',
-      '--newsletters=/tmp/n',
-      '--link-cache=/tmp/c.json',
     ]);
 
     expect(options.limit).toBe(5);
@@ -129,8 +80,6 @@ describe('the rest of the options', () => {
     expect(options.outputPath).toBe('/tmp/q.json');
     expect(options.fixturePath).toBe('/tmp/f.json');
     expect(options.applicationLogPath).toBe('/tmp/a.json');
-    expect(options.newsletterDir).toBe('/tmp/n');
-    expect(options.linkCachePath).toBe('/tmp/c.json');
   });
 
   it('rejects a negative or non-numeric count rather than running with a guess', () => {

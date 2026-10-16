@@ -21,17 +21,6 @@ describe('parseSourceSelection', () => {
     expect(parseSourceSelection('greenhouse')).toEqual(['greenhouse']);
     expect(parseSourceSelection('lever')).toEqual(['lever']);
     expect(parseSourceSelection('ashby')).toEqual(['ashby']);
-    expect(parseSourceSelection('newsletter')).toEqual(['newsletter']);
-  });
-
-  it('keeps the newsletter out of the boards shortcut', () => {
-    // `boards` means "per-company ATS APIs". Saved emails are not that, and a
-    // shortcut that quietly widened would make `--source=boards` unpredictable.
-    expect(parseSourceSelection('boards')).not.toContain('newsletter');
-  });
-
-  it('includes the newsletter in all', () => {
-    expect(parseSourceSelection('all')).toContain('newsletter');
   });
 
   /*
@@ -62,7 +51,6 @@ describe('parseSourceSelection', () => {
     expect(() => parseSourceSelection('fixture,greenhouse')).toThrow(/sample/i);
     expect(() => parseSourceSelection('boards,fixture')).toThrow(/fixture/);
     expect(() => parseSourceSelection('all,fixture')).toThrow(/fixture/);
-    expect(() => parseSourceSelection('fixture,newsletter')).toThrow(/fixture/);
   });
 
   it('rejects aggregator because it is no longer a supported source', () => {
@@ -97,8 +85,8 @@ describe('parseSourceSelection', () => {
      * rather than asserted loosely: `boards` describes a KIND of source (a
      * per-company ATS with no key and no search endpoint), so a new member is a
      * deliberate decision that should have to be written down here. What must
-     * never appear is `manfred`, `landingjobs`, `arbeitnow`, `aggregator` or
-     * `newsletter` - none of them is a company board, and a shortcut that
+     * never appear is `manfred`, `landingjobs`, `arbeitnow` or `aggregator` -
+     * none of them is a company board, and a shortcut that
      * quietly widened would make `--source=boards` unpredictable.
      */
     expect(BOARD_SOURCE_IDS).toEqual(['greenhouse', 'lever', 'ashby', 'smartrecruiters']);
@@ -120,16 +108,6 @@ describe('parseSourceSelection', () => {
   it('collapses duplicates while preserving first-mentioned order', () => {
     expect(parseSourceSelection('lever,greenhouse,lever')).toEqual(['lever', 'greenhouse']);
     expect(parseSourceSelection('boards,greenhouse')).toEqual([...BOARD_SOURCE_IDS]);
-  });
-
-  it('mixes a shortcut with an explicit source', () => {
-    // Was `boards,fixture`. The pairing it demonstrates - shortcut plus one
-    // explicit source - is unchanged; only the example moved off the sample
-    // catalogue, which may no longer share a run with real vacancies.
-    expect(parseSourceSelection('boards,newsletter')).toEqual([
-      ...BOARD_SOURCE_IDS,
-      'newsletter',
-    ]);
   });
 
   it('rejects an unknown source and names the valid ones', () => {

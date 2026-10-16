@@ -102,9 +102,9 @@ describe('the title-derived rule - the original defect', () => {
 });
 
 describe('links that are fine', () => {
-  it('accepts the real employer addresses the newsletter resolver produces', () => {
+  it('accepts the real employer addresses the greenhouse resolver produces', () => {
     for (const url of [
-      'https://careers.idealista.com/jobs/8103848-android-product-engineer?utm_source=juniorjobs',
+      'https://careers.idealista.com/jobs/8103848-android-product-engineer?utm_source=example',
       'https://jobs.smartrecruiters.com/RedPoints1/744000147215471-osint-investigator',
       'https://job-boards.greenhouse.io/factorial/jobs/6633404003',
     ]) {
@@ -118,7 +118,7 @@ describe('links that are fine', () => {
     // opens the posting in a browser.
     expect(
       inspectPostingLink({
-        url: 'https://juniorjobs.short.gy/2sxqtb',
+        url: 'https://jobs.example.test/2sxqtb',
         title: 'GTM Engineer Factorial IT',
       }),
     ).toHaveLength(0);
@@ -128,7 +128,7 @@ describe('links that are fine', () => {
 describe('auditing a whole queue', () => {
   const CLEAN = [
     { url: 'https://job-boards.greenhouse.io/factorial/jobs/6633404003', title: 'GTM Engineer' },
-    { url: 'https://juniorjobs.short.gy/2sxqtb', title: 'Android Product Engineer' },
+    { url: 'https://jobs.example.test/2sxqtb', title: 'Android Product Engineer' },
   ];
 
   const DIRTY = [

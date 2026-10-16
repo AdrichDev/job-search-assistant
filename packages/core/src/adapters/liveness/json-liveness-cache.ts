@@ -9,7 +9,7 @@ import type { CachedLiveness, LivenessCache } from './http-link-checker.js';
  * answered and when:
  *
  *   {
- *     "https://juniorjobs.short.gy/hh6WWK": {
+ *     "https://jobs.example.test/hh6WWK": {
  *       "verdict": "gone",
  *       "status": 404,
  *       "checkedAt": "2026-09-10T08:14:02.113Z"
@@ -28,7 +28,7 @@ import type { CachedLiveness, LivenessCache } from './http-link-checker.js';
  *      past. A deletion whose justification cannot be inspected afterwards is
  *      indistinguishable from a bug.
  *
- * It lives beside the queue rather than inside `data/newsletters/` because
+ * It lives beside the queue rather than inside `data/greenhouses/` because
  * liveness is checked for EVERY source - a Greenhouse posting closes as often
  * as a shortened one, it just does it more quietly.
  */

@@ -196,36 +196,6 @@ export { htmlToPlainText } from './adapters/boards/html-text.js';
 export type { BoardSourceFactoryOptions } from './adapters/boards/board-job-source.js';
 export { createFixtureJobSource } from './adapters/fixture/fixture-job-source.js';
 export {
-  NEWSLETTER_PARSERS,
-  NEWSLETTER_SOURCE_ID,
-  createNewsletterJobSource,
-  type LinkProvenance,
-  type NewsletterJobSource,
-  type NewsletterJobSourceOptions,
-} from './adapters/newsletter/newsletter-job-source.js';
-export {
-  JUNIORJOBS_DIGEST_FORMAT,
-  juniorJobsDigestParser,
-} from './adapters/newsletter/juniorjobs-digest.js';
-export {
-  selectNewsletterParser,
-  type NewsletterParseContext,
-  type NewsletterParser,
-  type NewsletterPosting,
-} from './adapters/newsletter/newsletter-parser.js';
-export {
-  DEFAULT_LINK_CONCURRENCY,
-  DEFAULT_LINK_TIMEOUT_MS,
-  createPassthroughLinkResolver,
-  createRedirectLinkResolver,
-  type CachedResolution,
-  type LinkFetch,
-  type LinkResolution,
-  type LinkResolutionCache,
-  type LinkResolver,
-} from './adapters/newsletter/link-resolver.js';
-export { createJsonLinkCache } from './adapters/newsletter/json-link-cache.js';
-export {
   DEFAULT_LIVENESS_CONCURRENCY,
   DEFAULT_LIVENESS_TIMEOUT_MS,
   DEFAULT_LIVENESS_TTL_MS,
@@ -256,11 +226,6 @@ export {
 } from './config/candidate-profile.js';
 export { DEFAULT_JUNIOR_FILTER_CONFIG } from './config/junior-filter-config.js';
 export { DEFAULT_LIVENESS_CACHE_PATH } from './config/liveness.js';
-export {
-  DEFAULT_NEWSLETTER_DIR,
-  DEFAULT_NEWSLETTER_LINK_CACHE,
-  DEFAULT_NEWSLETTER_LINK_CONCURRENCY,
-} from './config/newsletter.js';
 export {
   DEFAULT_APPLICATION_LOG_PATH,
   DEFAULT_DISMISSAL_LOG_PATH,

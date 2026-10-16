@@ -12,7 +12,7 @@ import { WORKSPACE_ROOT, resolveDataPath } from './paths.js';
  * Dot-prefixed for the same reason `.link-cache.json` is: it sits among data a
  * human browses, and it is machinery rather than content.
  *
- * NOT inside `data/newsletters/`. Liveness is checked for every source, because
+ * NOT inside `data/greenhouses/`. Liveness is checked for every source, because
  * a Greenhouse or a search provider posting closes exactly as often as a shortened one -
  * it just does so without a redirect to make it obvious.
  */

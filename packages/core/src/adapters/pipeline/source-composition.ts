@@ -1,5 +1,4 @@
 import { companiesFor } from '../../config/company-boards.js';
-import { DEFAULT_NEWSLETTER_LINK_CONCURRENCY } from '../../config/newsletter.js';
 import type { SelectableSourceId } from '../../cli/source-selection.js';
 import type { JobSource } from '../../ports/job-source.js';
 import type { LinkChecker } from '../../ports/link-checker.js';
@@ -17,16 +16,6 @@ import {
 } from '../liveness/http-link-checker.js';
 import { createJsonLivenessCache } from '../liveness/json-liveness-cache.js';
 import { createManfredJobSource } from '../manfred/manfred-job-source.js';
-import { createJsonLinkCache } from '../newsletter/json-link-cache.js';
-import {
-  createPassthroughLinkResolver,
-  createRedirectLinkResolver,
-  type LinkResolver,
-} from '../newsletter/link-resolver.js';
-import {
-  createNewsletterJobSource,
-  type NewsletterJobSource,
-} from '../newsletter/newsletter-job-source.js';
 
 /**
  * The one place where selected source ids become `JobSource` instances.
@@ -42,37 +31,13 @@ import {
  */
 export interface SourceCompositionOptions {
   readonly fixturePath: string;
-  readonly newsletterDir: string;
-  readonly linkCachePath: string;
   readonly livenessCachePath: string;
-  /** Follow newsletter tracking links to the employer's real posting. */
-  readonly resolveLinks: boolean;
   /** Remove postings whose address answers HTTP 404 or 410. Nothing else. */
   readonly checkLinks: boolean;
   readonly concurrency: number;
   readonly timeoutMs: number;
   readonly logger: Logger;
   readonly now: () => Date;
-}
-
-export interface SourceCompositionHooks {
-  /** Receives the newsletter source when it is constructed, e.g. to drain link provenance. */
-  readonly onNewsletter?: (source: NewsletterJobSource) => void;
-}
-
-/** Redirect-following only when the caller opted in; otherwise no network at all. */
-export function buildLinkResolver(options: SourceCompositionOptions): LinkResolver {
-  if (!options.resolveLinks) {
-    return createPassthroughLinkResolver();
-  }
-
-  return createRedirectLinkResolver({
-    cache: createJsonLinkCache({ filePath: options.linkCachePath }),
-    logger: options.logger,
-    now: options.now,
-    concurrency: DEFAULT_NEWSLETTER_LINK_CONCURRENCY,
-    timeoutMs: options.timeoutMs,
-  });
 }
 
 /**
@@ -104,7 +69,6 @@ export function buildLinkChecker(options: SourceCompositionOptions): LinkChecker
  */
 export function buildSourceFactories(
   options: SourceCompositionOptions,
-  hooks: SourceCompositionHooks = {},
 ): Readonly<Record<SelectableSourceId, () => JobSource>> {
   const { logger, now, timeoutMs, concurrency } = options;
   const boardOptions = { logger, concurrency, timeoutMs, now };
@@ -127,15 +91,5 @@ export function buildSourceFactories(
     landingjobs: () => createLandingJobsSource({ logger, timeoutMs, now }),
     arbeitnow: () => createArbeitnowJobSource({ logger, timeoutMs, now }),
 
-    newsletter: () => {
-      const source = createNewsletterJobSource({
-        directory: options.newsletterDir,
-        logger,
-        now,
-        linkResolver: buildLinkResolver(options),
-      });
-      hooks.onNewsletter?.(source);
-      return source;
-    },
   };
 }

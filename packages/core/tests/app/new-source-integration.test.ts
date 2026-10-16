@@ -19,7 +19,7 @@ import { silentLogger } from '../helpers/silent-logger.js';
  *
  *   1. Does one dead API sink a run that now has nine sources in it?
  *   2. Now that the SAME vacancy can arrive from Manfred, a SmartRecruiters
- *      board and the newsletter with three different spellings, does the
+ *      board and the greenhouse with three different spellings, does the
  *      conservative identity logic still behave the way it was designed to?
  *
  * The second one matters more than it looks. Adding sources makes overlap

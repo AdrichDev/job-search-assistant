@@ -31,7 +31,7 @@ describe('sample-data provenance', () => {
     expect([...SAMPLE_DATA_SOURCE_IDS]).toEqual(['fixture']);
 
     expect(isSampleDataSourceId('fixture')).toBe(true);
-    for (const real of ['aggregator', 'greenhouse', 'lever', 'ashby', 'newsletter']) {
+    for (const real of ['aggregator', 'greenhouse', 'lever', 'ashby', 'greenhouse']) {
       expect(isSampleDataSourceId(real)).toBe(false);
     }
   });

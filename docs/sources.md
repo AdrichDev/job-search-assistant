@@ -10,8 +10,6 @@ portal the author uses.
 |-------|-----------|----------------------|
 | **Official API** | A documented, public job API used within its terms | `manfred`, `smartrecruiters` |
 | **Employer ATS endpoint** | The public JSON a company's own careers page is built on | `greenhouse`, `lever`, `ashby` |
-| **Email alerts** | Job-alert emails the user receives and saves locally as text | `newsletter` (JuniorJobs digest) |
-| **Manual import** | The user copies a posting or alert by hand into a local file | `data/newsletters/` |
 
 ## Rejected routes
 
@@ -44,5 +42,3 @@ re-check them before building an adapter.
 1. Confirm the route is in the allowed table and the terms permit it.
 2. API or ATS: add a `JobSource` adapter and register it in
    `packages/core/src/adapters/pipeline/source-composition.ts`.
-3. Email: save a real sample locally, then add a `NewsletterParser`; commit only
-   a synthetic copy as the test fixture.
