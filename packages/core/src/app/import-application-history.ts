@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { ApplicationOutcome } from '../domain/application.js';
+import { isResponse, type Application, type ApplicationOutcome } from '../domain/application.js';
 import type { ApplicationRepository } from '../ports/application-repository.js';
 import type { HistoryRow } from '../ports/history-reader.js';
 
@@ -9,6 +9,13 @@ import type { HistoryRow } from '../ports/history-reader.js';
  * Idempotent: the job id is a hash of the row's identifying fields, and the
  * repository ignores a job id it already holds. Rows are never invented or
  * guessed: anything unmappable is skipped and reported by row number.
+ *
+ * A row that describes an application already in the log (made from the queue)
+ * is not imported a second time. It matches on normalized company and title with
+ * applied dates within one day, and each existing application absorbs at most one
+ * row. The spreadsheet may then supply the state, but only to an application that
+ * has no response yet: a response recorded in the app is never replaced, and a
+ * recorded response is never turned back into "no answer".
  */
 
 export interface ImportApplicationHistoryDeps {
@@ -23,6 +30,10 @@ export interface SkippedRow {
 export interface ImportApplicationHistoryResult {
   readonly imported: number;
   readonly alreadyImported: number;
+  /** Rows that describe an application already in the log and were not imported again. */
+  readonly matchedExisting: number;
+  /** Of those, how many had their state updated from the spreadsheet. */
+  readonly updatedExisting: number;
   readonly skipped: readonly SkippedRow[];
 }
 
@@ -47,6 +58,33 @@ export function slugPortal(portal: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+function matchKey(company: string, title: string): string {
+  return `${slugPortal(company)}|${slugPortal(title)}`;
+}
+
+/** Applications made from the queue, by `company|title`. Imported ones never match. */
+function indexQueueApplications(applications: readonly Application[]): Map<string, Application[]> {
+  const index = new Map<string, Application[]>();
+  for (const application of applications) {
+    if (application.jobId.startsWith('import-')) {
+      continue;
+    }
+    const [company, title] = application.jobId.split('::');
+    if (company === undefined || title === undefined) {
+      continue;
+    }
+    const key = matchKey(company, title);
+    index.set(key, [...(index.get(key) ?? []), application]);
+  }
+  return index;
+}
+
+function withinOneDay(a: Date, b: Date): boolean {
+  return Math.abs(Date.parse(dayOf(a)) - Date.parse(dayOf(b))) <= ONE_DAY_MS;
 }
 
 function outcomeFor(row: HistoryRow): ApplicationOutcome | undefined {
@@ -81,7 +119,10 @@ export async function importApplicationHistory(
 ): Promise<ImportApplicationHistoryResult> {
   let imported = 0;
   let alreadyImported = 0;
+  let matchedExisting = 0;
+  let updatedExisting = 0;
   const skipped: SkippedRow[] = [];
+  const queueApplications = indexQueueApplications(await deps.repository.list());
 
   for (const row of rows) {
     if (row.appliedAt === undefined) {
@@ -91,6 +132,23 @@ export async function importApplicationHistory(
     const outcome = outcomeFor(row);
     if (outcome === undefined) {
       skipped.push({ rowNumber: row.rowNumber, reason: 'unsupported_status_or_reply' });
+      continue;
+    }
+
+    const candidates = queueApplications.get(matchKey(row.company, row.title)) ?? [];
+    const matchIndex = candidates.findIndex((candidate) => withinOneDay(candidate.appliedAt, row.appliedAt as Date));
+    const match = matchIndex === -1 ? undefined : candidates[matchIndex];
+    if (match !== undefined) {
+      candidates.splice(matchIndex, 1);
+      matchedExisting += 1;
+      if (isResponse(outcome) && !isResponse(match.outcome)) {
+        await deps.repository.updateOutcome({
+          jobId: match.jobId,
+          outcome,
+          at: row.respondedAt ?? match.outcomeUpdatedAt,
+        });
+        updatedExisting += 1;
+      }
       continue;
     }
 
@@ -129,5 +187,5 @@ export async function importApplicationHistory(
     }
   }
 
-  return { imported, alreadyImported, skipped };
+  return { imported, alreadyImported, matchedExisting, updatedExisting, skipped };
 }

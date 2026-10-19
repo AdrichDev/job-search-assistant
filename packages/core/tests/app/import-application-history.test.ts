@@ -52,7 +52,7 @@ describe('importApplicationHistory', () => {
       ],
       { repository },
     );
-    expect(result).toEqual({ imported: 4, alreadyImported: 0, skipped: [] });
+    expect(result).toEqual({ imported: 4, alreadyImported: 0, matchedExisting: 0, updatedExisting: 0, skipped: [] });
     const all = await repository.list();
     expect(all.map((a) => a.outcome).sort()).toEqual(['applied', 'applied', 'rejected', 'screening']);
     const screening = all.find((a) => a.outcome === 'screening');
@@ -111,7 +111,7 @@ describe('importApplicationHistory', () => {
     const rows = [row({ listNumber: '1' }), row({ listNumber: '2' })];
     await importApplicationHistory(rows, { repository });
     const again = await importApplicationHistory(rows, { repository });
-    expect(again).toEqual({ imported: 0, alreadyImported: 2, skipped: [] });
+    expect(again).toEqual({ imported: 0, alreadyImported: 2, matchedExisting: 0, updatedExisting: 0, skipped: [] });
     expect(await repository.list()).toHaveLength(2);
   });
 
@@ -157,5 +157,124 @@ describe('createApplication outcomeUpdatedAt', () => {
       outcomeUpdatedAt: at,
     });
     expect(application.outcomeUpdatedAt).toEqual(at);
+  });
+});
+
+describe('importApplicationHistory - applications already in the log', () => {
+  async function seedAppCreated(
+    repository: ReturnType<typeof repo>,
+    overrides: { jobId?: string; appliedAt?: Date; outcome?: 'applied' | 'rejected' | 'interview' } = {},
+  ) {
+    await repository.record({
+      jobId: overrides.jobId ?? 'acme fictional::junior dev::madrid',
+      appliedAt: overrides.appliedAt ?? new Date('2026-01-10T15:30:00Z'),
+      cvVariant: 'frontend',
+      scoreAtApply: 80,
+      sourceIds: ['manfred'],
+      ...(overrides.outcome === undefined ? {} : { outcome: overrides.outcome }),
+    });
+  }
+
+  it('does not import a row that matches an application made from the queue', async () => {
+    const repository = repo();
+    await seedAppCreated(repository);
+
+    const result = await importApplicationHistory([row()], { repository });
+
+    expect(result).toEqual({ imported: 0, alreadyImported: 0, matchedExisting: 1, updatedExisting: 0, skipped: [] });
+    const all = await repository.list();
+    expect(all).toHaveLength(1);
+    expect(all[0]?.cvVariant).toBe('frontend');
+  });
+
+  it('takes the state from the spreadsheet when it records a response the app does not know', async () => {
+    const repository = repo();
+    await seedAppCreated(repository);
+
+    const result = await importApplicationHistory(
+      [row({ status: 'Rechazado', replied: 'Sí', respondedAt: new Date('2026-01-14T00:00:00Z') })],
+      { repository },
+    );
+
+    expect(result.matchedExisting).toBe(1);
+    expect(result.updatedExisting).toBe(1);
+    const [entry] = await repository.list();
+    expect(entry?.outcome).toBe('rejected');
+    expect(entry?.outcomeUpdatedAt.toISOString()).toBe('2026-01-14T00:00:00.000Z');
+    expect(entry?.cvVariant).toBe('frontend');
+  });
+
+  it('never replaces a response already recorded in the app', async () => {
+    const repository = repo();
+    await seedAppCreated(repository, { outcome: 'interview' });
+
+    const result = await importApplicationHistory([row({ status: 'Rechazado', replied: 'Sí' })], { repository });
+
+    expect(result.matchedExisting).toBe(1);
+    expect(result.updatedExisting).toBe(0);
+    expect((await repository.list())[0]?.outcome).toBe('interview');
+  });
+
+  it('does not turn a recorded rejection back into "no answer"', async () => {
+    const repository = repo();
+    await seedAppCreated(repository, { outcome: 'rejected' });
+
+    const result = await importApplicationHistory([row({ status: 'En proceso', replied: 'No' })], { repository });
+
+    expect(result.updatedExisting).toBe(0);
+    expect((await repository.list())[0]?.outcome).toBe('rejected');
+  });
+
+  it('matches ignoring case and accents, within one day of the application date', async () => {
+    const repository = repo();
+    await seedAppCreated(repository, {
+      jobId: 'acme fictional::ingeniero junior::madrid',
+      appliedAt: new Date('2026-01-11T09:00:00Z'),
+    });
+
+    const result = await importApplicationHistory(
+      [row({ company: 'ACME Fictional', title: 'Ingeniero J\u00fanior' })],
+      { repository },
+    );
+
+    expect(result.matchedExisting).toBe(1);
+    expect(result.imported).toBe(0);
+  });
+
+  it('imports as a new application when the dates are more than a day apart', async () => {
+    const repository = repo();
+    await seedAppCreated(repository, { appliedAt: new Date('2026-02-20T10:00:00Z') });
+
+    const result = await importApplicationHistory([row()], { repository });
+
+    expect(result.matchedExisting).toBe(0);
+    expect(result.imported).toBe(1);
+    expect(await repository.list()).toHaveLength(2);
+  });
+
+  it('lets one existing application absorb only one spreadsheet row', async () => {
+    const repository = repo();
+    await seedAppCreated(repository);
+
+    const result = await importApplicationHistory(
+      [row({ rowNumber: 2, listNumber: '1' }), row({ rowNumber: 3, listNumber: '2' })],
+      { repository },
+    );
+
+    expect(result.matchedExisting).toBe(1);
+    expect(result.imported).toBe(1);
+  });
+
+  it('keeps re-imports idempotent when matches exist', async () => {
+    const repository = repo();
+    await seedAppCreated(repository);
+    const rows = [row({ rowNumber: 2, listNumber: '1' }), row({ rowNumber: 3, listNumber: '2', title: 'Other Role' })];
+
+    await importApplicationHistory(rows, { repository });
+    const again = await importApplicationHistory(rows, { repository });
+
+    expect(again.imported).toBe(0);
+    expect(again.alreadyImported).toBe(1);
+    expect(await repository.list()).toHaveLength(2);
   });
 });

@@ -36,6 +36,7 @@ async function main(): Promise<number> {
 
   console.log(`Imported:         ${result.imported}`);
   console.log(`Already imported: ${result.alreadyImported}`);
+  console.log(`Matched existing: ${result.matchedExisting} (state updated: ${result.updatedExisting})`);
   console.log(`Skipped:          ${result.skipped.length}`);
   for (const skipped of result.skipped) {
     console.log(`  row ${skipped.rowNumber}: ${skipped.reason}`);
