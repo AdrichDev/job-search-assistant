@@ -12,9 +12,8 @@ import { WORKSPACE_ROOT, resolveDataPath } from './paths.js';
  * Dot-prefixed for the same reason `.link-cache.json` is: it sits among data a
  * human browses, and it is machinery rather than content.
  *
- * NOT inside `data/greenhouses/`. Liveness is checked for every source, because
- * a Greenhouse or a search provider posting closes exactly as often as a shortened one -
- * it just does so without a redirect to make it obvious.
+ * NOT inside a per-source folder. Liveness is checked for every source, because
+ * a posting from any provider closes exactly as often as any other.
  */
 export const DEFAULT_LIVENESS_CACHE_PATH = resolveDataPath(
   'JOB_QUEUE_LIVENESS_CACHE',

@@ -45,7 +45,7 @@ test.describe('fetch journey', () => {
 
   /**
    * Terminology is a product decision here, not a style preference. This tool
-   * queries public APIs and saved greenhouses; it never navigates or parses a
+   * queries public APIs and employer ATS endpoints; it never navigates or parses a
    * job board's pages. Copy that called it scraping would describe something it
    * does not do and is not allowed to do.
    */

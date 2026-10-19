@@ -1,6 +1,6 @@
 # Job queue — tech offers open to juniors, newest first
 
-A job-search aggregation pipeline for a junior developer in Madrid. It pulls vacancies from public job APIs, collapses duplicates, and applies exactly **two hard filters**: the posting must be software work, and it must carry no explicit signal that a first-job candidate is disqualified. Everything that passes both is shown, newest first. Nothing is ranked away and nothing is truncated — you decide what is worth your time.
+A job-search aggregation pipeline for a junior developer in Madrid. It pulls vacancies from public job APIs, collapses duplicates, and applies exactly **three hard filters**: the posting must be software work, it must be compatible with Madrid or remote work from Spain, and it must carry no explicit signal (senior/lead/manager role, 3+ years required) that a first-job candidate is disqualified. Everything that passes all three is shown, newest first. Nothing is ranked away and nothing is truncated — you decide what is worth your time.
 
 A score is still computed and persisted for every offer, but it is a secondary, inspectable detail: it does not order the list and it never removes anything. It exists so that, once there are enough applications logged, it can be correlated against reply rate and either earned its keep or be dropped.
 
@@ -46,24 +46,17 @@ npm run start:boards      # Greenhouse + Lever + Ashby
 | Source | Kind | Key needed | How coverage is decided |
 |--------|------|-----------|-------------------------|
 | `fixture` | Committed sample data | No | The catalogue in `data/sample-jobs.json` |
+| `manfred` | Public API, Spanish tech market | No | Whatever the API returns; the only source that publishes a salary |
 | `greenhouse` | Per-company boards | No | The company list in `config/company-boards.ts` |
 | `lever` | Per-company boards | No | Same list |
 | `ashby` | Per-company boards | No | Same list |
+| `smartrecruiters` | Per-company boards | No | Same list |
+| `landingjobs` | European job board API | No | Whatever the API returns |
+| `arbeitnow` | European job board API | No | Whatever the API returns |
 
+Every source is read through a public API or an employer's own ATS endpoint. InfoJobs, Indeed, LinkedIn, Tecnoempleo, Michael Page, Knowmad Mood and Experteer are **not implemented**; their intended routes are in [docs/sources.md](docs/sources.md). Email alerts are an allowed route but **no email ingestion exists today**.
 
-## Job alerts by email — the widest-reaching source
-
-**[Full workflow below](#reading-job-alerts-from-your-inbox).** In one paragraph:
-
-Most job sites either forbid scraping or render their listings with JavaScript,
-so there is nothing to read even if you were allowed to. Michael Page is typical:
-no public API, a sitemap that deliberately excludes individual postings, and
-category pages built in the browser. But **almost every one of those same sites
-will email you the openings if you subscribe to an alert.**
-
-So this pipeline does not visit those sites. You subscribe, you save the emails
-into a folder, and it reads the folder. That is legitimate, it does not break
-when somebody changes a CSS class, and it works for every sender at once.
+## Company boards
 
 ### Company boards are not search engines — read this before expecting coverage
 
@@ -289,7 +282,7 @@ packages/core/src/
     text.ts          Normalization, boundary-aware keyword matching
     dedupe.ts        Cross-source / cross-page collapsing
     order.ts         scoreJobs (no sorting) + orderByRecency. Split on purpose.
-    junior-eligibility.ts  Filter B. Excludes only on explicit signals.
+    hard-eligibility.ts  Filters B and C: location, experience, seniority. Excludes only on explicit signals.
     application.ts   Application entity + outcome transitions
     application-stats.ts  Response / advance rates, overall and per CV variant
     exploration.ts   RETIRED: seeded exploration sampling, unwired
@@ -342,7 +335,7 @@ It walks the real import graph from `domain-index.ts` and fails on any node buil
 | Flag | Default | Meaning |
 |------|---------|---------|
 | `--source=LIST` | `fixture` | Comma-separated supported source ids. Shortcuts: `boards` (configured company ATS providers) and `all` (every supported real source). `fixture` is never in a shortcut and may not share a run with a real source |
-| `--limit=N` | *off* | Truncate the list to N rows. **Off by default** — every offer that passed both filters is shown. Opt-in only, for keeping a huge exploratory run readable. |
+| `--limit=N` | *off* | Truncate the list to N rows. **Off by default** — every offer that passed the hard filters is shown. Opt-in only, for keeping a huge exploratory run readable. |
 | `--explain=N` | `3` | How many entries get a full score breakdown |
 | `--concurrency=N` | `4` | Simultaneous company-board requests |
 | `--timeout=MS` | `15000` | Per-request timeout for company boards |

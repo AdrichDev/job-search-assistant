@@ -12,7 +12,7 @@ import { ES, LOCALE, translateActionMessage } from '@/copy/es';
  * ## Terminology
  *
  * This FETCHES. It asks the same configured sources the CLI asks - public job
- * APIs and job-alert emails the human saved themselves - and it never navigates
+ * APIs and employer ATS endpoints - and it never navigates
  * or parses a job board's HTML. Calling it scraping in the copy would describe
  * something this program does not do and is not allowed to do.
  *

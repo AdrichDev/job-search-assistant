@@ -28,9 +28,9 @@ import type { CachedLiveness, LivenessCache } from './http-link-checker.js';
  *      past. A deletion whose justification cannot be inspected afterwards is
  *      indistinguishable from a bug.
  *
- * It lives beside the queue rather than inside `data/greenhouses/` because
- * liveness is checked for EVERY source - a Greenhouse posting closes as often
- * as a shortened one, it just does it more quietly.
+ * It lives beside the queue rather than inside a per-source folder because
+ * liveness is checked for EVERY source: any posting can close, and a closed
+ * one must not stay in the queue.
  */
 
 export interface JsonLivenessCacheOptions {

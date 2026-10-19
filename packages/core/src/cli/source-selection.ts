@@ -100,11 +100,7 @@ export const SAMPLE_SOURCE_IDS: readonly SelectableSourceId[] = ['fixture'];
 /**
  * Sources that report live vacancies. `all` means EXACTLY these.
  *
- * Order is the order the run summary prints, and it ends with the greenhouse
- * for one practical reason: it is the only source whose input a human has to
- * have produced. A run that finds an empty `data/greenhouses/` should read as
- * "you have not saved any alerts yet", which is easier to see at the bottom of
- * the report than in the middle of it.
+ * Order is the order the run summary prints.
  */
 export const REAL_SOURCE_IDS: readonly SelectableSourceId[] = [
   // First because it is the best match for this candidate: the Spanish tech
