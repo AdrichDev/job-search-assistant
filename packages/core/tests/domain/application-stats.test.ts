@@ -172,3 +172,22 @@ describe('computeApplicationStats', () => {
     expect(stats.byOutcome.rejected).toBe(0);
   });
 });
+
+describe('computeApplicationStats - imported history', () => {
+  it('counts imported applications in the funnel and per source but not per CV variant', () => {
+    const imported = createApplication({
+      jobId: 'import-1',
+      appliedAt: REFERENCE_NOW,
+      sourceIds: ['infojobs'],
+      outcome: 'rejected',
+      listing: { company: 'Acme', title: 'Dev' },
+    });
+    const stats = computeApplicationStats([application('frontend', 'applied', ['manfred']), imported]);
+
+    expect(stats.totalApplied).toBe(2);
+    expect(stats.responses).toBe(1);
+    expect(stats.byVariant.map((v) => v.cvVariant)).toEqual(['frontend']);
+    expect(stats.byVariant[0]?.applied).toBe(1);
+    expect(stats.bySource.find((s) => s.sourceId === 'infojobs')?.responses).toBe(1);
+  });
+});

@@ -113,15 +113,19 @@ export function computeApplicationStats(
       pending += 1;
     }
 
-    const accumulator = variants.get(application.cvVariant) ?? {
-      applied: 0,
-      responses: 0,
-      advances: 0,
-    };
-    accumulator.applied += 1;
-    accumulator.responses += responded ? 1 : 0;
-    accumulator.advances += advanced ? 1 : 0;
-    variants.set(application.cvVariant, accumulator);
+    // Imported history has no recorded CV; crediting it to one would distort
+    // the comparison between variants, so it stays out of this breakdown only.
+    if (application.cvVariant !== undefined) {
+      const accumulator = variants.get(application.cvVariant) ?? {
+        applied: 0,
+        responses: 0,
+        advances: 0,
+      };
+      accumulator.applied += 1;
+      accumulator.responses += responded ? 1 : 0;
+      accumulator.advances += advanced ? 1 : 0;
+      variants.set(application.cvVariant, accumulator);
+    }
 
     // A deduped vacancy can carry several source refs. Each source gets credit:
     // the question is "does this source lead to replies?", not "which source won?".

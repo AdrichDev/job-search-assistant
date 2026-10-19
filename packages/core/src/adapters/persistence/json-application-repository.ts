@@ -6,6 +6,8 @@ import {
   withOutcome,
   type Application,
   type ApplicationDraft,
+  type ApplicationListing,
+  normalizeListing,
 } from '../../domain/application.js';
 import { CV_VARIANTS } from '../../domain/job.js';
 import type {
@@ -30,16 +32,31 @@ const isoDate = z
   .datetime({ offset: true })
   .transform((value) => new Date(value));
 
+const listingSchema = z.object({
+  company: z.string().min(1),
+  title: z.string().min(1),
+  url: z.string().optional(),
+  portal: z.string().optional(),
+  city: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  contact: z.string().optional(),
+  companyInfo: z.string().optional(),
+  publishedAt: isoDate.optional(),
+});
+
 const applicationSchema = z.object({
   jobId: z.string().min(1),
   appliedAt: isoDate,
-  cvVariant: z.enum(CV_VARIANTS),
-  scoreAtApply: z.number().finite(),
+  // Absent for imported history, where nobody recorded the CV or the score.
+  cvVariant: z.enum(CV_VARIANTS).optional(),
+  scoreAtApply: z.number().finite().optional(),
   // Absent in logs written before source tracking.
   sourceIds: z.array(z.string()).default([]),
   outcome: z.enum(APPLICATION_OUTCOMES),
   outcomeUpdatedAt: isoDate,
   notes: z.string().optional(),
+  listing: listingSchema.optional(),
 });
 
 export interface JsonApplicationRepositoryOptions {
@@ -50,12 +67,22 @@ function serialize(application: Application) {
   return {
     jobId: application.jobId,
     appliedAt: application.appliedAt.toISOString(),
-    cvVariant: application.cvVariant,
-    scoreAtApply: application.scoreAtApply,
+    ...(application.cvVariant === undefined ? {} : { cvVariant: application.cvVariant }),
+    ...(application.scoreAtApply === undefined ? {} : { scoreAtApply: application.scoreAtApply }),
     sourceIds: application.sourceIds,
     outcome: application.outcome,
     outcomeUpdatedAt: application.outcomeUpdatedAt.toISOString(),
     ...(application.notes === undefined ? {} : { notes: application.notes }),
+    ...(application.listing === undefined
+      ? {}
+      : {
+          listing: {
+            ...application.listing,
+            ...(application.listing.publishedAt === undefined
+              ? {}
+              : { publishedAt: application.listing.publishedAt.toISOString() }),
+          },
+        }),
   };
 }
 
@@ -63,6 +90,15 @@ function serialize(application: Application) {
 function byNewestFirst(a: Application, b: Application): number {
   const byDate = b.appliedAt.getTime() - a.appliedAt.getTime();
   return byDate !== 0 ? byDate : a.jobId.localeCompare(b.jobId);
+}
+
+function reviveListing(entry: z.infer<typeof listingSchema>): ApplicationListing {
+  // Rebuilt through the domain normalizer so a hand-edited file cannot smuggle
+  // in blanks; `exactOptionalPropertyTypes` needs absent keys, not undefined ones.
+  const defined = Object.fromEntries(
+    Object.entries(entry).filter(([, value]) => value !== undefined),
+  ) as unknown as ApplicationListing;
+  return normalizeListing(defined);
 }
 
 export function createJsonApplicationRepository(
@@ -80,11 +116,12 @@ export function createJsonApplicationRepository(
         createApplication({
           jobId: entry.jobId,
           appliedAt: entry.appliedAt,
-          cvVariant: entry.cvVariant,
-          scoreAtApply: entry.scoreAtApply,
+          ...(entry.cvVariant === undefined ? {} : { cvVariant: entry.cvVariant }),
+          ...(entry.scoreAtApply === undefined ? {} : { scoreAtApply: entry.scoreAtApply }),
           sourceIds: entry.sourceIds,
           outcome: entry.outcome,
           ...(entry.notes === undefined ? {} : { notes: entry.notes }),
+          ...(entry.listing === undefined ? {} : { listing: reviveListing(entry.listing) }),
         }),
         entry.outcome,
         entry.outcomeUpdatedAt,

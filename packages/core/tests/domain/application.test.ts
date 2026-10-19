@@ -117,3 +117,38 @@ describe('outcome classification', () => {
     expect(isApplicationOutcome(7)).toBe(false);
   });
 });
+
+describe('imported history (no CV, no score, with a listing)', () => {
+  it('mints an application without a CV variant or score and keeps its listing', () => {
+    const imported = createApplication({
+      jobId: 'import-1',
+      appliedAt: REFERENCE_NOW,
+      sourceIds: ['infojobs'],
+      outcome: 'rejected',
+      listing: { company: '  Acme ', title: 'Junior Dev', url: 'https://example.com/o/1', portal: 'InfoJobs', city: 'Madrid' },
+    });
+
+    expect(imported.cvVariant).toBeUndefined();
+    expect(imported.scoreAtApply).toBeUndefined();
+    expect(imported.outcome).toBe('rejected');
+    expect(imported.listing).toEqual({
+      company: 'Acme',
+      title: 'Junior Dev',
+      url: 'https://example.com/o/1',
+      portal: 'InfoJobs',
+      city: 'Madrid',
+    });
+  });
+
+  it('still refuses a non-finite score when one is supplied', () => {
+    expect(() =>
+      createApplication({ jobId: 'x', appliedAt: REFERENCE_NOW, cvVariant: 'general', scoreAtApply: Number.NaN }),
+    ).toThrow(/finite score/);
+  });
+
+  it('refuses a listing without company or title', () => {
+    expect(() =>
+      createApplication({ jobId: 'x', appliedAt: REFERENCE_NOW, listing: { company: ' ', title: 'Dev' } }),
+    ).toThrow(/listing/i);
+  });
+});

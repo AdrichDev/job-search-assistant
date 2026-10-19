@@ -195,3 +195,30 @@ describe('createJsonApplicationRepository - outcomes', () => {
     ).toBeNull();
   });
 });
+
+describe('createJsonApplicationRepository - imported history', () => {
+  it('round-trips an application that has a listing and no CV or score', async () => {
+    await repository.record({
+      jobId: 'import-1',
+      appliedAt: REFERENCE_NOW,
+      outcome: 'rejected',
+      sourceIds: ['infojobs'],
+      listing: { company: 'Acme', title: 'Junior Dev', url: 'https://example.com/o/1', portal: 'InfoJobs' },
+    });
+    const reread = createJsonApplicationRepository({ filePath });
+    const [entry] = await reread.list();
+
+    expect(entry?.cvVariant).toBeUndefined();
+    expect(entry?.scoreAtApply).toBeUndefined();
+    expect(entry?.listing).toEqual({ company: 'Acme', title: 'Junior Dev', url: 'https://example.com/o/1', portal: 'InfoJobs' });
+    expect(entry?.outcome).toBe('rejected');
+  });
+
+  it('still loads a legacy log whose entries have no listing', async () => {
+    await repository.record(DRAFT);
+    const [entry] = await createJsonApplicationRepository({ filePath }).list();
+
+    expect(entry?.cvVariant).toBe('frontend');
+    expect(entry?.listing).toBeUndefined();
+  });
+});
