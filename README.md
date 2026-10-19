@@ -233,6 +233,24 @@ The application and dismissal logs share one JSON-log store for the mechanics th
 
 There is **no native dependency** — no `better-sqlite3`, nothing needing a postinstall build. `ApplicationRepository` and `DismissalRepository` are the seams for replacing either JSON log without changing callers. Both formats remain version 1 because all new fields are optional and old files load without migration.
 
+### Importing historical applications
+
+```
+npm run import:history -- <path-to-xlsx> [--applications=PATH]
+```
+
+Reads the sheet `Candidaturas` of your own tracking spreadsheet (headers matched by exact text, extra columns ignored; a missing sheet or required header is a clear error) and adds each row to the application log (`data/applications.json` by default). The spreadsheet holds personal data: keep it outside the repository. The command prints counts only (imported, already imported, skipped with row numbers and reasons), never cell content.
+
+Mapping rules:
+
+- `Estado` `Rechazado` becomes `rejected`; `En proceso` with `¿Han contestado?` `No` becomes `applied`, with `Sí` becomes `screening`. Any other status skips the row.
+- A row without `Fecha solicitud` is skipped (`missing_applied_date`); a date is never invented.
+- `Fecha contestación`, when present, becomes the outcome date.
+- `Portal` becomes the source id (lowercase, accents stripped, other characters to `-`, e.g. `InfoJobs` to `infojobs`); empty means no source.
+- The offer URL is the cell's hyperlink target when it has one; only `http`/`https` URLs are kept.
+- Job id is `import-` plus a hash of company, title, applied date and list number, so the import is **idempotent**: re-running it creates nothing new.
+- Imported rows count in the funnel and by source, but not per CV variant (no CV was recorded).
+
 ## Scoring model
 
 Each dimension returns `0..1`. They are combined with configurable weights and normalized to a `0..100` score.

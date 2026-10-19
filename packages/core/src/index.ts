@@ -177,6 +177,14 @@ export {
   type UpdateApplicationOutcomeResult,
 } from './app/update-application-outcome.js';
 
+export {
+  importApplicationHistory,
+  type ImportApplicationHistoryDeps,
+  type ImportApplicationHistoryResult,
+  type SkippedRow,
+} from './app/import-application-history.js';
+export type { HistoryReader, HistoryRow } from './ports/history-reader.js';
+
 /* Adapters ------------------------------------------------------------ */
 export { createAshbyJobSource } from './adapters/boards/ashby-board.js';
 export { createGreenhouseJobSource } from './adapters/boards/greenhouse-board.js';

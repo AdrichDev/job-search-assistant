@@ -25,6 +25,7 @@
     "start:offline": "npm run start:offline --workspace @job-queue/core",
     "start:boards": "npm run start:boards --workspace @job-queue/core",
     "seed:queue": "npm run seed:queue --workspace @job-queue/core",
+    "import:history": "npm run import:history --workspace @job-queue/core --",
     "verify:boards": "npm run verify:boards --workspace @job-queue/core --",
     "dev": "npm run build:core && npm run dev --workspace @job-queue/web",
     "web": "npm run build:core && npm run start --workspace @job-queue/web",

@@ -100,6 +100,8 @@ export interface ApplicationDraft {
   readonly sourceIds?: readonly string[];
   /** Defaults to `applied`. Only set explicitly when importing existing history. */
   readonly outcome?: ApplicationOutcome;
+  /** When the outcome was last set. Defaults to `appliedAt`; imports pass the reply date. */
+  readonly outcomeUpdatedAt?: Date;
   readonly notes?: string;
   readonly listing?: ApplicationListing;
 }
@@ -152,7 +154,7 @@ export function createApplication(draft: ApplicationDraft): Application {
     ...(draft.scoreAtApply === undefined ? {} : { scoreAtApply: draft.scoreAtApply }),
     sourceIds: [...new Set((draft.sourceIds ?? []).map((id) => id.trim()).filter((id) => id.length > 0))],
     outcome,
-    outcomeUpdatedAt: draft.appliedAt,
+    outcomeUpdatedAt: draft.outcomeUpdatedAt ?? draft.appliedAt,
     // `exactOptionalPropertyTypes` forbids an explicit `undefined`, so an absent
     // note means an absent key.
     ...(notes === undefined || notes.length === 0 ? {} : { notes }),
