@@ -1,5 +1,5 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { QueueFile } from '../fixtures/queue.js';
 
@@ -133,6 +133,41 @@ export async function removeQueue(): Promise<void> {
  */
 export async function resetApplications(): Promise<void> {
   await writeJson(SCRATCH_APPLICATIONS_PATH, { version: 1, applications: [] });
+}
+
+/** One application as it is stored in the log (ISO dates), without going through the app. */
+export interface SeedApplication {
+  readonly jobId: string;
+  readonly appliedAt: string;
+  readonly cvVariant?: string;
+  readonly scoreAtApply?: number;
+  readonly sourceIds?: readonly string[];
+  readonly outcome: string;
+  readonly outcomeUpdatedAt?: string;
+  readonly notes?: string;
+  readonly listing?: Readonly<Record<string, string>>;
+}
+
+/**
+ * Writes applications INTO THE ISOLATED log, replacing its content.
+ *
+ * Specs otherwise only get applications by clicking "Aplicar", which can never
+ * produce imported history. The target is the scratch path constant only, and
+ * the path is re-checked against the scratch root so a future edit cannot point
+ * this helper at the user's real `data/applications.json`.
+ */
+export async function seedApplications(rows: readonly SeedApplication[]): Promise<void> {
+  if (!resolve(SCRATCH_APPLICATIONS_PATH).startsWith(`${SCRATCH_ROOT}${sep}`)) {
+    throw new Error(`Refusing to seed outside the scratch tree: ${SCRATCH_APPLICATIONS_PATH}`);
+  }
+  await writeJson(SCRATCH_APPLICATIONS_PATH, {
+    version: 1,
+    applications: rows.map((row) => ({
+      sourceIds: [],
+      outcomeUpdatedAt: row.appliedAt,
+      ...row,
+    })),
+  });
 }
 
 export interface RecordedApplication {

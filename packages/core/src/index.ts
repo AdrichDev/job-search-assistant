@@ -132,6 +132,12 @@ export {
   type ApplicationStatusFields,
 } from './app/application-status.js';
 export {
+  buildTrackedApplications,
+  countByOutcome,
+  type TrackableQueueJob,
+  type TrackedApplication,
+} from './app/tracked-applications.js';
+export {
   classifyRunHealth,
   decideQueueWrite,
   persistQueue,

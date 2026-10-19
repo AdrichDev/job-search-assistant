@@ -465,6 +465,76 @@ export const ES = {
     submit: 'Guardar estado',
   },
 
+  /* Seguimiento ---------------------------------------------------------- */
+  tracking: {
+    nav: {
+      label: 'Secciones',
+      offers: 'Ofertas',
+      tracking: 'Seguimiento',
+    },
+    skipToContent: 'Saltar a la tabla de seguimiento',
+    meta: {
+      title: 'Seguimiento de postulaciones',
+      description: 'Todas tus postulaciones en un solo sitio, de la más reciente a la más antigua, con su estado y su respuesta.',
+    },
+    heading: 'Seguimiento de postulaciones',
+    intro:
+      'Todas las ofertas a las que te has postulado, tanto desde esta herramienta como las importadas de tu histórico. De la más reciente a la más antigua.',
+    total: (count: number) => `${count} ${count === 1 ? 'postulación' : 'postulaciones'}`,
+    showing: (visible: number, total: number) =>
+      `Mostrando ${visible} de ${total} ${total === 1 ? 'postulación' : 'postulaciones'}`,
+    filter: {
+      label: 'Filtrar por estado',
+      all: 'Todas',
+      option: (label: string, count: number) => `${label} (${count})`,
+    },
+    caption: 'Postulaciones con su empresa, puesto, fuente, ciudad, fechas, estado y notas',
+    columns: {
+      company: 'Empresa',
+      title: 'Puesto',
+      source: 'Fuente',
+      city: 'Ciudad',
+      appliedAt: 'Fecha de solicitud',
+      status: 'Estado',
+      respondedAt: 'Fecha de respuesta',
+      notes: 'Notas',
+    },
+    scrollRegion: 'Tabla de postulaciones, desplázala horizontalmente si no cabe',
+    openOffer: 'Abrir oferta',
+    openOfferHint: (title: string, company: string) =>
+      `de ${title}${company.length > 0 ? ` en ${company}` : ''} (se abre en una pestaña nueva)`,
+    noCompany: 'Empresa no indicada',
+    noCity: 'No indicada',
+    noResponseDate: 'Sin respuesta todavía',
+    noNotes: 'Sin notas',
+    emptyAllTitle: 'Todavía no hay postulaciones registradas',
+    emptyAllBody:
+      'Cuando te postules desde «Ofertas» o importes tu histórico, aparecerán aquí.',
+    emptyFilterTitle: (label: string) => `Ninguna postulación está en el estado «${label}»`,
+    emptyFilterBody: 'Elige otro estado o vuelve a ver todas las postulaciones.',
+    emptyFilterAction: 'Ver todas',
+    warningTitle: 'No se pudo leer todo',
+    warning: {
+      applications: (detail: string) =>
+        `No se pudo leer el registro de postulaciones, así que la lista puede estar incompleta. ${detail}`,
+      queue: (detail: string) =>
+        `No se pudo leer la cola guardada: las postulaciones sin datos propios se muestran con lo que se guardó al postularte. ${detail}`,
+    },
+    /** Portales del histórico importado: solo se usan en esta vista. */
+    portalLabels: {
+      infojobs: 'InfoJobs',
+      'web-de-la-empresa': 'Web de la empresa',
+      linkedin: 'LinkedIn',
+      indeed: 'Indeed',
+      tecnoempleo: 'Tecnoempleo',
+      'michael-page': 'Michael Page',
+      juniorjobs: 'JuniorJobs',
+      adzuna: 'Adzuna',
+      empleosit: 'EmpleosIT',
+      wizbii: 'Wizbii',
+    } as Readonly<Record<string, string>>,
+  },
+
   /* Lookups ------------------------------------------------------------- */
   status: STATUS,
   outcomeOption: OUTCOME,

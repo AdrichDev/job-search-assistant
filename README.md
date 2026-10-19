@@ -227,6 +227,15 @@ It only made sense as a counterweight to **score ordering**. With a recency-orde
 
 `domain/exploration.ts` and `config/exploration-config.ts` are kept unwired and still tested, and are no longer exported from the package barrels. They are the two files to delete if score ordering never returns.
 
+### Two views
+
+The web app has two pages, linked from a navigation bar on every page:
+
+- **Ofertas** (`/`): the ranked list of job offers, with the stats panel, search, dismissals and the fetch button.
+- **Seguimiento** (`/seguimiento`): a read-only table of **every** application, newest first, whether it was made from the queue or imported from the historical spreadsheet. Columns: company, title (with an `Abrir oferta` link when the stored URL is http or https), source, city, applied date, state, response date (only for outcomes that are responses) and notes.
+
+The table can be filtered by state through the query string (`/seguimiento?estado=rejected`); each filter link shows its count and an unknown value shows everything. Company, title, URL and city come from the application's own listing, else from the matching queue entry, else from the stored job fingerprint (`company::title::place`), so applications whose job left the queue are still listed. Editing from this view is not available yet.
+
 ### Storage
 
 The application and dismissal logs share one JSON-log store for the mechanics they must agree on: schema validation, refusal to overwrite unreadable data, in-process serialization and atomic writes. Each repository still owns its entity schema and business rules. A uniquely named temp file is written in the same directory and then renamed over the target; a crash leaves either the old complete file or the new complete file, never a truncated one.
