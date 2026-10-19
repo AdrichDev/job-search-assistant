@@ -35,3 +35,6 @@ Order = lowest external risk first. Each task is a work-unit commit with tests. 
 - L8 (user, verbatim): "2) si ya hay un proyecto de google cloud, se renueva cada 7 dias, pero no pasaria nada, se programa una alerta y listo (creo que se tardaria en que google permitiera el proyecto)"
 - L9 (user, verbatim): "3) Yo soy el que aplica a las empresas, unicamente ha de generar el texto y yo modifico los cv."
 - L10 (user, verbatim): "4) Cuando analices mi email veras los correos."
+- L11 (user, answer to "3 filas dicen que contestó pero siguen En proceso: ¿qué estado?"): "screening (en selección)".
+- L12 (user, answer to "¿cómo entran las importadas en las estadísticas?"): "Embudo y por fuente; no por variante de CV".
+- L13 (design, T1): imported applications use jobId = "import-" + hash(company|title|applied date|list number); outcome: Rechazado -> rejected, En proceso + contestó No -> applied, En proceso + contestó Sí -> screening; rows without applied date are skipped and reported, never invented; portal becomes the source id (slug).
