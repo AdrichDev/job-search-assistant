@@ -250,6 +250,8 @@ Mapping rules:
 - The offer URL is the cell's hyperlink target when it has one; only `http`/`https` URLs are kept.
 - Job id is `import-` plus a hash of company, title, applied date and list number, so the import is **idempotent**: re-running it creates nothing new.
 - Imported rows count in the funnel and by source, but not per CV variant (no CV was recorded).
+- A row that describes an application already in the log (same normalized company and title, applied dates within one day) is **not imported again**. Each logged application absorbs at most one row. The spreadsheet may supply the state, but only to an application that has no response yet: a response recorded in the app is never replaced, and a recorded response is never turned back into "no answer". The output reports these as `Matched existing`.
+- Back up `data/applications.json` before importing into a real log. Files named `data/applications.backup-*.json` are ignored by git.
 
 ## Scoring model
 

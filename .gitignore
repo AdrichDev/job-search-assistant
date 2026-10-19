@@ -14,6 +14,7 @@ output/
 # Application log: personal job-hunting history, not source.
 # data/sample-jobs.json IS tracked - it is the offline fixture.
 data/applications.json
+data/applications.backup-*.json
 data/.applications.*.tmp
 
 # Dismissal log: which offers he said no to. Personal, like the log above, and
