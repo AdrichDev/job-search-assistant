@@ -38,3 +38,5 @@ Order = lowest external risk first. Each task is a work-unit commit with tests. 
 - L11 (user, answer to "3 filas dicen que contestó pero siguen En proceso: ¿qué estado?"): "screening (en selección)".
 - L12 (user, answer to "¿cómo entran las importadas en las estadísticas?"): "Embudo y por fuente; no por variante de CV".
 - L13 (design, T1): imported applications use jobId = "import-" + hash(company|title|applied date|list number); outcome: Rechazado -> rejected, En proceso + contestó No -> applied, En proceso + contestó Sí -> screening; rows without applied date are skipped and reported, never invented; portal becomes the source id (slug).
+- L14 (user, answer to "¿qué hago con las 5 candidaturas que están en su app y en el Excel?"): "Saltar y actualizar estado desde el Excel".
+- L15 (design, T1): a row matches an application already in the log when normalized company and title are equal and the applied dates are within one day. A match is not imported again; its state is taken from the Excel only when the Excel carries a response (never replaces a recorded response with "no answer"). Measured on the real data: 5 matches, 1 state change.
