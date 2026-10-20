@@ -289,7 +289,7 @@ Reads the sheet `Candidaturas` of your own tracking spreadsheet (headers matched
 Mapping rules:
 
 - `Estado` `Rechazado` becomes `rejected`; `En proceso` with `¿Han contestado?` `No` becomes `applied`, with `Sí` becomes `screening`. Any other status skips the row.
-- A row without `Fecha solicitud` is skipped (`missing_applied_date`); a date is never invented.
+- A row without `Fecha solicitud` is imported only if it has a `Fecha contestación`: that date is used as an **estimated** applied date (nobody is answered before applying) and the application carries a visible note saying so, which you can correct from the edit form. A row with neither date is skipped (`missing_applied_date`): there is nothing to base a date on.
 - `Fecha contestación`, when present, becomes the outcome date.
 - `Portal` becomes the source id (lowercase, accents stripped, other characters to `-`, e.g. `InfoJobs` to `infojobs`); empty means no source.
 - The offer URL is the cell's hyperlink target when it has one; only `http`/`https` URLs are kept.

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createJsonApplicationRepository } from '../../src/adapters/persistence/json-application-repository.js';
-import { importApplicationHistory } from '../../src/app/import-application-history.js';
+import { ESTIMATED_APPLIED_DATE_NOTE, importApplicationHistory } from '../../src/app/import-application-history.js';
 import { createApplication } from '../../src/domain/application.js';
 import { computeApplicationStats } from '../../src/domain/application-stats.js';
 import type { HistoryRow } from '../../src/ports/history-reader.js';
@@ -278,3 +278,70 @@ describe('importApplicationHistory - applications already in the log', () => {
     expect(await repository.list()).toHaveLength(2);
   });
 });
+
+describe('importApplicationHistory - rows without an applied date', () => {
+  const RESPONSE = new Date('2026-10-05T00:00:00Z');
+
+  function undated(overrides: Partial<HistoryRow> = {}): HistoryRow {
+    const { appliedAt: _drop, ...rest } = row({ status: 'Rechazado', replied: 'S\u00ed', respondedAt: RESPONSE });
+    return { ...rest, listNumber: '', ...overrides };
+  }
+
+  it('imports a rejection that has a response date, using it as an estimated applied date with a visible note', async () => {
+    const repository = repo();
+
+    const result = await importApplicationHistory([undated({ rowNumber: 166 })], { repository });
+
+    expect(result).toMatchObject({ imported: 1, skipped: [] });
+    const [entry] = await repository.list();
+    expect(entry?.appliedAt.toISOString()).toBe(RESPONSE.toISOString());
+    expect(entry?.outcomeUpdatedAt.toISOString()).toBe(RESPONSE.toISOString());
+    expect(entry?.outcome).toBe('rejected');
+    expect(entry?.notes).toBe(ESTIMATED_APPLIED_DATE_NOTE);
+  });
+
+  it('keeps skipping a row that has neither an applied nor a response date', async () => {
+    const repository = repo();
+    const { respondedAt: _r, ...noDates } = undated({ rowNumber: 237 });
+
+    const result = await importApplicationHistory([noDates], { repository });
+
+    expect(result.imported).toBe(0);
+    expect(result.skipped).toEqual([{ rowNumber: 237, reason: 'missing_applied_date' }]);
+    expect(await repository.list()).toEqual([]);
+  });
+
+  it('is idempotent for an estimated row', async () => {
+    const repository = repo();
+    await importApplicationHistory([undated()], { repository });
+
+    const again = await importApplicationHistory([undated()], { repository });
+
+    expect(again).toMatchObject({ imported: 0, alreadyImported: 1 });
+    expect(await repository.list()).toHaveLength(1);
+  });
+
+  it('does not add the estimate note to a row that has a real applied date', async () => {
+    const repository = repo();
+
+    await importApplicationHistory([row({ status: 'Rechazado', replied: 'S\u00ed', respondedAt: RESPONSE })], { repository });
+
+    expect((await repository.list())[0]?.notes).toBeUndefined();
+  });
+
+  it('keeps the estimated note editable like any other note', async () => {
+    const repository = repo();
+    await importApplicationHistory([undated()], { repository });
+    const [entry] = await repository.list();
+
+    const updated = await repository.update({
+      jobId: entry?.jobId as string,
+      patch: { appliedAt: new Date('2026-09-20T00:00:00Z'), notes: '' },
+      now: new Date('2026-10-20T10:00:00Z'),
+    });
+
+    expect(updated?.after.appliedAt.toISOString()).toBe('2026-09-20T00:00:00.000Z');
+    expect(updated?.after.notes).toBeUndefined();
+  });
+});
+

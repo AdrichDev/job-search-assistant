@@ -20,6 +20,10 @@ import type { HistoryRow } from '../ports/history-reader.js';
  * recorded response is never turned back into "no answer".
  */
 
+/** Visible marker on a row whose applied date is the response date, not a real one. */
+export const ESTIMATED_APPLIED_DATE_NOTE =
+  'Fecha de solicitud desconocida en el Excel: se usa la fecha de respuesta como estimaci\u00f3n. Corr\u00edgela si la sabes.';
+
 export interface ImportApplicationHistoryDeps {
   readonly repository: ApplicationRepository;
   /**
@@ -138,7 +142,13 @@ export async function importApplicationHistory(
   const queueApplications = indexQueueApplications(await deps.repository.list());
 
   for (const row of rows) {
-    if (row.appliedAt === undefined) {
+    // A row without an applied date is only imported when it has a response date,
+    // which is an upper bound (nobody is answered before applying). The estimate is
+    // flagged in the notes so it is never mistaken for a real date, and the person
+    // can correct it by hand. With no date at all there is nothing to base one on.
+    const estimated = row.appliedAt === undefined;
+    const appliedAt = row.appliedAt ?? row.respondedAt;
+    if (appliedAt === undefined) {
       skipped.push({ rowNumber: row.rowNumber, reason: 'missing_applied_date' });
       continue;
     }
@@ -149,7 +159,7 @@ export async function importApplicationHistory(
     }
 
     const candidates = queueApplications.get(matchKey(row.company, row.title)) ?? [];
-    const matchIndex = candidates.findIndex((candidate) => withinOneDay(candidate.appliedAt, row.appliedAt as Date));
+    const matchIndex = candidates.findIndex((candidate) => withinOneDay(candidate.appliedAt, appliedAt));
     const match = matchIndex === -1 ? undefined : candidates[matchIndex];
     if (match !== undefined) {
       candidates.splice(matchIndex, 1);
@@ -186,9 +196,10 @@ export async function importApplicationHistory(
 
     try {
       const { created } = await deps.repository.record({
-        jobId: importJobId(row, row.appliedAt),
-        appliedAt: row.appliedAt,
+        jobId: importJobId(row, appliedAt),
+        appliedAt,
         outcome,
+        ...(estimated ? { notes: ESTIMATED_APPLIED_DATE_NOTE } : {}),
         ...(row.respondedAt === undefined ? {} : { outcomeUpdatedAt: row.respondedAt }),
         sourceIds: portalSlug.length === 0 ? [] : [portalSlug],
         listing: {
