@@ -150,6 +150,18 @@ export type {
   RunClaim,
   RunStateStore,
 } from './ports/run-state-store.js';
+export { EMPTY_MAIL_RUN_STATE } from './ports/mail-run-state-store.js';
+export type { MailRunState, MailRunStateStore } from './ports/mail-run-state-store.js';
+export {
+  MAIL_RUN_HOUR,
+  MAIL_TIME_ZONE,
+  TOKEN_LIFETIME_DAYS,
+  isMailRunDue,
+  latestScheduledRun,
+  tokenExpiresAt,
+  tokenStatus,
+  type TokenStatus,
+} from './domain/mail-schedule.js';
 export type { LinkChecker, LinkCheckerStats } from './ports/link-checker.js';
 export type { Logger } from './ports/logger.js';
 export type { QueueReader } from './ports/queue-reader.js';
@@ -281,6 +293,7 @@ export { createJsonDismissalRepository } from './adapters/persistence/json-dismi
 export { createJsonCvModelRepository } from './adapters/persistence/json-cv-model-repository.js';
 export { createCvLibrary } from './adapters/library/cv-library.js';
 export { createJsonRunStateStore } from './adapters/persistence/json-run-state-store.js';
+export { createJsonMailRunStateStore } from './adapters/persistence/json-mail-run-state-store.js';
 export {
   createQueuePipelineRunner,
   type QueuePipelineRunnerOptions,
@@ -303,6 +316,7 @@ export {
   DEFAULT_HISTORY_LOG_PATH,
   DEFAULT_FIXTURE_PATH,
   DEFAULT_QUEUE_PATH,
+  DEFAULT_MAIL_RUN_STATE_PATH,
   DEFAULT_RUN_STATE_PATH,
   WORKSPACE_ROOT,
 } from './config/paths.js';

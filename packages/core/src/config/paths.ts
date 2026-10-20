@@ -155,3 +155,13 @@ export const DEFAULT_CV_MODELS_PATH = resolveDataPath(
   'JOB_QUEUE_CV_MODELS_PATH',
   resolve(WORKSPACE_ROOT, 'data/cv-models.json'),
 );
+
+/**
+ * The daily mail check's memory: last success, last attempt, last error code and
+ * the Google token issue/failure dates. Transient and rebuildable, so dot-prefixed
+ * like the fetch run state, but a separate file: the two runs are unrelated.
+ */
+export const DEFAULT_MAIL_RUN_STATE_PATH = resolveDataPath(
+  'JOB_QUEUE_MAIL_RUN_STATE_PATH',
+  resolve(WORKSPACE_ROOT, 'data/.mail-run.json'),
+);

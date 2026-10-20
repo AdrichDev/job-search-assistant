@@ -46,6 +46,10 @@ data/.fetch-run.json
 data/.fetch-run.json.lock
 data/.fetch-run.*.tmp
 
+# Mail check state: last run, error code and token dates. Transient.
+data/.mail-run.json
+data/.mail-run.*.tmp
+
 # Generated link evidence and raw personal job-alert inputs.
 data/.link-liveness.json
 data/.link-liveness.*.tmp

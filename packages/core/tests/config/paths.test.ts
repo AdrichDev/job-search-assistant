@@ -77,3 +77,23 @@ describe('CV library locations', () => {
     expect(resolveDataPath('JOB_QUEUE_CV_MODELS_PATH', 'x', { JOB_QUEUE_CV_MODELS_PATH: registry })).toBe(registry);
   });
 });
+
+describe('DEFAULT_MAIL_RUN_STATE_PATH', () => {
+  it('lives under data/ as a dot file unless overridden', async () => {
+    const paths = await import('../../src/config/paths.js');
+    if (process.env['JOB_QUEUE_MAIL_RUN_STATE_PATH'] === undefined) {
+      expect(paths.DEFAULT_MAIL_RUN_STATE_PATH.split(String.fromCharCode(92)).join('/')).toMatch(
+        /\/data\/\.mail-run\.json$/,
+      );
+    }
+  });
+
+  it('honours the JOB_QUEUE_MAIL_RUN_STATE_PATH override seam', () => {
+    const override = resolve('/tmp/run-4/mail-run.json');
+    expect(
+      resolveDataPath('JOB_QUEUE_MAIL_RUN_STATE_PATH', resolve('/workspace/data/.mail-run.json'), {
+        JOB_QUEUE_MAIL_RUN_STATE_PATH: override,
+      }),
+    ).toBe(override);
+  });
+});

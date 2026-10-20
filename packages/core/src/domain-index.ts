@@ -139,6 +139,19 @@ export type {
  */
 export type { FetchRunState, FetchRunSummary } from './ports/run-state-store.js';
 
+/** Mail check state shape (type-only) and the pure schedule / token-expiry rules. */
+export type { MailRunState, MailRunStateStore } from './ports/mail-run-state-store.js';
+export {
+  MAIL_RUN_HOUR,
+  MAIL_TIME_ZONE,
+  TOKEN_LIFETIME_DAYS,
+  isMailRunDue,
+  latestScheduledRun,
+  tokenExpiresAt,
+  tokenStatus,
+  type TokenStatus,
+} from './domain/mail-schedule.js';
+
 /**
  * One row of the "dismissed" review list.
  *
