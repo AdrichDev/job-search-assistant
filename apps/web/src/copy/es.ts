@@ -7,6 +7,7 @@ import type {
 } from '@job-queue/core/domain';
 import type { HistoryField } from '@job-queue/core';
 import { ACTION_MESSAGES, type ActionMessage } from '@/copy/action-messages';
+import type { CvModelNoticeCode } from '@/copy/cv-model-notices';
 
 /**
  * Every user-facing string of the interface, in one module.
@@ -499,6 +500,7 @@ export const ES = {
       label: 'Secciones',
       offers: 'Ofertas',
       tracking: 'Seguimiento',
+      models: 'Modelos',
     },
     skipToContent: 'Saltar a la tabla de seguimiento',
     meta: {
@@ -664,6 +666,107 @@ export const ES = {
       'listing.companyInfo': 'Datos de la empresa',
       'listing.publishedAt': 'Fecha de publicación',
     } as Readonly<Record<HistoryField, string>>,
+  },
+
+  /* Modelos de CV y cartas ------------------------------------------------ */
+  models: {
+    skipToContent: 'Saltar a los modelos',
+    meta: {
+      title: 'Modelos de CV y cartas',
+      description: 'Tus CV y cartas de presentación base, registrados desde tu carpeta sin moverlos ni modificarlos.',
+    },
+    heading: 'Modelos de CV y cartas',
+    intro:
+      'Los PDF que usas como base para tus candidaturas. La herramienta solo los lee desde tu carpeta: nunca los mueve, los cambia ni los borra.',
+    total: (count: number) => `${count} ${count === 1 ? 'modelo registrado' : 'modelos registrados'}`,
+    caption: 'Modelos registrados con su tipo, idioma, etiquetas y disponibilidad',
+    columns: {
+      name: 'Nombre',
+      kind: 'Tipo',
+      language: 'Idioma',
+      tags: 'Etiquetas',
+      status: 'Estado',
+      actions: 'Acciones',
+    },
+    kinds: { cv: 'CV', letter: 'Carta de presentación' } as const,
+    languages: { es: 'Español', en: 'Inglés' } as const,
+    noTags: 'Sin etiquetas',
+    available: 'Disponible',
+    unavailable: 'No disponible',
+    unavailableHint: 'El archivo ya no está en la carpeta o no se puede abrir de forma segura. El modelo sigue registrado.',
+    open: 'Abrir PDF',
+    openHint: (name: string) => `Abrir el PDF de ${name} en una pestaña nueva`,
+    edit: 'Editar',
+    editHint: (name: string) => `Editar ${name}`,
+    remove: 'Quitar del registro',
+    removeHint: (name: string) => `Quitar ${name} del registro`,
+    emptyTitle: 'Todavía no hay modelos registrados',
+    emptyBody: 'Elige abajo un PDF de tu carpeta y regístralo con un nombre, un tipo y un idioma.',
+    confirm: {
+      heading: 'Quitar un modelo del registro',
+      body: (name: string) =>
+        `Vas a quitar «${name}» del registro. El archivo PDF no se toca: sigue en tu carpeta y podrás registrarlo otra vez.`,
+      yes: 'Sí, quitar del registro',
+      cancel: 'Cancelar',
+    },
+    register: {
+      heading: 'Registrar un modelo',
+      intro: 'PDF de tu carpeta que aún no están registrados. Abre uno para darle nombre, tipo, idioma y etiquetas.',
+      none: 'No hay PDF nuevos en la carpeta para registrar.',
+      truncated: 'La carpeta tiene muchos PDF y solo se muestran los primeros.',
+      pick: (path: string) => `Registrar ${path}`,
+      submit: 'Registrar modelo',
+      pathLabel: 'Archivo',
+    },
+    fields: {
+      name: 'Nombre',
+      kind: 'Tipo',
+      language: 'Idioma',
+      tags: 'Etiquetas (separadas por comas)',
+      note: 'Nota (opcional)',
+      path: 'Archivo en la carpeta',
+    },
+    hints: {
+      tags: 'Hasta 12 etiquetas de 40 caracteres como máximo. Por ejemplo: java, spring boot.',
+      path: 'La ruta no se puede cambiar. Para usar otro archivo, quita este modelo y registra el nuevo.',
+    },
+    editPage: {
+      meta: { title: 'Editar modelo' },
+      heading: 'Editar modelo',
+      back: '← Volver a los modelos',
+      submit: 'Guardar cambios',
+      notFoundTitle: 'No se encontró el modelo',
+      notFoundBody: 'Puede que se haya quitado del registro. Vuelve a la lista para ver los modelos que hay.',
+    },
+    problemTitle: 'No se pudo completar la operación',
+    warningTitle: 'Aviso',
+    notices: {
+      registered: 'Modelo registrado.',
+      updated: 'Cambios guardados.',
+      removed: 'Modelo quitado del registro. El archivo sigue en tu carpeta.',
+      invalid_input: 'El formulario no es válido. No se guardó nada.',
+      invalid_name: 'El nombre es obligatorio y puede tener hasta 120 caracteres, sin saltos de línea.',
+      invalid_kind: 'Elige si es un CV o una carta de presentación.',
+      invalid_language: 'Elige el idioma: español o inglés.',
+      invalid_tags: 'Las etiquetas no son válidas. Sepáralas con comas y usa solo texto.',
+      too_many_tags: 'Hay demasiadas etiquetas: el máximo es 12.',
+      tag_too_long: 'Alguna etiqueta es demasiado larga: el máximo es de 40 caracteres.',
+      invalid_note: 'La nota es demasiado larga (máximo 500 caracteres) o contiene caracteres no permitidos.',
+      invalid_path: 'La ruta del archivo no es válida. Solo se aceptan archivos dentro de tu carpeta de modelos.',
+      not_pdf: 'Solo se pueden registrar archivos PDF.',
+      already_registered: 'Ese archivo ya está registrado como modelo.',
+      outside_library: 'Ese archivo queda fuera de tu carpeta de modelos, así que no se puede usar.',
+      file_not_found: 'No se encontró ese archivo en tu carpeta de modelos.',
+      not_a_file: 'Esa ruta no es un archivo.',
+      empty_file: 'Ese archivo está vacío.',
+      too_large: 'Ese archivo es demasiado grande: el máximo es de 50 MB.',
+      unreadable: 'No se pudo leer ese archivo.',
+      model_not_found: 'Ese modelo no existe. Puede que ya se haya quitado.',
+      library_unavailable:
+        'No se puede leer la carpeta de modelos. Comprueba que existe y que la ruta configurada es correcta.',
+      registry_unavailable:
+        'No se pudo leer el registro de modelos. No se ha modificado nada; revisa el archivo de registro o los registros del servidor.',
+    } as Readonly<Record<CvModelNoticeCode, string>>,
   },
 
   /* Lookups ------------------------------------------------------------- */

@@ -260,6 +260,18 @@ The edit page (`/seguimiento/<jobId>/editar`) shows the section **Historial de c
 - Known limitation: undoing the creation of a listing on a queue-made application clears its optional fields but keeps company and title (there is no "remove listing" action).
 - Out of scope here: automatic (email) changes, attachments, exporting the history.
 
+### CV and cover-letter models
+
+The **Modelos** page (`/modelos`) is a library of the CVs and cover letters you start from. It reads PDFs from a folder of yours and keeps a registry of which of them are models; it **never writes, moves, renames or deletes anything in that folder**.
+
+- **Where the PDFs are.** `JOB_QUEUE_CV_LIBRARY_DIR` is the library root (default `data/cv-library`, git-ignored). Point it at your own folder, e.g. `JOB_QUEUE_CV_LIBRARY_DIR=D:\Adrian\3. Curriculum`. Models are registered **where they are**; nothing is copied.
+- **The registry.** `JOB_QUEUE_CV_MODELS_PATH` (default `data/cv-models.json`, git-ignored: it quotes your file names). It lives outside the library on purpose. A missing file is an empty registry; a corrupt one is refused and never overwritten (the page shows a Spanish warning and the technical detail goes only to the server log).
+- **How the variables reach the web app.** Only `process.env` of the server process counts. The root `.env` is read by the **CLI** (`loadDotEnv` in `packages/core/src/cli/main.ts`) and **not** by the web app. Next loads `.env*` files from `apps/web/` only (checked with Next's own loader: the root `.env` is not read for `apps/web`, `apps/web/.env.local` is; it is git-ignored). So either export the variable in the shell that starts the app (PowerShell: `$env:JOB_QUEUE_CV_LIBRARY_DIR = 'D:\Adrian\3. Curriculum'; npm run web`) or put it in `apps/web/.env.local`, then restart the server.
+- **Registering.** The page lists the **`.pdf` files** of the folder that are not registered yet (up to 4 levels deep, 500 files; hidden folders, `tmp` and `node_modules` are skipped; other file types are never listed or inspected; links to folders are not followed). Open one, give it a name (pre-filled from the file name), a type (CV or carta de presentación), a language (español/inglés), tags (pre-filled from the folder names, editable) and an optional note.
+- **Opening a model.** `Abrir PDF` opens `/modelos/<id>/pdf` in a new tab. The id is only a registry key, never a path. The file is served only if it passes the safe resolver: relative path, no `..`, no drive letter or UNC, `.pdf` extension, no control characters, the real path (links and junctions resolved) inside the real library root, an existing regular file of 1 byte to 50 MB that starts with `%PDF-`. Anything else is a plain Spanish 404 that never names a path. The route answers GET and HEAD; ranges are not supported (always a full 200, `Accept-Ranges: none`).
+- **Remove / edit.** `Quitar del registro` asks for confirmation and removes the registry entry only; the PDF stays in your folder. A model whose file moved shows **No disponible** instead of failing. Editing changes name, type, language, tags and note, never the path.
+- Marking which model an application used, suggestions and analysis are separate slices (T3b-T3d).
+
 ### Storage
 
 The application and dismissal logs share one JSON-log store for the mechanics they must agree on: schema validation, refusal to overwrite unreadable data, in-process serialization and atomic writes. Each repository still owns its entity schema and business rules. A uniquely named temp file is written in the same directory and then renamed over the target; a crash leaves either the old complete file or the new complete file, never a truncated one.
@@ -647,6 +659,8 @@ So the suite never runs against those paths. `packages/core/src/config/paths.ts`
 | `JOB_QUEUE_APPLICATIONS_PATH` | `data/applications.json` |
 | `JOB_QUEUE_DISMISSALS_PATH` | `data/dismissals.json` |
 | `JOB_QUEUE_HISTORY_PATH` | `data/application-history.json` |
+| `JOB_QUEUE_CV_MODELS_PATH` | `data/cv-models.json` |
+| `JOB_QUEUE_CV_LIBRARY_DIR` | `data/cv-library` (a scratch folder of synthetic PDFs under `e2e/.tmp/`; the real default folder is only listed by name and size, never by content, to prove it is untouched) |
 
 `playwright.config.ts` exports both into the server process, pointing at `e2e/.tmp/` (gitignored, wiped before each run). Three layers make that a guarantee rather than an intention:
 

@@ -2,6 +2,8 @@ import 'server-only';
 
 import {
   DEFAULT_APPLICATION_LOG_PATH,
+  DEFAULT_CV_LIBRARY_DIR,
+  DEFAULT_CV_MODELS_PATH,
   DEFAULT_DISMISSAL_LOG_PATH,
   DEFAULT_FIXTURE_PATH,
   DEFAULT_HISTORY_LOG_PATH,
@@ -13,7 +15,9 @@ import {
   buildJobQueue,
   consoleLogger,
   createFixtureJobSource,
+  createCvLibrary,
   createJsonApplicationHistoryRepository,
+  createJsonCvModelRepository,
   createJsonApplicationRepository,
   createJsonDismissalRepository,
   createJsonFileQueueReader,
@@ -21,6 +25,9 @@ import {
   loadCandidateProfile,
   type ApplicationHistoryRepository,
   type ApplicationRepository,
+  type CvLibrary,
+  type CvModelDeps,
+  type CvModelRepository,
   type DismissalRepository,
   type JobQueue,
   type QueueReader,
@@ -49,6 +56,8 @@ import {
 let repository: ApplicationRepository | null = null;
 let history: ApplicationHistoryRepository | null = null;
 let dismissals: DismissalRepository | null = null;
+let cvModels: CvModelRepository | null = null;
+let cvLib: CvLibrary | null = null;
 let reader: QueueReader | null = null;
 let runState: RunStateStore | null = null;
 
@@ -77,6 +86,25 @@ export function applicationHistoryRepository(): ApplicationHistoryRepository {
 export function dismissalRepository(): DismissalRepository {
   dismissals ??= createJsonDismissalRepository({ filePath: DEFAULT_DISMISSAL_LOG_PATH });
   return dismissals;
+}
+
+/**
+ * Registry of CV and letter models. A singleton for the same reason as the other
+ * JSON logs: its read-modify-write cycles are serialised by one in-process queue.
+ */
+export function cvModelRepository(): CvModelRepository {
+  cvModels ??= createJsonCvModelRepository({ filePath: DEFAULT_CV_MODELS_PATH });
+  return cvModels;
+}
+
+/** The user's own CV folder, READ-ONLY: the adapter has no write function at all. */
+export function cvLibrary(): CvLibrary {
+  cvLib ??= createCvLibrary({ root: DEFAULT_CV_LIBRARY_DIR });
+  return cvLib;
+}
+
+export function cvModelDeps(): CvModelDeps {
+  return { repository: cvModelRepository(), library: cvLibrary(), logger: consoleLogger };
 }
 
 export function queueReader(): QueueReader {

@@ -1,4 +1,5 @@
 import { test as base, expect, type Locator, type Page } from '@playwright/test';
+import { resetCvModels } from './cv-library.js';
 import {
   removeQueue,
   resetApplications,
@@ -87,6 +88,8 @@ export const test = base.extend<Fixtures>({
     // The change history too: a spec asserting "two entries" measures its own run.
     await resetHistory();
     await resetRunState();
+    // The CV model registry and its scratch library (two synthetic PDFs plus noise).
+    await resetCvModels();
 
     await use(async (queue: QueueFile | null) => {
       if (queue === null) {

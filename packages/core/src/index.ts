@@ -267,6 +267,8 @@ export { createJsonFileQueueWriter } from './adapters/output/json-file-queue-wri
 export { createJsonApplicationRepository } from './adapters/persistence/json-application-repository.js';
 export { createJsonApplicationHistoryRepository } from './adapters/persistence/json-application-history-repository.js';
 export { createJsonDismissalRepository } from './adapters/persistence/json-dismissal-repository.js';
+export { createJsonCvModelRepository } from './adapters/persistence/json-cv-model-repository.js';
+export { createCvLibrary } from './adapters/library/cv-library.js';
 export { createJsonRunStateStore } from './adapters/persistence/json-run-state-store.js';
 export {
   createQueuePipelineRunner,
@@ -284,6 +286,8 @@ export { DEFAULT_JUNIOR_FILTER_CONFIG } from './config/junior-filter-config.js';
 export { DEFAULT_LIVENESS_CACHE_PATH } from './config/liveness.js';
 export {
   DEFAULT_APPLICATION_LOG_PATH,
+  DEFAULT_CV_LIBRARY_DIR,
+  DEFAULT_CV_MODELS_PATH,
   DEFAULT_DISMISSAL_LOG_PATH,
   DEFAULT_HISTORY_LOG_PATH,
   DEFAULT_FIXTURE_PATH,
@@ -322,3 +326,52 @@ export {
   renderScoreExplanations,
 } from './cli/render-table.js';
 export { USAGE, parseCliOptions, type CliOptions } from './cli/options.js';
+
+/* CV model library ---------------------------------------------------- */
+export {
+  CV_MODEL_KINDS,
+  CV_MODEL_LANGUAGES,
+  CV_MODEL_LIMITS,
+  checkRelativePath,
+  isCvModelKind,
+  isCvModelLanguage,
+  normalizeTags,
+  relativePathKey,
+  validateCvModelDraft,
+  validateCvModelPatch,
+  type CvModel,
+  type CvModelDraft,
+  type CvModelKind,
+  type CvModelLanguage,
+  type CvModelPatch,
+  type CvModelValidationReason,
+} from './domain/cv-model.js';
+export type {
+  AddCvModelResult,
+  CvModelRepository,
+  UpdateCvModelResult,
+} from './ports/cv-model-repository.js';
+export {
+  MAX_MODEL_FILE_BYTES,
+  type CvLibrary,
+  type ListCandidateOptions,
+  type ListCandidatesResult,
+  type ModelFileRefusalReason,
+  type ReadModelFileResult,
+  type ResolveModelFileResult,
+} from './ports/cv-library.js';
+export {
+  listCvModels,
+  listRegistrableCandidates,
+  registerCvModel,
+  removeCvModel,
+  updateCvModel,
+  type CvModelDeps,
+  type CvModelRefusalReason,
+  type ListCandidatesOutcome,
+  type ListCvModelsResult,
+  type ListedCvModel,
+  type RegisterCvModelResult,
+  type RemoveCvModelResult,
+  type UpdateCvModelOutcome,
+} from './app/cv-models.js';

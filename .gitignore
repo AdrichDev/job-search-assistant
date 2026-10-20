@@ -28,6 +28,13 @@ data/application-history.json
 data/application-history.backup-*.json
 data/.changes.*.tmp
 
+# CV model library: the registry quotes the user's own file names, and the default
+# library folder holds their personal PDFs. Both personal, like the logs above.
+data/cv-models.json
+data/cv-models.backup-*.json
+data/.models.*.tmp
+data/cv-library/
+
 # Fetch run status board and its single-flight lock. Transient state about the
 # last run, safe to delete, rebuilt by the next one - unlike the two logs above,
 # nothing here is the user's data.

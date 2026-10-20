@@ -8,12 +8,18 @@ import {
   applicationHistoryRepository,
   applicationRepository,
   buildFallbackQueue,
+  cvModelDeps,
   dismissalRepository,
   queueReader,
   runStateStore,
 } from '@/server/container';
 import { ACTION_MESSAGES } from '@/copy/action-messages';
 import { EDIT_FORM_FIELDS, type EditFormValues } from '@/server/edit-form';
+import {
+  registerCvModelFromForm,
+  removeCvModelFromForm,
+  updateCvModelFromForm,
+} from '@/server/cv-models';
 import { pipelineRunner } from '@/server/pipeline';
 import {
   applyToJob,
@@ -207,4 +213,42 @@ export async function startFetchAction(): Promise<ActionOutcome> {
 /** What the run is doing right now. Polled by the fetch button while it runs. */
 export async function fetchStateAction(): Promise<FetchRunState> {
   return readFetchState(fetchDeps());
+}
+
+/* CV model library -------------------------------------------------------- */
+
+/*
+ * Plain form posts that answer with a redirect and a fixed notice code in the
+ * URL (post/redirect/get): they work with the keyboard alone and without client
+ * JavaScript, and a reload never re-submits. The page words the code in Spanish
+ * from a closed set, so nothing typed or thrown is ever echoed back.
+ */
+
+/** Registers a library PDF as a model. The form is untrusted: see `registerCvModelFromForm`. */
+export async function registerCvModelAction(formData: FormData): Promise<void> {
+  const result = await registerCvModelFromForm(formData, cvModelDeps());
+  revalidatePath('/modelos');
+  redirect(`/modelos?aviso=${result.code}${result.ok ? '' : '#registrar'}`);
+}
+
+/** Edits name, kind, language, tags and note. The path cannot be edited. */
+export async function updateCvModelAction(formData: FormData): Promise<void> {
+  const result = await updateCvModelFromForm(formData, cvModelDeps());
+  revalidatePath('/modelos');
+  if (result.ok || result.code === 'model_not_found') {
+    redirect(`/modelos?aviso=${result.code}`);
+  }
+  const id = formData.get('id');
+  redirect(
+    typeof id === 'string' && id.length > 0 && id.length <= 200
+      ? `/modelos/${encodeURIComponent(id)}/editar?aviso=${result.code}`
+      : `/modelos?aviso=${result.code}`,
+  );
+}
+
+/** Removes the registry entry only; the PDF in the user's folder is never touched. */
+export async function removeCvModelAction(formData: FormData): Promise<void> {
+  const result = await removeCvModelFromForm(formData, cvModelDeps());
+  revalidatePath('/modelos');
+  redirect(`/modelos?aviso=${result.code}`);
 }

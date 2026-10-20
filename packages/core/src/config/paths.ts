@@ -133,3 +133,25 @@ export const DEFAULT_HISTORY_LOG_PATH = resolveDataPath(
   'JOB_QUEUE_HISTORY_PATH',
   resolve(WORKSPACE_ROOT, 'data/application-history.json'),
 );
+
+/**
+ * The folder that holds the human's CV and cover-letter PDFs (the model library).
+ *
+ * Read-only for this product: it lists and serves PDFs from here and never
+ * writes. The default sits under data/ and is git-ignored; the user points it at
+ * their own folder with `JOB_QUEUE_CV_LIBRARY_DIR`.
+ */
+export const DEFAULT_CV_LIBRARY_DIR = resolveDataPath(
+  'JOB_QUEUE_CV_LIBRARY_DIR',
+  resolve(WORKSPACE_ROOT, 'data/cv-library'),
+);
+
+/**
+ * Registry of which library files are models. Personal (it quotes file names),
+ * so git-ignored and kept OUTSIDE the library: the library folder is never
+ * written to.
+ */
+export const DEFAULT_CV_MODELS_PATH = resolveDataPath(
+  'JOB_QUEUE_CV_MODELS_PATH',
+  resolve(WORKSPACE_ROOT, 'data/cv-models.json'),
+);

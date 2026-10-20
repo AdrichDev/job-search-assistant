@@ -57,3 +57,23 @@ describe('DEFAULT_HISTORY_LOG_PATH', () => {
     ).toBe(override);
   });
 });
+
+describe('CV library locations', () => {
+  it('default to git-ignored locations under data/ unless overridden', async () => {
+    const paths = await import('../../src/config/paths.js');
+    const posix = (value: string) => value.split(String.fromCharCode(92)).join('/');
+    if (process.env['JOB_QUEUE_CV_LIBRARY_DIR'] === undefined) {
+      expect(posix(paths.DEFAULT_CV_LIBRARY_DIR)).toMatch(/\/data\/cv-library$/);
+    }
+    if (process.env['JOB_QUEUE_CV_MODELS_PATH'] === undefined) {
+      expect(posix(paths.DEFAULT_CV_MODELS_PATH)).toMatch(/\/data\/cv-models\.json$/);
+    }
+  });
+
+  it('honour their own environment variables', () => {
+    const library = resolve('/somewhere/my-cvs');
+    const registry = resolve('/somewhere/registry.json');
+    expect(resolveDataPath('JOB_QUEUE_CV_LIBRARY_DIR', 'x', { JOB_QUEUE_CV_LIBRARY_DIR: library })).toBe(library);
+    expect(resolveDataPath('JOB_QUEUE_CV_MODELS_PATH', 'x', { JOB_QUEUE_CV_MODELS_PATH: registry })).toBe(registry);
+  });
+});

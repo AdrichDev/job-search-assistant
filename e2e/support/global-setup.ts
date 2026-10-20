@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { HEALTHY_QUEUE } from '../fixtures/queue.js';
+import { listDirectory, resetCvModels } from './cv-library.js';
 import {
   ISOLATION_ENV,
   PIPELINE_ENV,
@@ -43,7 +44,22 @@ export const REAL_USER_FILES: readonly string[] = [
   // Added with the change history (personal notes inside): same reasoning.
   resolve(WORKSPACE_ROOT, 'data', 'application-history.json'),
   resolve(WORKSPACE_ROOT, 'data', '.fetch-run.json'),
+  // The registry of CV models quotes personal file names: same reasoning.
+  resolve(WORKSPACE_ROOT, 'data', 'cv-models.json'),
 ];
+
+/**
+ * The default CV library folder. Only its NAMES AND SIZES are recorded (never
+ * the contents): enough to prove the suite neither wrote into it nor removed
+ * anything from it. `null` = the folder does not exist, itself worth preserving.
+ */
+export const REAL_CV_LIBRARY_DIR = resolve(WORKSPACE_ROOT, 'data', 'cv-library');
+export const LIBRARY_BASELINE_PATH = resolve(SCRATCH_ROOT, 'real-library-baseline.json');
+
+export interface LibraryListing {
+  readonly path: string;
+  readonly entries: readonly string[] | null;
+}
 
 export const BASELINE_PATH = resolve(SCRATCH_ROOT, 'real-file-baseline.json');
 
@@ -82,12 +98,18 @@ async function globalSetup(): Promise<void> {
 
   const baseline = await Promise.all(REAL_USER_FILES.map(fingerprint));
   await writeFile(BASELINE_PATH, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8');
+  const libraryListing: LibraryListing = {
+    path: REAL_CV_LIBRARY_DIR,
+    entries: await listDirectory(REAL_CV_LIBRARY_DIR),
+  };
+  await writeFile(LIBRARY_BASELINE_PATH, `${JSON.stringify(libraryListing, null, 2)}\n`, 'utf8');
 
   await seedQueue(HEALTHY_QUEUE);
   await resetApplications();
   await resetDismissals();
   await resetHistory();
   await resetRunState();
+  await resetCvModels();
 
   for (const entry of baseline) {
     // Printed so the guarantee is visible in the run log, not only in an

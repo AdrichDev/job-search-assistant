@@ -42,6 +42,16 @@ export const SCRATCH_HISTORY_PATH = resolve(SCRATCH_ROOT, 'data', 'application-h
 /** Stands in for the user's `data/.fetch-run.json` and its lock. */
 export const SCRATCH_RUN_STATE_PATH = resolve(SCRATCH_ROOT, 'data', 'fetch-run.json');
 
+/**
+ * Stands in for the user's CV folder (`data/cv-library`, or wherever they point
+ * `JOB_QUEUE_CV_LIBRARY_DIR`). Holds ONLY synthetic tiny PDFs the suite creates;
+ * the user's real folder is never read, listed or touched by a spec.
+ */
+export const SCRATCH_CV_LIBRARY_DIR = resolve(SCRATCH_ROOT, 'cv-library');
+
+/** Stands in for the user's `data/cv-models.json` (the registry of models). */
+export const SCRATCH_CV_MODELS_PATH = resolve(SCRATCH_ROOT, 'data', 'cv-models.json');
+
 /** The variables `@job-queue/core` reads to relocate its shared files. */
 export const ISOLATION_ENV: Readonly<Record<string, string>> = {
   JOB_QUEUE_QUEUE_PATH: SCRATCH_QUEUE_PATH,
@@ -49,6 +59,8 @@ export const ISOLATION_ENV: Readonly<Record<string, string>> = {
   JOB_QUEUE_DISMISSALS_PATH: SCRATCH_DISMISSALS_PATH,
   JOB_QUEUE_HISTORY_PATH: SCRATCH_HISTORY_PATH,
   JOB_QUEUE_RUN_STATE_PATH: SCRATCH_RUN_STATE_PATH,
+  JOB_QUEUE_CV_LIBRARY_DIR: SCRATCH_CV_LIBRARY_DIR,
+  JOB_QUEUE_CV_MODELS_PATH: SCRATCH_CV_MODELS_PATH,
 };
 
 /**

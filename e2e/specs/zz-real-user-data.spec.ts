@@ -2,12 +2,19 @@ import { readFile } from 'node:fs/promises';
 import { applyLinkFor, expect, test } from '../support/test.js';
 import {
   BASELINE_PATH,
+  LIBRARY_BASELINE_PATH,
+  REAL_CV_LIBRARY_DIR,
   REAL_USER_FILES,
   fingerprint,
   type FileFingerprint,
+  type LibraryListing,
 } from '../support/global-setup.js';
+import { LIBRARY_NESTED_PDF, listDirectory, readCvModels } from '../support/cv-library.js';
 import {
+  ISOLATION_ENV,
   SCRATCH_APPLICATIONS_PATH,
+  SCRATCH_CV_LIBRARY_DIR,
+  SCRATCH_CV_MODELS_PATH,
   SCRATCH_HISTORY_PATH,
   readApplications,
   readHistory,
@@ -89,7 +96,35 @@ test.describe('real user data is untouched', () => {
     ).toBe(1);
   });
 
-  test('every real user file (queue, applications, dismissals, history, run state) is byte-identical to the baseline', async () => {
+  test('a model registration lands in the scratch registry and reads the scratch library, not the user ones', async ({ page, seed }) => {
+    // Environment first: a path-dependent check run with the wrong environment proves nothing.
+    expect(ISOLATION_ENV['JOB_QUEUE_CV_MODELS_PATH']).toBe(SCRATCH_CV_MODELS_PATH);
+    expect(ISOLATION_ENV['JOB_QUEUE_CV_LIBRARY_DIR']).toBe(SCRATCH_CV_LIBRARY_DIR);
+
+    await seed(HEALTHY_QUEUE);
+    await page.goto('/modelos');
+    await page.getByText(`Registrar ${LIBRARY_NESTED_PDF}`).click();
+    await page.getByRole('button', { name: 'Registrar modelo' }).first().click();
+    await expect(page).toHaveURL(/aviso=registered/);
+
+    const stored = await readCvModels();
+    expect(
+      stored.length,
+      `no model was recorded in ${SCRATCH_CV_MODELS_PATH}; either the form did not write, or it wrote somewhere else`,
+    ).toBe(1);
+    expect(stored[0]?.relativePath).toBe(LIBRARY_NESTED_PDF);
+  });
+
+  test('the default CV library folder is untouched (names and sizes, never contents)', async () => {
+    const baseline = JSON.parse(await readFile(LIBRARY_BASELINE_PATH, 'utf8')) as LibraryListing;
+    expect(baseline.path).toBe(REAL_CV_LIBRARY_DIR);
+    expect(
+      await listDirectory(REAL_CV_LIBRARY_DIR),
+      `${REAL_CV_LIBRARY_DIR} changed during the E2E run (null = the folder does not exist)`,
+    ).toEqual(baseline.entries);
+  });
+
+  test('every real user file (queue, applications, dismissals, history, run state, CV registry) is byte-identical to the baseline', async () => {
     const baseline: readonly FileFingerprint[] = JSON.parse(
       await readFile(BASELINE_PATH, 'utf8'),
     ) as FileFingerprint[];
