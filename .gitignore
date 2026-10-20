@@ -38,6 +38,8 @@ data/.models.*.tmp
 data/cv-library/
 # Canva-ready CV draft text contains personal data extracted from the PDFs.
 data/cv-drafts/
+# Machine-specific settings read by scripts/run-web.mjs (paths, later the Google token).
+data/dev-env.json
 
 # Fetch run status board and its single-flight lock. Transient state about the
 # last run, safe to delete, rebuilt by the next one - unlike the two logs above,

@@ -20,6 +20,7 @@
     "typecheck": "npm run typecheck --workspace @job-queue/core && npm run typecheck --workspace @job-queue/web && npm run typecheck --workspace @job-queue/e2e",
     "pretest": "npm run build:core",
     "test": "npm run test --workspace @job-queue/core && npm run test --workspace @job-queue/web",
+    "test:scripts": "node --test scripts/run-web.test.mjs",
     "test:coverage": "npm run test:coverage --workspace @job-queue/core",
     "start": "npm run start --workspace @job-queue/core --",
     "start:offline": "npm run start:offline --workspace @job-queue/core",
@@ -27,8 +28,8 @@
     "seed:queue": "npm run seed:queue --workspace @job-queue/core",
     "import:history": "npm run import:history --workspace @job-queue/core --",
     "verify:boards": "npm run verify:boards --workspace @job-queue/core --",
-    "dev": "npm run build:core && npm run dev --workspace @job-queue/web",
-    "web": "npm run build:core && npm run start --workspace @job-queue/web",
+    "dev": "npm run build:core && node scripts/run-web.mjs dev",
+    "web": "npm run build:core && node scripts/run-web.mjs start",
     "pretest:e2e": "npm run build:core",
     "test:e2e": "npm run test:e2e --workspace @job-queue/e2e",
     "test:e2e:ui": "npm run test:e2e --workspace @job-queue/e2e -- --ui"
