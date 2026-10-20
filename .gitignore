@@ -34,6 +34,8 @@ data/cv-models.json
 data/cv-models.backup-*.json
 data/.models.*.tmp
 data/cv-library/
+# Canva-ready CV draft text contains personal data extracted from the PDFs.
+data/cv-drafts/
 
 # Fetch run status board and its single-flight lock. Transient state about the
 # last run, safe to delete, rebuilt by the next one - unlike the two logs above,
