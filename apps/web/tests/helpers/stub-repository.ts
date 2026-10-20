@@ -19,6 +19,9 @@ export function createStubRepository(
     updateOutcome: async () => {
       throw new Error('The dashboard read model must not write applications.');
     },
+    update: async () => {
+      throw new Error('The dashboard read model must not write applications.');
+    },
   };
 }
 

@@ -42,6 +42,19 @@ export const ACTION_MESSAGES = {
   restored: 'Offer restored.',
   notDismissed: 'That offer was not dismissed.',
 
+  /* Manual edit of an application ---------------------------------- */
+  invalidInput: 'The submitted form is not valid.',
+  applicationEdited: 'Application updated.',
+  applicationUnchanged: 'There were no changes to save.',
+  applicationNotFound: 'That application does not exist.',
+  invalidDate: 'One of the dates is not valid.',
+  invalidCvVariant: 'That CV is not valid.',
+  blankCompany: 'The company cannot be empty.',
+  blankTitle: 'The job title cannot be empty.',
+  invalidUrl: 'The link must start with http:// or https://.',
+  listingIncomplete: 'To add offer details, company and title are both required.',
+  tooLong: 'One of the fields is too long.',
+
   /* Fetch ------------------------------------------------------------ */
   fetchStarted: 'Fetch run started.',
   fetchAlreadyRunning: 'A fetch run is already in progress.',

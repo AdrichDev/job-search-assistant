@@ -204,7 +204,7 @@ Every click on **Apply** does two things: it opens the real posting in a new tab
 | Field | Why it exists |
 |-------|---------------|
 | `jobId` | The content fingerprint. One application per vacancy, enforced by the store. |
-| `appliedAt` | Frozen history. Never moves. |
+| `appliedAt` | When you applied. The automatic paths never move it; you can correct it by hand (see *Editing by hand*), because a wrong date typed into a spreadsheet must be fixable. |
 | `cvVariant` | Which CV was sent. This is what makes the stats panel worth reading. |
 | `scoreAtApply` | The score *at the time*. Retuning the weights later must not rewrite what the scorer believed back then. This is the column the score/reply-rate correlation will eventually be run against. |
 | `sourceIds` | Every source that carried the deduplicated vacancy when Apply was clicked. Old records load with an empty list and remain visible as “source not recorded”. |
@@ -232,9 +232,21 @@ It only made sense as a counterweight to **score ordering**. With a recency-orde
 The web app has two pages, linked from a navigation bar on every page:
 
 - **Ofertas** (`/`): the ranked list of job offers, with the stats panel, search, dismissals and the fetch button.
-- **Seguimiento** (`/seguimiento`): a read-only table of **every** application, newest first, whether it was made from the queue or imported from the historical spreadsheet. Columns: company, title (with an `Abrir oferta` link when the stored URL is http or https), source, city, applied date, state, response date (only for outcomes that are responses) and notes.
+- **Seguimiento** (`/seguimiento`): a table of **every** application, newest first, whether it was made from the queue or imported from the historical spreadsheet. Columns: company, title (with an `Abrir oferta` link when the stored URL is http or https), source, city, applied date, state, response date (only for outcomes that are responses) and notes, plus an `Editar` link per row.
 
-The table can be filtered by state through the query string (`/seguimiento?estado=rejected`); each filter link shows its count and an unknown value shows everything. Company, title, URL and city come from the application's own listing, else from the matching queue entry, else from the stored job fingerprint (`company::title::place`), so applications whose job left the queue are still listed. Editing from this view is not available yet.
+The table can be filtered by state through the query string (`/seguimiento?estado=rejected`); each filter link shows its count and an unknown value shows everything. Company, title, URL and city come from the application's own listing, else from the matching queue entry, else from the stored job fingerprint (`company::title::place`), so applications whose job left the queue are still listed. 
+
+### Editing by hand
+
+Every row has an **Editar** link (`/seguimiento/<jobId>/editar`) opening ONE form with every editable field: state, reply date, applied date, CV, notes, sources and all listing fields (company, title, link, portal, city, address, phone, contact, company info, published date). Rules:
+
+- **Not editable:** `jobId` (the identity) and `scoreAtApply` (a frozen snapshot of the score when you applied).
+- Fields you do not touch stay as they are. Clearing a text field (empty box) removes it; choosing *Sin CV registrado* removes the CV. Company and title can never be empty.
+- Changing the state without changing the reply date stamps today as the reply date; a stale date is never kept silently.
+- The link must be http or https. Anything else is **refused** (not silently dropped), the form is shown again with your input and a Spanish error, and the stored file is not written.
+- Saving with no real change reports so and does not rewrite the log.
+- An application made from the queue has no stored listing of its own: the form pre-fills company, title, link and city from what the table shows, and saving writes them as the application's own listing.
+- The repository port gained `update({ jobId, patch, now })` returning `{ before, after }` (or `null` for an unknown job); the pure rules live in `applyApplicationPatch`. The persisted JSON format did not change. The change history/revert is a later step.
 
 ### Storage
 

@@ -12,6 +12,12 @@
 /* Domain -------------------------------------------------------------- */
 export {
   APPLICATION_OUTCOMES,
+  ApplicationPatchError,
+  MAX_NOTES_LENGTH,
+  MAX_TEXT_LENGTH,
+  PATCH_REFUSAL_REASONS,
+  applicationsEqual,
+  applyApplicationPatch,
   createApplication,
   indexApplicationsByJobId,
   isAdvance,
@@ -21,6 +27,10 @@ export {
   type Application,
   type ApplicationDraft,
   type ApplicationOutcome,
+  type ApplicationPatch,
+  type ApplyPatchResult,
+  type ListingPatch,
+  type PatchRefusalReason,
 } from './domain/application.js';
 
 export {
@@ -90,7 +100,9 @@ export {
 export type {
   ApplicationRepository,
   RecordResult,
+  UpdateApplicationInput,
   UpdateOutcomeInput,
+  UpdateResult,
 } from './ports/application-repository.js';
 export type {
   DismissResult,
@@ -176,6 +188,12 @@ export {
   type RecordApplicationInput,
   type RecordApplicationResult,
 } from './app/record-application.js';
+export {
+  editApplication,
+  type EditApplicationDeps,
+  type EditApplicationInput,
+  type EditApplicationResult,
+} from './app/edit-application.js';
 export {
   updateApplicationOutcome,
   type UpdateApplicationOutcomeDeps,

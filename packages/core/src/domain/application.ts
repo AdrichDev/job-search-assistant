@@ -1,4 +1,4 @@
-import type { CvVariant } from './job.js';
+import { CV_VARIANTS, type CvVariant } from './job.js';
 
 /**
  * What happened after the human clicked "Apply" and filled the form themselves.
@@ -175,7 +175,11 @@ export function indexApplicationsByJobId(
 }
 
 /**
- * Records what came back. Immutable update: `appliedAt` is history and never moves.
+ * Records what came back. Immutable update.
+ *
+ * (Editing by hand, `applyApplicationPatch` below, may move `appliedAt` too: the
+ * human is the authority over their own history and a wrong date typed into a
+ * spreadsheet must be fixable. The automatic paths never move it.)
  *
  * Omitting `notes` keeps whatever was there; the UI clears notes by sending an
  * empty string, not by omitting the field.
@@ -197,4 +201,232 @@ export function withOutcome(
     outcomeUpdatedAt: at,
     ...(nextNotes === undefined || nextNotes.length === 0 ? {} : { notes: nextNotes }),
   };
+}
+
+/* Manual editing --------------------------------------------------------- */
+
+/** Edits to the listing. Absent key = unchanged; blank text clears; `publishedAt: null` clears. */
+export interface ListingPatch {
+  readonly company?: string;
+  readonly title?: string;
+  readonly url?: string;
+  readonly portal?: string;
+  readonly city?: string;
+  readonly address?: string;
+  readonly phone?: string;
+  readonly contact?: string;
+  readonly companyInfo?: string;
+  readonly publishedAt?: Date | null;
+}
+
+/**
+ * Every field a human may edit by hand. NOT here on purpose: `jobId` (the
+ * identity) and `scoreAtApply` (a snapshot of what the ranking believed back
+ * then). Absent key = unchanged; `cvVariant: null` clears the CV; blank notes
+ * clear them.
+ */
+export interface ApplicationPatch {
+  readonly appliedAt?: Date;
+  readonly outcome?: ApplicationOutcome;
+  readonly outcomeUpdatedAt?: Date;
+  readonly cvVariant?: CvVariant | null;
+  readonly notes?: string;
+  readonly sourceIds?: readonly string[];
+  readonly listing?: ListingPatch;
+}
+
+/** Fixed machine reasons. Never carry cell content, so they are safe to log and to show. */
+export const PATCH_REFUSAL_REASONS = [
+  'invalid_date',
+  'invalid_outcome',
+  'invalid_cv_variant',
+  'blank_company',
+  'blank_title',
+  'invalid_url',
+  'listing_incomplete',
+  'too_long',
+] as const;
+
+export type PatchRefusalReason = (typeof PATCH_REFUSAL_REASONS)[number];
+
+export type ApplyPatchResult =
+  | { readonly ok: true; readonly application: Application; readonly changed: boolean }
+  | { readonly ok: false; readonly reason: PatchRefusalReason };
+
+/** Thrown by a repository when a patch breaks a domain rule; nothing was written. */
+export class ApplicationPatchError extends Error {
+  readonly reason: PatchRefusalReason;
+
+  constructor(reason: PatchRefusalReason) {
+    super(`The application edit was refused: ${reason}.`);
+    this.name = 'ApplicationPatchError';
+    this.reason = reason;
+  }
+}
+
+/** Generous on purpose: a very long note must stay editable. */
+export const MAX_NOTES_LENGTH = 20_000;
+export const MAX_TEXT_LENGTH = 2_000;
+
+function isValidDate(value: unknown): value is Date {
+  return value instanceof Date && !Number.isNaN(value.getTime());
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function sameDate(a: Date | undefined, b: Date | undefined): boolean {
+  return a === undefined || b === undefined ? a === b : a.getTime() === b.getTime();
+}
+
+function sameListing(a: ApplicationListing | undefined, b: ApplicationListing | undefined): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return (
+    a.company === b.company &&
+    a.title === b.title &&
+    OPTIONAL_LISTING_TEXT.every((key) => a[key] === b[key]) &&
+    sameDate(a.publishedAt, b.publishedAt)
+  );
+}
+
+/** Value equality of two applications (dates by instant, absent = absent). */
+export function applicationsEqual(a: Application, b: Application): boolean {
+  return (
+    a.jobId === b.jobId &&
+    sameDate(a.appliedAt, b.appliedAt) &&
+    a.cvVariant === b.cvVariant &&
+    a.scoreAtApply === b.scoreAtApply &&
+    a.sourceIds.length === b.sourceIds.length &&
+    a.sourceIds.every((id, index) => id === b.sourceIds[index]) &&
+    a.outcome === b.outcome &&
+    sameDate(a.outcomeUpdatedAt, b.outcomeUpdatedAt) &&
+    a.notes === b.notes &&
+    sameListing(a.listing, b.listing)
+  );
+}
+
+/**
+ * Applies a manual edit and decides whether it is valid. Pure: persistence is
+ * the repository's job, and a refusal means nothing may be written.
+ *
+ * Rules: absent key = unchanged; blank optional text clears the field; company
+ * and title never blank; a queue-made application has no listing, so touching
+ * any listing field creates one and then company AND title must both be in the
+ * patch; changing the outcome without a date stamps `now` (a stale date is
+ * never kept silently); every date must be valid; a non-blank url must be
+ * http(s) or the edit is refused (editing is explicit: refuse, don't drop).
+ */
+export function applyApplicationPatch(
+  application: Application,
+  patch: ApplicationPatch,
+  now: Date,
+): ApplyPatchResult {
+  const refuse = (reason: PatchRefusalReason): ApplyPatchResult => ({ ok: false, reason });
+
+  if (patch.appliedAt !== undefined && !isValidDate(patch.appliedAt)) return refuse('invalid_date');
+  if (patch.outcomeUpdatedAt !== undefined && !isValidDate(patch.outcomeUpdatedAt)) {
+    return refuse('invalid_date');
+  }
+  if (patch.outcome !== undefined && !isApplicationOutcome(patch.outcome)) {
+    return refuse('invalid_outcome');
+  }
+  if (
+    patch.cvVariant !== undefined &&
+    patch.cvVariant !== null &&
+    !(CV_VARIANTS as readonly string[]).includes(patch.cvVariant)
+  ) {
+    return refuse('invalid_cv_variant');
+  }
+
+  let notes = application.notes;
+  if (patch.notes !== undefined) {
+    const trimmed = patch.notes.trim();
+    if (trimmed.length > MAX_NOTES_LENGTH) return refuse('too_long');
+    notes = trimmed.length === 0 ? undefined : trimmed;
+  }
+
+  let sourceIds = application.sourceIds;
+  if (patch.sourceIds !== undefined) {
+    sourceIds = [...new Set(patch.sourceIds.map((id) => id.trim()).filter((id) => id.length > 0))];
+    if (sourceIds.some((id) => id.length > MAX_TEXT_LENGTH)) return refuse('too_long');
+  }
+
+  let listing = application.listing;
+  const listingPatch = patch.listing;
+  const touched =
+    listingPatch === undefined
+      ? []
+      : (Object.keys(listingPatch) as (keyof ListingPatch)[]).filter(
+          (key) => listingPatch[key] !== undefined,
+        );
+  if (listingPatch !== undefined && touched.length > 0) {
+    if (listing === undefined && (listingPatch.company === undefined || listingPatch.title === undefined)) {
+      return refuse('listing_incomplete');
+    }
+    const company = (listingPatch.company ?? listing?.company ?? '').trim();
+    const title = (listingPatch.title ?? listing?.title ?? '').trim();
+    if (company.length === 0) return refuse('blank_company');
+    if (title.length === 0) return refuse('blank_title');
+    if (company.length > MAX_TEXT_LENGTH || title.length > MAX_TEXT_LENGTH) return refuse('too_long');
+
+    const optional: Partial<Record<(typeof OPTIONAL_LISTING_TEXT)[number], string>> = {};
+    for (const key of OPTIONAL_LISTING_TEXT) {
+      const incoming = listingPatch[key];
+      const value = (incoming ?? listing?.[key])?.trim();
+      if (incoming !== undefined) {
+        if (value !== undefined && value.length > MAX_TEXT_LENGTH) return refuse('too_long');
+        if (key === 'url' && value !== undefined && value.length > 0 && !isHttpUrl(value)) {
+          return refuse('invalid_url');
+        }
+      }
+      if (value !== undefined && value.length > 0) {
+        optional[key] = value;
+      }
+    }
+
+    let publishedAt = listing?.publishedAt;
+    if (listingPatch.publishedAt === null) {
+      publishedAt = undefined;
+    } else if (listingPatch.publishedAt !== undefined) {
+      if (!isValidDate(listingPatch.publishedAt)) return refuse('invalid_date');
+      publishedAt = listingPatch.publishedAt;
+    }
+
+    listing = { company, title, ...optional, ...(publishedAt === undefined ? {} : { publishedAt }) };
+  }
+
+  let cvVariant = application.cvVariant;
+  if (patch.cvVariant === null) {
+    cvVariant = undefined;
+  } else if (patch.cvVariant !== undefined) {
+    cvVariant = patch.cvVariant;
+  }
+
+  const outcome = patch.outcome ?? application.outcome;
+  const outcomeUpdatedAt =
+    patch.outcomeUpdatedAt ?? (outcome === application.outcome ? application.outcomeUpdatedAt : now);
+
+  // Rebuilt key by key: `exactOptionalPropertyTypes` needs absent keys, and
+  // `jobId` / `scoreAtApply` come from the current record, never from the patch.
+  const next: Application = {
+    jobId: application.jobId,
+    appliedAt: patch.appliedAt ?? application.appliedAt,
+    ...(cvVariant === undefined ? {} : { cvVariant }),
+    ...(application.scoreAtApply === undefined ? {} : { scoreAtApply: application.scoreAtApply }),
+    sourceIds,
+    outcome,
+    outcomeUpdatedAt,
+    ...(notes === undefined ? {} : { notes }),
+    ...(listing === undefined ? {} : { listing }),
+  };
+
+  return { ok: true, application: next, changed: !applicationsEqual(application, next) };
 }

@@ -4,6 +4,7 @@ import {
   buildTrackedApplications,
   countByOutcome,
   isApplicationOutcome,
+  type Application,
   type ApplicationOutcome,
   type ApplicationRepository,
   type QueueReader,
@@ -50,6 +51,40 @@ export function filterTrackedRows(
   filter: EstadoFilter,
 ): readonly TrackedApplication[] {
   return filter === 'all' ? rows : rows.filter((row) => row.outcome === filter);
+}
+
+export interface EditableApplication {
+  readonly application: Application;
+  /** What the tracking table shows for it: company/title even without a listing. */
+  readonly row: TrackedApplication | undefined;
+}
+
+/** The URL param may or may not arrive decoded; a stray `%` must not crash the page. */
+export function decodeJobIdParam(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+/** One application plus its tracked row, or null when the id is unknown. */
+export async function loadEditableApplication(
+  jobId: string,
+  deps: TrackingDeps,
+): Promise<EditableApplication | null> {
+  const application = await deps.applicationRepository.findByJobId(jobId);
+  if (application === null) {
+    return null;
+  }
+  let jobs: readonly TrackableQueueJob[] = [];
+  try {
+    jobs = (await deps.queueReader.read())?.jobs ?? [];
+  } catch {
+    // A broken queue only costs the pre-filled facts of a queue-made application.
+  }
+  const row = buildTrackedApplications([application], jobs)[0];
+  return { application, row };
 }
 
 export async function loadTracking(deps: TrackingDeps): Promise<TrackingData> {

@@ -17,7 +17,14 @@ export default async function TrackingPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const filter = parseEstadoFilter((await searchParams).estado);
+  const query = await searchParams;
+  const filter = parseEstadoFilter(query.estado);
+  const notice =
+    query.edicion === 'guardada'
+      ? ES.tracking.notice.saved
+      : query.edicion === 'sin-cambios'
+        ? ES.tracking.notice.unchanged
+        : null;
   const { rows, counts, warnings } = await loadTracking({
     applicationRepository: applicationRepository(),
     queueReader: queueReader(),
@@ -34,6 +41,15 @@ export default async function TrackingPage({
         </p>
         <p className="mt-2 text-xs text-slate-500">{ES.tracking.total(rows.length)}</p>
       </header>
+
+      {notice !== null && (
+        <p
+          role="status"
+          className="mb-4 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm font-medium text-emerald-900"
+        >
+          {notice}
+        </p>
+      )}
 
       <TrackingView
         rows={rows}

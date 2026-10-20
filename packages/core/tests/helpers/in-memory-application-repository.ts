@@ -1,4 +1,6 @@
 import {
+  ApplicationPatchError,
+  applyApplicationPatch,
   createApplication,
   withOutcome,
   type Application,
@@ -7,7 +9,9 @@ import {
 import type {
   ApplicationRepository,
   RecordResult,
+  UpdateApplicationInput,
   UpdateOutcomeInput,
+  UpdateResult,
 } from '../../src/ports/application-repository.js';
 
 /**
@@ -45,6 +49,22 @@ export function createInMemoryApplicationRepository(
       const application = createApplication(draft);
       byJobId.set(jobId, application);
       return { application, created: true };
+    },
+
+    async update(input: UpdateApplicationInput): Promise<UpdateResult | null> {
+      const before = byJobId.get(input.jobId.trim());
+      if (before === undefined) {
+        return null;
+      }
+      const result = applyApplicationPatch(before, input.patch, input.now);
+      if (!result.ok) {
+        throw new ApplicationPatchError(result.reason);
+      }
+      if (!result.changed) {
+        return { before, after: before };
+      }
+      byJobId.set(before.jobId, result.application);
+      return { before, after: result.application };
     },
 
     async updateOutcome(input: UpdateOutcomeInput): Promise<Application | null> {

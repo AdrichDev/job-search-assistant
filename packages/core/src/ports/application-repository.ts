@@ -1,4 +1,9 @@
-import type { Application, ApplicationDraft, ApplicationOutcome } from '../domain/application.js';
+import type {
+  Application,
+  ApplicationDraft,
+  ApplicationOutcome,
+  ApplicationPatch,
+} from '../domain/application.js';
 
 /**
  * Driven port for the application log.
@@ -23,6 +28,19 @@ export interface UpdateOutcomeInput {
   readonly notes?: string;
 }
 
+export interface UpdateApplicationInput {
+  readonly jobId: string;
+  readonly patch: ApplicationPatch;
+  /** Stamped on `outcomeUpdatedAt` when the outcome changes and the patch has no date. */
+  readonly now: Date;
+}
+
+/** Both sides are required so a change history can record the edit without a refactor. */
+export interface UpdateResult {
+  readonly before: Application;
+  readonly after: Application;
+}
+
 export interface ApplicationRepository {
   /** Every application, newest first. */
   list(): Promise<readonly Application[]>;
@@ -37,4 +55,11 @@ export interface ApplicationRepository {
 
   /** Returns null when there is nothing to update. */
   updateOutcome(input: UpdateOutcomeInput): Promise<Application | null>;
+
+  /**
+   * Manual edit of any editable field (see `ApplicationPatch`). Returns null for
+   * an unknown job. A patch that breaks a domain rule throws
+   * `ApplicationPatchError`; a refused or no-op edit never touches the stored file.
+   */
+  update(input: UpdateApplicationInput): Promise<UpdateResult | null>;
 }

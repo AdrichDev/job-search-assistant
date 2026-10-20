@@ -102,6 +102,7 @@ function fakeApplications(seed: readonly Application[] = []): ApplicationReposit
       return { application, created: true };
     },
     updateOutcome: async () => null,
+    update: async () => null,
   };
 }
 

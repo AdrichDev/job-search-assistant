@@ -148,8 +148,8 @@ test.describe('tracking view', () => {
       await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
       await expect(link).toHaveAttribute('href', /^https?:\/\//);
     }
-    await expect(rowFor(page, 'Programador Júnior').getByRole('link')).toHaveCount(0);
-    await expect(rowFor(page, 'Analista Júnior').getByRole('link')).toHaveCount(0);
+    await expect(rowFor(page, 'Programador Júnior').getByRole('link', { name: /Abrir oferta/ })).toHaveCount(0);
+    await expect(rowFor(page, 'Analista Júnior').getByRole('link', { name: /Abrir oferta/ })).toHaveCount(0);
     await expect(
       rowFor(page, 'Desarrollador Júnior Frontend').getByRole('link', { name: /Abrir oferta/ }),
     ).toHaveAttribute('href', 'https://empleo.example.test/oferta/1');
@@ -256,7 +256,7 @@ test.describe('tracking view accessibility', () => {
     await expect(page.getByRole('main')).toHaveCount(1);
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.getByRole('table', { name: /Postulaciones con su empresa/ })).toBeVisible();
-    await expect(page.locator('thead th[scope="col"]')).toHaveCount(8);
+    await expect(page.locator('thead th[scope="col"]')).toHaveCount(9);
     await expect(page.locator('tbody th[scope="row"]')).toHaveCount(5);
     // Layout tables are forbidden: the only table is the data table.
     await expect(page.locator('table')).toHaveCount(1);

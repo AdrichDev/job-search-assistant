@@ -97,6 +97,15 @@ function Row({ row }: { row: TrackedApplication }) {
           </>
         )}
       </td>
+      <td className="whitespace-nowrap px-3 py-3">
+        <Link
+          href={`${BASE_PATH}/${encodeURIComponent(row.jobId)}/editar`}
+          aria-label={ES.tracking.editHint(row.company, row.title)}
+          className="text-sm font-medium text-indigo-700 underline"
+        >
+          {ES.tracking.edit}
+        </Link>
+      </td>
     </tr>
   );
 }
@@ -177,6 +186,7 @@ export function TrackingView({
                     <th scope="col" className="px-3 py-2">{columns.status}</th>
                     <th scope="col" className="px-3 py-2">{columns.respondedAt}</th>
                     <th scope="col" className="px-3 py-2">{columns.notes}</th>
+                    <th scope="col" className="px-3 py-2">{columns.actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

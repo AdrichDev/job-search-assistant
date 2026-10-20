@@ -117,6 +117,19 @@ const ACTION_RESULT: Record<ActionMessage, string> = {
   [ACTION_MESSAGES.restored]: 'Oferta recuperada. Vuelve a estar en la lista.',
   [ACTION_MESSAGES.notDismissed]: 'Esa oferta no estaba descartada.',
 
+  /* Edición manual de una postulación. Cada motivo de rechazo dice qué corregir. */
+  [ACTION_MESSAGES.invalidInput]: 'El formulario enviado no es válido. Recarga la página e inténtalo otra vez.',
+  [ACTION_MESSAGES.applicationEdited]: 'Cambios guardados.',
+  [ACTION_MESSAGES.applicationUnchanged]: 'No había cambios que guardar.',
+  [ACTION_MESSAGES.applicationNotFound]: 'Esa postulación no existe.',
+  [ACTION_MESSAGES.invalidDate]: 'Alguna de las fechas no es válida. Usa el formato día/mes/año del selector.',
+  [ACTION_MESSAGES.invalidCvVariant]: 'Ese CV no es válido.',
+  [ACTION_MESSAGES.blankCompany]: 'La empresa no puede quedar vacía.',
+  [ACTION_MESSAGES.blankTitle]: 'El puesto no puede quedar vacío.',
+  [ACTION_MESSAGES.invalidUrl]: 'El enlace debe empezar por http:// o https://. No se guardó nada.',
+  [ACTION_MESSAGES.listingIncomplete]: 'Para añadir los datos de la oferta hacen falta la empresa y el puesto.',
+  [ACTION_MESSAGES.tooLong]: 'Alguno de los campos es demasiado largo.',
+
   /* Buscar ofertas. Es una búsqueda en las fuentes configuradas, no un scrapeo. */
   [ACTION_MESSAGES.fetchStarted]: 'Búsqueda iniciada.',
   [ACTION_MESSAGES.fetchAlreadyRunning]: 'Ya hay una búsqueda en curso.',
@@ -498,6 +511,14 @@ export const ES = {
       status: 'Estado',
       respondedAt: 'Fecha de respuesta',
       notes: 'Notas',
+      actions: 'Acciones',
+    },
+    edit: 'Editar',
+    editHint: (company: string, title: string) =>
+      `Editar ${company.length > 0 ? company : 'empresa no indicada'} - ${title}`,
+    notice: {
+      saved: 'Cambios guardados.',
+      unchanged: 'No había cambios que guardar.',
     },
     scrollRegion: 'Tabla de postulaciones, desplázala horizontalmente si no cabe',
     openOffer: 'Abrir oferta',
@@ -533,6 +554,54 @@ export const ES = {
       empleosit: 'EmpleosIT',
       wizbii: 'Wizbii',
     } as Readonly<Record<string, string>>,
+  },
+
+  /* Editar una postulación ---------------------------------------------- */
+  edit: {
+    meta: { title: 'Editar postulación' },
+    heading: 'Editar postulación',
+    intro:
+      'Corrige a mano cualquier dato. Un campo de texto vacío se borra; los datos que no toques se quedan como están. Las fechas que cambies se guardan como ese día.',
+    back: 'Volver al seguimiento',
+    cancel: 'Cancelar',
+    submit: 'Guardar cambios',
+    errorTitle: 'No se guardó nada',
+    notFoundTitle: 'No encontramos esa postulación',
+    notFoundBody: 'Puede que se haya cambiado el identificador o que el registro ya no la tenga.',
+    groups: {
+      state: 'Estado',
+      offer: 'La oferta',
+      contact: 'Contacto y empresa',
+      application: 'Cómo te postulaste',
+    },
+    fields: {
+      outcome: 'Estado de la postulación',
+      outcomeUpdatedAt: 'Fecha de respuesta',
+      appliedAt: 'Fecha de solicitud',
+      notes: 'Notas',
+      cvVariant: 'CV enviado',
+      noCv: 'Sin CV registrado',
+      sourceIds: 'Fuentes (separadas por comas)',
+      company: 'Empresa',
+      title: 'Puesto',
+      url: 'Enlace de la oferta',
+      portal: 'Portal',
+      city: 'Ciudad',
+      address: 'Dirección',
+      phone: 'Teléfono',
+      contact: 'Persona de contacto',
+      companyInfo: 'Datos de la empresa',
+      publishedAt: 'Fecha de publicación',
+    },
+    hints: {
+      company: 'Obligatoria.',
+      title: 'Obligatorio.',
+      url: 'Debe empezar por http:// o https://. Vacío para quitarlo.',
+      noListing:
+        'Esta postulación salió de la lista de ofertas y no guarda datos propios. Al guardar, se guardan la empresa y el puesto que ves aquí.',
+      outcomeDate:
+        'Si cambias el estado y dejas la fecha como está, se anota la de hoy.',
+    },
   },
 
   /* Lookups ------------------------------------------------------------- */

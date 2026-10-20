@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { createJsonLogStore } from './json-log-store.js';
 import {
   APPLICATION_OUTCOMES,
+  ApplicationPatchError,
+  applyApplicationPatch,
   createApplication,
   withOutcome,
   type Application,
@@ -13,7 +15,9 @@ import { CV_VARIANTS } from '../../domain/job.js';
 import type {
   ApplicationRepository,
   RecordResult,
+  UpdateApplicationInput,
   UpdateOutcomeInput,
+  UpdateResult,
 } from '../../ports/application-repository.js';
 
 /**
@@ -155,6 +159,33 @@ export function createJsonApplicationRepository(
         const application = createApplication(draft);
         await store.writeAll([...applications, application]);
         return { application, created: true };
+      });
+    },
+
+    async update(input: UpdateApplicationInput): Promise<UpdateResult | null> {
+      return store.exclusive(async () => {
+        const applications = await store.readAll();
+        const jobId = input.jobId.trim();
+        const index = applications.findIndex((entry) => entry.jobId === jobId);
+
+        const before = index === -1 ? undefined : applications[index];
+        if (before === undefined) {
+          return null;
+        }
+
+        const result = applyApplicationPatch(before, input.patch, input.now);
+        if (!result.ok) {
+          throw new ApplicationPatchError(result.reason);
+        }
+        if (!result.changed) {
+          // A no-op must not rewrite the file nor bump any date.
+          return { before, after: before };
+        }
+
+        const next = [...applications];
+        next[index] = result.application;
+        await store.writeAll(next);
+        return { before, after: result.application };
       });
     },
 

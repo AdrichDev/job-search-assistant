@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { consoleLogger, type FetchRunState } from '@job-queue/core';
 import {
   applicationRepository,
@@ -10,10 +11,13 @@ import {
   queueReader,
   runStateStore,
 } from '@/server/container';
+import { ACTION_MESSAGES } from '@/copy/action-messages';
+import { EDIT_FORM_FIELDS, type EditFormValues } from '@/server/edit-form';
 import { pipelineRunner } from '@/server/pipeline';
 import {
   applyToJob,
   dismissOffer,
+  editApplication,
   readFetchState,
   restoreOffer,
   setOutcome,
@@ -64,6 +68,49 @@ export async function applyToJobAction(jobId: string): Promise<ActionOutcome> {
 export async function setOutcomeAction(formData: FormData): Promise<void> {
   await setOutcome(formData.get('jobId'), formData.get('outcome'), formData.get('notes'), deps());
   revalidatePath('/');
+}
+
+/** Edits any field of an application by hand. The form is untrusted: see `editApplication`. */
+export async function editApplicationAction(formData: FormData): Promise<ActionOutcome> {
+  const result = await editApplication(formData, deps());
+  if (result.ok) {
+    revalidatePath('/seguimiento');
+    revalidatePath('/');
+  }
+  return result;
+}
+
+/** State of the edit form between submissions: the message and what the person typed. */
+export interface EditFormState {
+  readonly message: string | null;
+  readonly values: Partial<EditFormValues> | null;
+  /** Bumped on every refusal so the form remounts with the typed values. */
+  readonly attempt: number;
+}
+
+/**
+ * `useActionState` adapter of the edit form. A refusal returns the typed values
+ * so nothing the person wrote is lost; a success leaves for the tracking view,
+ * which confirms it.
+ */
+export async function submitEditApplicationForm(
+  previous: EditFormState,
+  formData: FormData,
+): Promise<EditFormState> {
+  const result = await editApplicationAction(formData);
+  if (result.ok) {
+    const changed = result.message === ACTION_MESSAGES.applicationEdited;
+    redirect(`/seguimiento?edicion=${changed ? 'guardada' : 'sin-cambios'}`);
+  }
+
+  const values: Record<string, string> = {};
+  for (const key of ['jobId', ...EDIT_FORM_FIELDS]) {
+    const value = formData.get(key);
+    if (typeof value === 'string') {
+      values[key] = value;
+    }
+  }
+  return { message: result.message, values, attempt: previous.attempt + 1 };
 }
 
 export async function dismissOfferAction(

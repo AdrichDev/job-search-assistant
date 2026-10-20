@@ -37,6 +37,9 @@ const UNUSED_DEPS: WriteDeps = {
     updateOutcome: async () => {
       throw new Error('not reached');
     },
+    update: async () => {
+      throw new Error('not reached');
+    },
   } satisfies ApplicationRepository,
   loadQueue: async () => null,
   now: () => new Date('2026-09-08T00:00:00.000Z'),
