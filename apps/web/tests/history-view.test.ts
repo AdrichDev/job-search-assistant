@@ -95,3 +95,14 @@ describe('history display helpers', () => {
     expect(formatHistoryDate(new Date('2026-06-30T22:30:00Z'))).toMatch(/1 jul 2026.*00:30/);
   });
 });
+
+describe('history sources', () => {
+  it('labels every source, with Correo for email and the old labels untouched', () => {
+    expect(ES.history.sources).toEqual({
+      manual: 'Manual',
+      import: 'Importación',
+      revert: 'Deshacer',
+      email: 'Correo',
+    });
+  });
+});

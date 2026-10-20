@@ -73,3 +73,13 @@ describe('isMailProposalOutcome', () => {
     }
   });
 });
+
+describe('createMailProposal basedOnOutcome', () => {
+  it('records the outcome the proposal was built against', () => {
+    expect(createMailProposal({ ...draft, basedOnOutcome: 'applied' }).basedOnOutcome).toBe('applied');
+  });
+
+  it('omits the key entirely when none is given (legacy shape)', () => {
+    expect('basedOnOutcome' in createMailProposal(draft)).toBe(false);
+  });
+});

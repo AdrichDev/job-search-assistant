@@ -124,6 +124,7 @@ export async function proposeFromMail(input: ProposeFromMailInput): Promise<Prop
         id: proposalId(message.id),
         jobId: match.application.jobId,
         proposedOutcome: reply.outcome,
+        basedOnOutcome: match.application.outcome,
         messageId: message.id,
         snippet: message.snippet,
         evidence: reply.evidence,

@@ -197,3 +197,11 @@ describe('proposeFromMail', () => {
     expect(apps[0]?.outcome).toBe('applied');
   });
 });
+
+describe('proposeFromMail basedOnOutcome', () => {
+  it('remembers the outcome the application had when the proposal was made', async () => {
+    await run([message({ id: 'm1' })], [application('Nubesol', 'screening')]);
+    const [proposal] = await repository.listPending();
+    expect(proposal?.basedOnOutcome).toBe('screening');
+  });
+});

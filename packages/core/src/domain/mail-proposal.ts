@@ -8,6 +8,8 @@
  * the dedupe key, so reading the same mail twice proposes once.
  */
 
+import type { ApplicationOutcome } from './application.js';
+
 export const MAIL_PROPOSAL_OUTCOMES = ['rejected', 'screening', 'interview', 'offer'] as const;
 export type MailProposalOutcome = (typeof MAIL_PROPOSAL_OUTCOMES)[number];
 
@@ -20,6 +22,12 @@ export interface MailProposal {
   readonly id: string;
   readonly jobId: string;
   readonly proposedOutcome: MailProposalOutcome;
+  /**
+   * The application's outcome when the proposal was made. Accepting refuses if it
+   * changed since (a newer human decision is never overwritten). Absent on
+   * proposals stored before this field existed.
+   */
+  readonly basedOnOutcome?: ApplicationOutcome;
   /** Gmail message id: the idempotency key. */
   readonly messageId: string;
   readonly snippet: string;
@@ -34,6 +42,7 @@ export interface MailProposalDraft {
   readonly id: string;
   readonly jobId: string;
   readonly proposedOutcome: MailProposalOutcome;
+  readonly basedOnOutcome?: ApplicationOutcome;
   readonly messageId: string;
   readonly snippet: string;
   readonly evidence: readonly string[];
@@ -76,6 +85,7 @@ export function createMailProposal(draft: MailProposalDraft): MailProposal {
     id: requireText(draft.id, 'id'),
     jobId: requireText(draft.jobId, 'jobId'),
     proposedOutcome: draft.proposedOutcome,
+    ...(draft.basedOnOutcome === undefined ? {} : { basedOnOutcome: draft.basedOnOutcome }),
     messageId: requireText(draft.messageId, 'messageId'),
     snippet: sanitizeSnippet(draft.snippet),
     evidence: [...draft.evidence],

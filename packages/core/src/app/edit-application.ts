@@ -5,7 +5,7 @@ import {
   type ApplicationPatch,
   type PatchRefusalReason,
 } from '../domain/application.js';
-import { diffApplications, type ApplicationChange } from '../domain/application-history.js';
+import { diffApplications, type ApplicationChange, type ChangeSource } from '../domain/application-history.js';
 import type { ApplicationHistoryRepository } from '../ports/application-history-repository.js';
 import type { ApplicationRepository } from '../ports/application-repository.js';
 
@@ -20,12 +20,14 @@ import type { ApplicationRepository } from '../ports/application-repository.js';
 export interface EditApplicationInput {
   readonly jobId: string;
   readonly patch: ApplicationPatch;
+  /** Who is making the change; defaults to `manual`. */
+  readonly source?: ChangeSource;
 }
 
 export interface EditApplicationDeps {
   readonly repository: ApplicationRepository;
   readonly now: () => Date;
-  /** When present, every edit that really changed something is logged (source `manual`). */
+  /** When present, every edit that really changed something is logged (source `manual` unless the input says otherwise). */
   readonly history?: ApplicationHistoryRepository;
   /** Entry id generator; defaults to a random UUID. */
   readonly newId?: () => string;
@@ -42,6 +44,8 @@ export type EditApplicationResult =
        * failure is never hidden: the caller must tell the person.
        */
       readonly historyRecorded: boolean;
+      /** The id of the entry written; absent when nothing was recorded. */
+      readonly historyEntryId?: string;
     }
   | { readonly status: 'unchanged'; readonly application: Application }
   | { readonly status: 'not_found' }
@@ -63,8 +67,14 @@ export async function editApplication(
     if (applicationsEqual(result.before, result.after)) {
       return { status: 'unchanged', application: result.after };
     }
-    const historyRecorded = await recordChange(result.before, result.after, deps);
-    return { status: 'updated', before: result.before, after: result.after, historyRecorded };
+    const recorded = await recordChange(result.before, result.after, deps, input.source ?? 'manual');
+    return {
+      status: 'updated',
+      before: result.before,
+      after: result.after,
+      historyRecorded: recorded.recorded,
+      ...(recorded.entryId === undefined ? {} : { historyEntryId: recorded.entryId }),
+    };
   } catch (cause: unknown) {
     // Only a domain refusal is a result; I/O failures must stay loud.
     if (cause instanceof ApplicationPatchError) {
@@ -74,30 +84,31 @@ export async function editApplication(
   }
 }
 
-/** Appends one entry for the diff; false when there is no history or the write failed. */
+/** Appends one entry for the diff; not recorded when there is no history or the write failed. */
 async function recordChange(
   before: Application,
   after: Application,
   deps: EditApplicationDeps,
-): Promise<boolean> {
+  source: ChangeSource,
+): Promise<{ readonly recorded: boolean; readonly entryId?: string }> {
   if (deps.history === undefined) {
-    return false;
+    return { recorded: false };
   }
   const changes = diffApplications(before, after);
   if (changes.length === 0) {
-    return true;
+    return { recorded: true };
   }
   const entry: ApplicationChange = {
     id: (deps.newId ?? (() => globalThis.crypto.randomUUID()))(),
     jobId: before.jobId,
     at: deps.now(),
-    source: 'manual',
+    source,
     changes,
   };
   try {
     await deps.history.append(entry);
-    return true;
+    return { recorded: true, entryId: entry.id };
   } catch {
-    return false;
+    return { recorded: false };
   }
 }

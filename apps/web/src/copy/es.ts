@@ -676,7 +676,7 @@ export const ES = {
       'Cada cambio que se guarda queda anotado aquí, del más reciente al más antiguo. El historial nunca se borra: deshacer un cambio añade una anotación nueva.',
     caption: 'Cambios de esta postulación, del más reciente al más antiguo',
     columns: { date: 'Fecha', source: 'Origen', changes: 'Cambios', action: 'Acción' },
-    sources: { manual: 'Manual', import: 'Importación', revert: 'Deshacer' },
+    sources: { manual: 'Manual', import: 'Importación', revert: 'Deshacer', email: 'Correo' },
     emptyTitle: 'Todavía no hay cambios anotados',
     emptyBody: 'Cuando edites esta postulación, cada cambio aparecerá aquí y podrás deshacerlo.',
     warningTitle: 'No se pudo leer el historial',

@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 import { writeFileAtomically } from './atomic-file.js';
+import { APPLICATION_OUTCOMES } from '../../domain/application.js';
 import {
   MAIL_PROPOSAL_OUTCOMES,
   MAIL_PROPOSAL_STATUSES,
@@ -31,6 +32,7 @@ const proposalSchema = z
     id: z.string().min(1),
     jobId: z.string().min(1),
     proposedOutcome: z.enum(MAIL_PROPOSAL_OUTCOMES),
+    basedOnOutcome: z.enum(APPLICATION_OUTCOMES).optional(),
     messageId: z.string().min(1),
     snippet: z.string(),
     evidence: z.array(z.string()),
@@ -100,8 +102,9 @@ export function createJsonMailProposalRepository(
       );
     }
 
-    return parsed.data.proposals.map(({ detectedAt, historyEntryId, ...rest }) => ({
+    return parsed.data.proposals.map(({ detectedAt, historyEntryId, basedOnOutcome, ...rest }) => ({
       ...rest,
+      ...(basedOnOutcome === undefined ? {} : { basedOnOutcome }),
       detectedAt: new Date(detectedAt),
       ...(historyEntryId === undefined ? {} : { historyEntryId }),
     }));
@@ -115,6 +118,7 @@ export function createJsonMailProposalRepository(
           id: proposal.id,
           jobId: proposal.jobId,
           proposedOutcome: proposal.proposedOutcome,
+          ...(proposal.basedOnOutcome === undefined ? {} : { basedOnOutcome: proposal.basedOnOutcome }),
           messageId: proposal.messageId,
           snippet: proposal.snippet,
           evidence: proposal.evidence,

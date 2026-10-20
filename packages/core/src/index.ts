@@ -179,6 +179,16 @@ export {
   type ProposeFromMailInput,
   type ProposeFromMailResult,
 } from './app/propose-from-mail.js';
+export {
+  acceptMailProposal,
+  dismissMailProposal,
+  type AcceptMailProposalDeps,
+  type AcceptMailProposalInput,
+  type AcceptMailProposalResult,
+  type DismissMailProposalDeps,
+  type DismissMailProposalInput,
+  type DismissMailProposalResult,
+} from './app/review-mail-proposal.js';
 export type {
   GmailFetchResult,
   GmailQuery,

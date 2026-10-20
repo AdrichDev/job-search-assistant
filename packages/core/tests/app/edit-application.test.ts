@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { editApplication } from '../../src/app/edit-application.js';
 import { createApplication } from '../../src/domain/application.js';
+import { createInMemoryApplicationHistoryRepository } from '../helpers/in-memory-application-history-repository.js';
 import { createInMemoryApplicationRepository } from '../helpers/in-memory-application-repository.js';
 
 const NOW = new Date('2026-04-10T09:30:00.000Z');
@@ -72,5 +73,28 @@ describe('editApplication', () => {
     await expect(
       editApplication({ jobId: IMPORTED.jobId, patch: { notes: 'x' } }, { repository: broken, now: () => NOW }),
     ).rejects.toThrow('disk on fire');
+  });
+});
+
+describe('editApplication history source', () => {
+  it('records a custom source and reports the entry id', async () => {
+    const repository = createInMemoryApplicationRepository([IMPORTED]);
+    const history = createInMemoryApplicationHistoryRepository();
+    const result = await editApplication(
+      { jobId: IMPORTED.jobId, patch: { outcome: 'rejected' }, source: 'email' },
+      { repository, history, now: () => NOW, newId: () => 'entry-7' },
+    );
+    expect(result).toMatchObject({ status: 'updated', historyRecorded: true, historyEntryId: 'entry-7' });
+    expect(history.all()[0]).toMatchObject({ id: 'entry-7', source: 'email' });
+  });
+
+  it('defaults the source to manual', async () => {
+    const repository = createInMemoryApplicationRepository([IMPORTED]);
+    const history = createInMemoryApplicationHistoryRepository();
+    await editApplication(
+      { jobId: IMPORTED.jobId, patch: { notes: 'x' } },
+      { repository, history, now: () => NOW, newId: () => 'entry-8' },
+    );
+    expect(history.all()[0]?.source).toBe('manual');
   });
 });

@@ -131,3 +131,26 @@ describe('createJsonMailProposalRepository', () => {
     expect(await readdir(directory)).toEqual(['mail-proposals.json']);
   });
 });
+
+describe('basedOnOutcome persistence', () => {
+  it('round-trips basedOnOutcome', async () => {
+    const repository = createJsonMailProposalRepository({ filePath });
+    await repository.add({ ...proposal('m1'), basedOnOutcome: 'applied' });
+    expect((await repository.findByMessageId('m1'))?.basedOnOutcome).toBe('applied');
+  });
+
+  it('reads a stored proposal that lacks basedOnOutcome', async () => {
+    const stored = { ...proposal('m1'), detectedAt: '2026-02-03T08:00:00.000Z' };
+    await writeFile(filePath, JSON.stringify({ version: 1, proposals: [stored] }), 'utf8');
+    const repository = createJsonMailProposalRepository({ filePath });
+    const [read] = await repository.list();
+    expect(read?.id).toBe('p-m1');
+    expect(read !== undefined && 'basedOnOutcome' in read).toBe(false);
+  });
+
+  it('refuses an unknown basedOnOutcome value', async () => {
+    const stored = { ...proposal('m1'), detectedAt: '2026-02-03T08:00:00.000Z', basedOnOutcome: 'bogus' };
+    await writeFile(filePath, JSON.stringify({ version: 1, proposals: [stored] }), 'utf8');
+    await expect(createJsonMailProposalRepository({ filePath }).list()).rejects.toThrow(/Refusing/);
+  });
+});

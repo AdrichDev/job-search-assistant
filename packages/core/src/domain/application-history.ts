@@ -45,7 +45,7 @@ export interface FieldChange {
   readonly after: ChangeValue;
 }
 
-export const CHANGE_SOURCES = ['manual', 'import', 'revert'] as const;
+export const CHANGE_SOURCES = ['manual', 'import', 'revert', 'email'] as const;
 export type ChangeSource = (typeof CHANGE_SOURCES)[number];
 
 export interface ApplicationChange {

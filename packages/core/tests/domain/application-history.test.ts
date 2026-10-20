@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyApplicationPatch, applicationsEqual, createApplication } from '../../src/domain/application.js';
 import {
+  CHANGE_SOURCES,
   analyzeHistory,
   diffApplications,
   fieldValue,
@@ -192,5 +193,11 @@ describe('analyzeHistory', () => {
 
   it('is empty for an empty history', () => {
     expect(analyzeHistory([]).undoable).toEqual([]);
+  });
+});
+
+describe('CHANGE_SOURCES', () => {
+  it('keeps the three original sources in order and adds email', () => {
+    expect([...CHANGE_SOURCES]).toEqual(['manual', 'import', 'revert', 'email']);
   });
 });
