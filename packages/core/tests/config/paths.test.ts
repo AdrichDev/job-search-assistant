@@ -97,3 +97,23 @@ describe('DEFAULT_MAIL_RUN_STATE_PATH', () => {
     ).toBe(override);
   });
 });
+
+describe('DEFAULT_MAIL_PROPOSALS_PATH', () => {
+  it('lives under data/ unless overridden', async () => {
+    const paths = await import('../../src/config/paths.js');
+    if (process.env['JOB_QUEUE_MAIL_PROPOSALS_PATH'] === undefined) {
+      expect(paths.DEFAULT_MAIL_PROPOSALS_PATH.split(String.fromCharCode(92)).join('/')).toMatch(
+        /\/data\/mail-proposals\.json$/,
+      );
+    }
+  });
+
+  it('honours the JOB_QUEUE_MAIL_PROPOSALS_PATH override seam', () => {
+    const override = resolve('/tmp/run-5/mail-proposals.json');
+    expect(
+      resolveDataPath('JOB_QUEUE_MAIL_PROPOSALS_PATH', resolve('/workspace/data/mail-proposals.json'), {
+        JOB_QUEUE_MAIL_PROPOSALS_PATH: override,
+      }),
+    ).toBe(override);
+  });
+});

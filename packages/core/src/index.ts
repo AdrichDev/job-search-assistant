@@ -152,6 +152,33 @@ export type {
 } from './ports/run-state-store.js';
 export { EMPTY_MAIL_RUN_STATE } from './ports/mail-run-state-store.js';
 export type { MailRunState, MailRunStateStore } from './ports/mail-run-state-store.js';
+export {
+  MAIL_PROPOSAL_OUTCOMES,
+  MAIL_PROPOSAL_STATUSES,
+  MAX_PROPOSAL_SNIPPET_LENGTH,
+  createMailProposal,
+  isMailProposalOutcome,
+  sanitizeSnippet,
+  type MailProposal,
+  type MailProposalDraft,
+  type MailProposalOutcome,
+  type MailProposalStatus,
+} from './domain/mail-proposal.js';
+export {
+  classifyReply,
+  type ReplyClassification,
+  type ReplyInput,
+  type ReplyOutcome,
+} from './domain/mail-reply.js';
+export type {
+  AddMailProposalResult,
+  MailProposalRepository,
+} from './ports/mail-proposal-repository.js';
+export {
+  proposeFromMail,
+  type ProposeFromMailInput,
+  type ProposeFromMailResult,
+} from './app/propose-from-mail.js';
 export type {
   GmailFetchResult,
   GmailQuery,
@@ -308,6 +335,7 @@ export { createJsonCvModelRepository } from './adapters/persistence/json-cv-mode
 export { createCvLibrary } from './adapters/library/cv-library.js';
 export { createJsonRunStateStore } from './adapters/persistence/json-run-state-store.js';
 export { createJsonMailRunStateStore } from './adapters/persistence/json-mail-run-state-store.js';
+export { createJsonMailProposalRepository } from './adapters/persistence/json-mail-proposal-repository.js';
 export {
   createQueuePipelineRunner,
   type QueuePipelineRunnerOptions,
@@ -331,6 +359,7 @@ export {
   DEFAULT_FIXTURE_PATH,
   DEFAULT_QUEUE_PATH,
   DEFAULT_MAIL_RUN_STATE_PATH,
+  DEFAULT_MAIL_PROPOSALS_PATH,
   DEFAULT_RUN_STATE_PATH,
   WORKSPACE_ROOT,
 } from './config/paths.js';

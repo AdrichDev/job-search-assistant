@@ -141,6 +141,28 @@ export type { FetchRunState, FetchRunSummary } from './ports/run-state-store.js'
 
 /** Mail check state shape (type-only) and the pure schedule / token-expiry rules. */
 export type { MailRunState, MailRunStateStore } from './ports/mail-run-state-store.js';
+export {
+  MAIL_PROPOSAL_OUTCOMES,
+  MAIL_PROPOSAL_STATUSES,
+  MAX_PROPOSAL_SNIPPET_LENGTH,
+  createMailProposal,
+  isMailProposalOutcome,
+  sanitizeSnippet,
+  type MailProposal,
+  type MailProposalDraft,
+  type MailProposalOutcome,
+  type MailProposalStatus,
+} from './domain/mail-proposal.js';
+export {
+  classifyReply,
+  type ReplyClassification,
+  type ReplyInput,
+  type ReplyOutcome,
+} from './domain/mail-reply.js';
+export type {
+  AddMailProposalResult,
+  MailProposalRepository,
+} from './ports/mail-proposal-repository.js';
 export type {
   GmailFetchResult,
   GmailQuery,

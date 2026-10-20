@@ -165,3 +165,12 @@ export const DEFAULT_MAIL_RUN_STATE_PATH = resolveDataPath(
   'JOB_QUEUE_MAIL_RUN_STATE_PATH',
   resolve(WORKSPACE_ROOT, 'data/.mail-run.json'),
 );
+
+/**
+ * Pending suggestions from the mail check (message id as dedupe key, a short
+ * snippet, never a body). Personal, so git-ignored and relocatable like the logs.
+ */
+export const DEFAULT_MAIL_PROPOSALS_PATH = resolveDataPath(
+  'JOB_QUEUE_MAIL_PROPOSALS_PATH',
+  resolve(WORKSPACE_ROOT, 'data/mail-proposals.json'),
+);

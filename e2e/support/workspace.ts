@@ -45,6 +45,9 @@ export const SCRATCH_RUN_STATE_PATH = resolve(SCRATCH_ROOT, 'data', 'fetch-run.j
 /** Stands in for the user's `data/.mail-run.json`. */
 export const SCRATCH_MAIL_RUN_STATE_PATH = resolve(SCRATCH_ROOT, 'data', 'mail-run.json');
 
+/** Stands in for the user's `data/mail-proposals.json`. */
+export const SCRATCH_MAIL_PROPOSALS_PATH = resolve(SCRATCH_ROOT, 'data', 'mail-proposals.json');
+
 /**
  * Stands in for the user's CV folder (`data/cv-library`, or wherever they point
  * `JOB_QUEUE_CV_LIBRARY_DIR`). Holds ONLY synthetic tiny PDFs the suite creates;
@@ -63,6 +66,7 @@ export const ISOLATION_ENV: Readonly<Record<string, string>> = {
   JOB_QUEUE_HISTORY_PATH: SCRATCH_HISTORY_PATH,
   JOB_QUEUE_RUN_STATE_PATH: SCRATCH_RUN_STATE_PATH,
   JOB_QUEUE_MAIL_RUN_STATE_PATH: SCRATCH_MAIL_RUN_STATE_PATH,
+  JOB_QUEUE_MAIL_PROPOSALS_PATH: SCRATCH_MAIL_PROPOSALS_PATH,
   JOB_QUEUE_CV_LIBRARY_DIR: SCRATCH_CV_LIBRARY_DIR,
   JOB_QUEUE_CV_MODELS_PATH: SCRATCH_CV_MODELS_PATH,
 };

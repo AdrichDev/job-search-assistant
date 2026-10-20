@@ -45,6 +45,7 @@ export const REAL_USER_FILES: readonly string[] = [
   resolve(WORKSPACE_ROOT, 'data', 'application-history.json'),
   resolve(WORKSPACE_ROOT, 'data', '.fetch-run.json'),
   resolve(WORKSPACE_ROOT, 'data', '.mail-run.json'),
+  resolve(WORKSPACE_ROOT, 'data', 'mail-proposals.json'),
   // The registry of CV models quotes personal file names: same reasoning.
   resolve(WORKSPACE_ROOT, 'data', 'cv-models.json'),
 ];

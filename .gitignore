@@ -50,6 +50,10 @@ data/.fetch-run.*.tmp
 data/.mail-run.json
 data/.mail-run.*.tmp
 
+# Pending mail proposals: snippets of the user's replies. Personal.
+data/mail-proposals.json
+data/.mail-proposals.*.tmp
+
 # Generated link evidence and raw personal job-alert inputs.
 data/.link-liveness.json
 data/.link-liveness.*.tmp
