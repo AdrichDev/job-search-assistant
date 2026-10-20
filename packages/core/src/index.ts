@@ -97,6 +97,23 @@ export {
 } from './domain/scoring/types.js';
 
 /* Ports --------------------------------------------------------------- */
+export {
+  CHANGE_SOURCES,
+  HISTORY_FIELDS,
+  analyzeHistory,
+  diffApplications,
+  fieldValue,
+  isHistoryField,
+  patchRestoring,
+  sameChangeValue,
+  type ApplicationChange,
+  type ChangeSource,
+  type ChangeValue,
+  type FieldChange,
+  type HistoryAnalysis,
+  type HistoryField,
+} from './domain/application-history.js';
+export type { ApplicationHistoryRepository } from './ports/application-history-repository.js';
 export type {
   ApplicationRepository,
   RecordResult,
@@ -202,6 +219,12 @@ export {
 } from './app/update-application-outcome.js';
 
 export {
+  revertApplicationChange,
+  type RevertApplicationChangeDeps,
+  type RevertApplicationChangeInput,
+  type RevertApplicationChangeResult,
+} from './app/revert-application-change.js';
+export {
   importApplicationHistory,
   type ImportApplicationHistoryDeps,
   type ImportApplicationHistoryResult,
@@ -242,6 +265,7 @@ export { consoleLogger } from './adapters/logging/console-logger.js';
 export { createJsonFileQueueReader } from './adapters/output/json-file-queue-reader.js';
 export { createJsonFileQueueWriter } from './adapters/output/json-file-queue-writer.js';
 export { createJsonApplicationRepository } from './adapters/persistence/json-application-repository.js';
+export { createJsonApplicationHistoryRepository } from './adapters/persistence/json-application-history-repository.js';
 export { createJsonDismissalRepository } from './adapters/persistence/json-dismissal-repository.js';
 export { createJsonRunStateStore } from './adapters/persistence/json-run-state-store.js';
 export {
@@ -261,6 +285,7 @@ export { DEFAULT_LIVENESS_CACHE_PATH } from './config/liveness.js';
 export {
   DEFAULT_APPLICATION_LOG_PATH,
   DEFAULT_DISMISSAL_LOG_PATH,
+  DEFAULT_HISTORY_LOG_PATH,
   DEFAULT_FIXTURE_PATH,
   DEFAULT_QUEUE_PATH,
   DEFAULT_RUN_STATE_PATH,

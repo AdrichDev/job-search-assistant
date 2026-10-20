@@ -36,6 +36,9 @@ export const SCRATCH_APPLICATIONS_PATH = resolve(SCRATCH_ROOT, 'data', 'applicat
 /** Stands in for the user's `data/dismissals.json`. */
 export const SCRATCH_DISMISSALS_PATH = resolve(SCRATCH_ROOT, 'data', 'dismissals.json');
 
+/** Stands in for the user's `data/application-history.json`. */
+export const SCRATCH_HISTORY_PATH = resolve(SCRATCH_ROOT, 'data', 'application-history.json');
+
 /** Stands in for the user's `data/.fetch-run.json` and its lock. */
 export const SCRATCH_RUN_STATE_PATH = resolve(SCRATCH_ROOT, 'data', 'fetch-run.json');
 
@@ -44,6 +47,7 @@ export const ISOLATION_ENV: Readonly<Record<string, string>> = {
   JOB_QUEUE_QUEUE_PATH: SCRATCH_QUEUE_PATH,
   JOB_QUEUE_APPLICATIONS_PATH: SCRATCH_APPLICATIONS_PATH,
   JOB_QUEUE_DISMISSALS_PATH: SCRATCH_DISMISSALS_PATH,
+  JOB_QUEUE_HISTORY_PATH: SCRATCH_HISTORY_PATH,
   JOB_QUEUE_RUN_STATE_PATH: SCRATCH_RUN_STATE_PATH,
 };
 
@@ -223,6 +227,57 @@ export async function readDismissals(): Promise<readonly RecordedDismissal[]> {
   } catch {
     return [];
   }
+}
+
+/** One change-history entry as it is stored (ISO date), read back without going through the app. */
+export interface RecordedChange {
+  readonly id: string;
+  readonly jobId: string;
+  readonly at: string;
+  readonly source: string;
+  readonly changes: readonly {
+    readonly field: string;
+    readonly before: string | readonly string[] | null;
+    readonly after: string | readonly string[] | null;
+  }[];
+  readonly revertsId?: string;
+}
+
+/**
+ * Reads back the change history the SERVER wrote (oldest first, file order).
+ *
+ * Same reasoning as `readApplications`: "the table shows an entry" and "an entry
+ * was durably appended" are two different claims. A missing file is an empty history.
+ */
+export async function readHistory(): Promise<readonly RecordedChange[]> {
+  const { readFile } = await import('node:fs/promises');
+  try {
+    const raw = await readFile(SCRATCH_HISTORY_PATH, 'utf8');
+    const list = (JSON.parse(raw) as { changes?: unknown }).changes;
+    return Array.isArray(list) ? (list as RecordedChange[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Removes the history file (the app's "no change logged yet" state). Scratch tree only. */
+export async function resetHistory(): Promise<void> {
+  if (!resolve(SCRATCH_HISTORY_PATH).startsWith(`${SCRATCH_ROOT}${sep}`)) {
+    throw new Error(`Refusing to reset outside the scratch tree: ${SCRATCH_HISTORY_PATH}`);
+  }
+  await rm(SCRATCH_HISTORY_PATH, { force: true });
+}
+
+/**
+ * Overwrites the ISOLATED history file with exact text (e.g. a corrupt file, or
+ * entries written by hand). Scratch tree only.
+ */
+export async function writeHistoryFile(content: string): Promise<void> {
+  if (!resolve(SCRATCH_HISTORY_PATH).startsWith(`${SCRATCH_ROOT}${sep}`)) {
+    throw new Error(`Refusing to write outside the scratch tree: ${SCRATCH_HISTORY_PATH}`);
+  }
+  await mkdir(dirname(SCRATCH_HISTORY_PATH), { recursive: true });
+  await writeFile(SCRATCH_HISTORY_PATH, content, 'utf8');
 }
 
 /** Empties the dismissal log, so a count is about this test and not a leftover. */

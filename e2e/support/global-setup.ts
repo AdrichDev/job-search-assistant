@@ -10,6 +10,7 @@ import {
   assertOfflinePipeline,
   resetApplications,
   resetDismissals,
+  resetHistory,
   resetRunState,
   resetScratch,
   seedQueue,
@@ -39,6 +40,8 @@ export const REAL_USER_FILES: readonly string[] = [
   // exist yet: `<absent>` is a state worth proving unchanged too, because the
   // failure being guarded is a suite that CREATES it.
   resolve(WORKSPACE_ROOT, 'data', 'dismissals.json'),
+  // Added with the change history (personal notes inside): same reasoning.
+  resolve(WORKSPACE_ROOT, 'data', 'application-history.json'),
   resolve(WORKSPACE_ROOT, 'data', '.fetch-run.json'),
 ];
 
@@ -83,6 +86,7 @@ async function globalSetup(): Promise<void> {
   await seedQueue(HEALTHY_QUEUE);
   await resetApplications();
   await resetDismissals();
+  await resetHistory();
   await resetRunState();
 
   for (const entry of baseline) {

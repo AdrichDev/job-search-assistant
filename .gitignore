@@ -22,6 +22,12 @@ data/.applications.*.tmp
 data/dismissals.json
 data/.dismissals.*.tmp
 
+# Change history of applications: quotes the user's notes before/after every edit.
+# Personal, like the logs above.
+data/application-history.json
+data/application-history.backup-*.json
+data/.changes.*.tmp
+
 # Fetch run status board and its single-flight lock. Transient state about the
 # last run, safe to delete, rebuilt by the next one - unlike the two logs above,
 # nothing here is the user's data.

@@ -69,6 +69,12 @@ export function EditApplicationForm({
 }) {
   const [state, formAction] = useActionState(submitEditApplicationForm, INITIAL);
   const values: EditFormValues = { ...initial, ...(state.values ?? {}) };
+  /*
+   * The inputs are uncontrolled (`defaultValue`), so React ignores a new default
+   * on a form that stays mounted. That happens when an undo redirects back to this
+   * very page with the restored values: without a key that changes with the stored
+   * values the form would keep showing (and saving back) the pre-undo text.
+   */
   const f = ES.edit.fields;
 
   const text = (name: keyof EditFormValues, label: string, hint?: string, type = 'text') => (
@@ -85,7 +91,7 @@ export function EditApplicationForm({
   );
 
   return (
-    <form key={state.attempt} action={formAction} className="space-y-5">
+    <form key={`${state.attempt}:${JSON.stringify(initial)}`} action={formAction} className="space-y-5">
       <input type="hidden" name="jobId" value={values.jobId} />
 
       {state.message !== null && (

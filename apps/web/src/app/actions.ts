@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { consoleLogger, type FetchRunState } from '@job-queue/core';
 import {
+  applicationHistoryRepository,
   applicationRepository,
   buildFallbackQueue,
   dismissalRepository,
@@ -20,6 +21,7 @@ import {
   editApplication,
   readFetchState,
   restoreOffer,
+  revertChange,
   setOutcome,
   startFetch,
   type ActionOutcome,
@@ -39,6 +41,7 @@ function deps(): WriteDeps {
   const now = new Date();
   return {
     applicationRepository: applicationRepository(),
+    historyRepository: applicationHistoryRepository(),
     dismissalRepository: dismissalRepository(),
     // Falls back to the offline catalogue so an Apply click still resolves when
     // no CLI run has been persisted yet - the same queue the page is showing.
@@ -99,8 +102,13 @@ export async function submitEditApplicationForm(
 ): Promise<EditFormState> {
   const result = await editApplicationAction(formData);
   if (result.ok) {
-    const changed = result.message === ACTION_MESSAGES.applicationEdited;
-    redirect(`/seguimiento?edicion=${changed ? 'guardada' : 'sin-cambios'}`);
+    const outcome =
+      result.message === ACTION_MESSAGES.applicationEdited
+        ? 'guardada'
+        : result.message === ACTION_MESSAGES.applicationEditedNotLogged
+          ? 'sin-registro'
+          : 'sin-cambios';
+    redirect(`/seguimiento?edicion=${outcome}`);
   }
 
   const values: Record<string, string> = {};
@@ -111,6 +119,25 @@ export async function submitEditApplicationForm(
     }
   }
   return { message: result.message, values, attempt: previous.attempt + 1 };
+}
+
+/**
+ * Undoes one logged change, then returns to the edit page with the result in the
+ * URL (the page words it in Spanish). A plain form post: it works with the
+ * keyboard alone and without client JavaScript.
+ */
+export async function revertChangeAction(formData: FormData): Promise<void> {
+  const result = await revertChange(formData, deps());
+  if (result.ok) {
+    revalidatePath('/seguimiento');
+    revalidatePath('/');
+  }
+  if (result.jobId === null) {
+    redirect(`/seguimiento?deshacer=${result.code}`);
+  }
+  const edit = `/seguimiento/${encodeURIComponent(result.jobId)}/editar`;
+  revalidatePath(edit);
+  redirect(`${edit}?deshacer=${result.code}#historial`);
 }
 
 export async function dismissOfferAction(

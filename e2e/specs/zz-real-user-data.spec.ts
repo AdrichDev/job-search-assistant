@@ -6,7 +6,13 @@ import {
   fingerprint,
   type FileFingerprint,
 } from '../support/global-setup.js';
-import { SCRATCH_APPLICATIONS_PATH, readApplications } from '../support/workspace.js';
+import {
+  SCRATCH_APPLICATIONS_PATH,
+  SCRATCH_HISTORY_PATH,
+  readApplications,
+  readHistory,
+  seedApplications,
+} from '../support/workspace.js';
 import { HEALTHY_QUEUE, HEALTHY_TITLES } from '../fixtures/queue.js';
 
 /**
@@ -60,7 +66,30 @@ test.describe('real user data is untouched', () => {
     });
   });
 
-  test('output/queue.json and data/applications.json are byte-identical to the baseline', async () => {
+  test('a history write lands in the scratch history, not in the user history', async ({ page, seed }) => {
+    // Same two-sided proof as above, for the change history (it quotes personal notes).
+    await seed(HEALTHY_QUEUE);
+    await seedApplications([
+      {
+        jobId: 'import-aaaa1111',
+        appliedAt: '2026-03-01T00:00:00.000Z',
+        sourceIds: ['infojobs'],
+        outcome: 'applied',
+        listing: { company: 'Información Ñandú S.L.', title: 'Desarrollador Júnior' },
+      },
+    ]);
+    await page.goto('/seguimiento/import-aaaa1111/editar');
+    await page.getByLabel('Notas', { exact: true }).fill('nota para el historial');
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+    await expect(page).toHaveURL(/edicion=guardada/);
+
+    expect(
+      (await readHistory()).length,
+      `no history entry was recorded in ${SCRATCH_HISTORY_PATH}; either the edit did not log, or it logged somewhere else`,
+    ).toBe(1);
+  });
+
+  test('every real user file (queue, applications, dismissals, history, run state) is byte-identical to the baseline', async () => {
     const baseline: readonly FileFingerprint[] = JSON.parse(
       await readFile(BASELINE_PATH, 'utf8'),
     ) as FileFingerprint[];

@@ -1,9 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { APPLICATION_OUTCOMES } from '@job-queue/core';
+import { ChangeHistory } from '@/components/change-history';
 import { EditApplicationForm } from '@/components/edit-application-form';
 import { ES } from '@/copy/es';
-import { applicationRepository, queueReader } from '@/server/container';
+import {
+  applicationHistoryRepository,
+  applicationRepository,
+  queueReader,
+} from '@/server/container';
+import { loadApplicationHistory, revertNoticeFor } from '@/server/history';
 import { buildEditFormValues } from '@/server/edit-form';
 import { decodeJobIdParam, loadEditableApplication } from '@/server/tracking';
 
@@ -16,8 +22,10 @@ export const metadata: Metadata = {
 
 export default async function EditApplicationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ jobId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   // Job ids contain `::` and spaces, so they travel percent-encoded.
   const jobId = decodeJobIdParam((await params).jobId);
@@ -25,6 +33,13 @@ export default async function EditApplicationPage({
     applicationRepository: applicationRepository(),
     queueReader: queueReader(),
   });
+  const history =
+    found === null
+      ? null
+      : await loadApplicationHistory(found.application.jobId, {
+          historyRepository: applicationHistoryRepository(),
+        });
+  const notice = revertNoticeFor((await searchParams).deshacer);
 
   return (
     <main id="seguimiento" className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
@@ -55,6 +70,7 @@ export default async function EditApplicationPage({
             cvVariants={Object.keys(ES.cvVariant)}
             hasListing={found.application.listing !== undefined}
           />
+          {history !== null && <ChangeHistory data={history} notice={notice} />}
         </>
       )}
     </main>

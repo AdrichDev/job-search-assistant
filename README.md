@@ -246,7 +246,19 @@ Every row has an **Editar** link (`/seguimiento/<jobId>/editar`) opening ONE for
 - The link must be http or https. Anything else is **refused** (not silently dropped), the form is shown again with your input and a Spanish error, and the stored file is not written.
 - Saving with no real change reports so and does not rewrite the log.
 - An application made from the queue has no stored listing of its own: the form pre-fills company, title, link and city from what the table shows, and saving writes them as the application's own listing.
-- The repository port gained `update({ jobId, patch, now })` returning `{ before, after }` (or `null` for an unknown job); the pure rules live in `applyApplicationPatch`. The persisted JSON format did not change. The change history/revert is a later step.
+- The repository port gained `update({ jobId, patch, now })` returning `{ before, after }` (or `null` for an unknown job); the pure rules live in `applyApplicationPatch`. The persisted JSON format of `applications.json` did not change.
+
+### Change history and undo
+
+Every change that really changes an application is appended to `data/application-history.json` (git-ignored: it quotes your notes; override the location with `JOB_QUEUE_HISTORY_PATH`). One entry = id, application, timestamp, source (**Manual** from the edit form, **Importación** when the spreadsheet import updates the state of an application already in the log, **Deshacer** for an undo) and, per field, the value before and after (`null` = no value). The file is **append-only**: nothing is edited or deleted; an undo appends a new entry. A missing file is an empty history; a corrupt one is refused and never overwritten.
+
+The edit page (`/seguimiento/<jobId>/editar`) shows the section **Historial de cambios**, newest first, with a **Deshacer** button on the entries that may be undone:
+
+- Only the newest entry still in effect can be undone (plus, right after an undo, the undo itself: undoing the undo). After undoing the newest, the next older one becomes undoable.
+- If the application was changed outside the history (the file edited by hand, say), the undo is refused as a *conflict* and nothing is written: it would otherwise destroy that other change.
+- Refused, unchanged and no-op edits write no entry. The edit and its entry are two writes: if the entry cannot be written the edit is kept and the page says, in Spanish, that it was saved but not logged.
+- Known limitation: undoing the creation of a listing on a queue-made application clears its optional fields but keeps company and title (there is no "remove listing" action).
+- Out of scope here: automatic (email) changes, attachments, exporting the history.
 
 ### Storage
 
@@ -633,6 +645,8 @@ So the suite never runs against those paths. `packages/core/src/config/paths.ts`
 |----------|-----------|
 | `JOB_QUEUE_QUEUE_PATH` | `output/queue.json` |
 | `JOB_QUEUE_APPLICATIONS_PATH` | `data/applications.json` |
+| `JOB_QUEUE_DISMISSALS_PATH` | `data/dismissals.json` |
+| `JOB_QUEUE_HISTORY_PATH` | `data/application-history.json` |
 
 `playwright.config.ts` exports both into the server process, pointing at `e2e/.tmp/` (gitignored, wiped before each run). Three layers make that a guarantee rather than an intention:
 

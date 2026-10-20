@@ -7,8 +7,10 @@ import {
   isApplicationOutcome,
   recordApplication,
   restoreJob,
+  revertApplicationChange,
   startFetchRun,
   updateApplicationOutcome,
+  type ApplicationHistoryRepository,
   type ApplicationPatch,
   type ApplicationRepository,
   type CvVariant,
@@ -48,6 +50,11 @@ export interface WriteDeps {
    * the behaviour they were written for.
    */
   readonly dismissalRepository?: DismissalRepository;
+  /**
+   * OPTIONAL for the same reason: without it edits are simply not logged. When it
+   * IS configured a failed log write is reported to the person, never hidden.
+   */
+  readonly historyRepository?: ApplicationHistoryRepository;
 }
 
 export interface ActionOutcome {
@@ -308,17 +315,84 @@ export async function editApplication(input: unknown, deps: WriteDeps): Promise<
   const result = await editApplicationUseCase({ jobId, patch }, {
     repository: deps.applicationRepository,
     now: deps.now,
+    ...(deps.historyRepository === undefined ? {} : { history: deps.historyRepository }),
   });
 
   switch (result.status) {
     case 'updated':
-      return { ok: true, message: ACTION_MESSAGES.applicationEdited };
+      return {
+        ok: true,
+        message:
+          result.historyRecorded || deps.historyRepository === undefined
+            ? ACTION_MESSAGES.applicationEdited
+            : ACTION_MESSAGES.applicationEditedNotLogged,
+      };
     case 'unchanged':
       return { ok: true, message: ACTION_MESSAGES.applicationUnchanged };
     case 'not_found':
       return { ok: false, message: ACTION_MESSAGES.applicationNotFound };
     case 'invalid':
       return { ok: false, message: REFUSAL_MESSAGE[result.reason] };
+  }
+}
+
+export type RevertCode =
+  | 'deshecho'
+  | 'deshecho-sin-registro'
+  | 'no-encontrado'
+  | 'ya-deshecho'
+  | 'no-ultimo'
+  | 'conflicto'
+  | 'invalido'
+  | 'sin-historial';
+
+export interface RevertOutcome extends ActionOutcome {
+  /** Machine code carried in the URL after the redirect; the page words it in Spanish. */
+  readonly code: RevertCode;
+  /** The application the entry belongs to, when it could be found. */
+  readonly jobId: string | null;
+}
+
+/**
+ * Undoes one logged change. `input` is the raw form post and is untrusted: it
+ * must be a FormData with a non-blank text `entryId`. The rules (only the latest
+ * live entry, no overwriting of changes made outside the log) live in core's
+ * `revertApplicationChange`; this only maps its answer to a message.
+ */
+export async function revertChange(input: unknown, deps: WriteDeps): Promise<RevertOutcome> {
+  if (deps.historyRepository === undefined) {
+    return { ok: false, message: ACTION_MESSAGES.historyUnavailable, code: 'sin-historial', jobId: null };
+  }
+  const entryId = input instanceof FormData ? input.get('entryId') : null;
+  if (typeof entryId !== 'string' || entryId.trim().length === 0) {
+    return { ok: false, message: ACTION_MESSAGES.invalidInput, code: 'invalido', jobId: null };
+  }
+
+  const id = entryId.trim();
+  const jobId = (await deps.historyRepository.find(id))?.jobId ?? null;
+  const result = await revertApplicationChange(
+    { entryId: id },
+    { repository: deps.applicationRepository, history: deps.historyRepository, now: deps.now },
+  );
+
+  switch (result.status) {
+    case 'reverted':
+      return result.historyRecorded
+        ? { ok: true, message: ACTION_MESSAGES.changeReverted, code: 'deshecho', jobId }
+        : {
+            ok: true,
+            message: ACTION_MESSAGES.changeRevertedNotLogged,
+            code: 'deshecho-sin-registro',
+            jobId,
+          };
+    case 'not_found':
+      return { ok: false, message: ACTION_MESSAGES.changeNotFound, code: 'no-encontrado', jobId };
+    case 'already_reverted':
+      return { ok: false, message: ACTION_MESSAGES.changeAlreadyReverted, code: 'ya-deshecho', jobId };
+    case 'not_latest':
+      return { ok: false, message: ACTION_MESSAGES.changeNotLatest, code: 'no-ultimo', jobId };
+    case 'conflict':
+      return { ok: false, message: ACTION_MESSAGES.changeConflict, code: 'conflicto', jobId };
   }
 }
 

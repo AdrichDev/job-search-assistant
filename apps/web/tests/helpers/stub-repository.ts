@@ -1,5 +1,7 @@
 import type {
   Application,
+  ApplicationChange,
+  ApplicationHistoryRepository,
   ApplicationRepository,
   Dismissal,
   DismissalRepository,
@@ -39,5 +41,24 @@ export function createStubDismissals(
     restore: async () => {
       throw new Error('The dashboard read model must not write dismissals.');
     },
+  };
+}
+
+/** Read-only history stub. `failReads` simulates a corrupt history file. */
+export function createStubHistory(
+  entries: readonly ApplicationChange[] = [],
+  options: { failReads?: boolean } = {},
+): ApplicationHistoryRepository {
+  return {
+    append: async () => {
+      throw new Error('The history read model must not write the history.');
+    },
+    listFor: async (jobId) => {
+      if (options.failReads === true) {
+        throw new Error('The application history log is not valid JSON.');
+      }
+      return entries.filter((entry) => entry.jobId === jobId);
+    },
+    find: async (id) => entries.find((entry) => entry.id === id) ?? null,
   };
 }

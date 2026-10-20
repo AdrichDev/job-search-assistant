@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { TrackingView } from '@/components/tracking-view';
 import { ES } from '@/copy/es';
 import { applicationRepository, queueReader } from '@/server/container';
+import { revertNoticeFor } from '@/server/history';
 import { filterTrackedRows, loadTracking, parseEstadoFilter } from '@/server/tracking';
 
 /** The application log changes on every click elsewhere; never serve a cached copy. */
@@ -19,12 +20,15 @@ export default async function TrackingPage({
 }) {
   const query = await searchParams;
   const filter = parseEstadoFilter(query.estado);
-  const notice =
+  const notice: { readonly text: string; readonly warning: boolean } | null =
     query.edicion === 'guardada'
-      ? ES.tracking.notice.saved
+      ? { text: ES.tracking.notice.saved, warning: false }
       : query.edicion === 'sin-cambios'
-        ? ES.tracking.notice.unchanged
-        : null;
+        ? { text: ES.tracking.notice.unchanged, warning: false }
+        : query.edicion === 'sin-registro'
+          ? { text: ES.tracking.notice.savedNotLogged, warning: true }
+          : null;
+  const undoNotice = revertNoticeFor(query.deshacer);
   const { rows, counts, warnings } = await loadTracking({
     applicationRepository: applicationRepository(),
     queueReader: queueReader(),
@@ -45,9 +49,22 @@ export default async function TrackingPage({
       {notice !== null && (
         <p
           role="status"
-          className="mb-4 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm font-medium text-emerald-900"
+          className={
+            notice.warning
+              ? 'mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900'
+              : 'mb-4 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm font-medium text-emerald-900'
+          }
         >
-          {notice}
+          {notice.text}
+        </p>
+      )}
+
+      {undoNotice !== null && (
+        <p
+          role="status"
+          className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-medium text-amber-900"
+        >
+          {undoNotice.text}
         </p>
       )}
 

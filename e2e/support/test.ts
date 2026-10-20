@@ -3,6 +3,7 @@ import {
   removeQueue,
   resetApplications,
   resetDismissals,
+  resetHistory,
   resetRunState,
   seedQueue,
 } from './workspace.js';
@@ -83,6 +84,8 @@ export const test = base.extend<Fixtures>({
     // lock left behind by a previous spec would make every later fetch read as
     // "already running".
     await resetDismissals();
+    // The change history too: a spec asserting "two entries" measures its own run.
+    await resetHistory();
     await resetRunState();
 
     await use(async (queue: QueueFile | null) => {

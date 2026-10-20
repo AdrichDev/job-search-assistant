@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 import { isResponse, type Application, type ApplicationOutcome } from '../domain/application.js';
+import { diffApplications } from '../domain/application-history.js';
+import type { ApplicationHistoryRepository } from '../ports/application-history-repository.js';
 import type { ApplicationRepository } from '../ports/application-repository.js';
 import type { HistoryRow } from '../ports/history-reader.js';
 
@@ -20,6 +22,14 @@ import type { HistoryRow } from '../ports/history-reader.js';
 
 export interface ImportApplicationHistoryDeps {
   readonly repository: ApplicationRepository;
+  /**
+   * When present, each existing application whose state the spreadsheet updated
+   * gets a history entry (source `import`). The creation of imported rows is not
+   * logged: the rows themselves are the record.
+   */
+  readonly history?: ApplicationHistoryRepository;
+  readonly now?: () => Date;
+  readonly newId?: () => string;
 }
 
 export interface SkippedRow {
@@ -35,6 +45,8 @@ export interface ImportApplicationHistoryResult {
   /** Of those, how many had their state updated from the spreadsheet. */
   readonly updatedExisting: number;
   readonly skipped: readonly SkippedRow[];
+  /** Present only when some update was saved but its history entry could not be written. */
+  readonly historyFailures?: number;
 }
 
 function dayOf(date: Date): string {
@@ -121,6 +133,7 @@ export async function importApplicationHistory(
   let alreadyImported = 0;
   let matchedExisting = 0;
   let updatedExisting = 0;
+  let historyFailures = 0;
   const skipped: SkippedRow[] = [];
   const queueApplications = indexQueueApplications(await deps.repository.list());
 
@@ -142,12 +155,28 @@ export async function importApplicationHistory(
       candidates.splice(matchIndex, 1);
       matchedExisting += 1;
       if (isResponse(outcome) && !isResponse(match.outcome)) {
-        await deps.repository.updateOutcome({
+        const updated = await deps.repository.updateOutcome({
           jobId: match.jobId,
           outcome,
           at: row.respondedAt ?? match.outcomeUpdatedAt,
         });
         updatedExisting += 1;
+        if (deps.history !== undefined && updated !== null) {
+          const changes = diffApplications(match, updated);
+          if (changes.length > 0) {
+            try {
+              await deps.history.append({
+                id: (deps.newId ?? (() => globalThis.crypto.randomUUID()))(),
+                jobId: match.jobId,
+                at: (deps.now ?? (() => new Date()))(),
+                source: 'import',
+                changes,
+              });
+            } catch {
+              historyFailures += 1;
+            }
+          }
+        }
       }
       continue;
     }
@@ -187,5 +216,12 @@ export async function importApplicationHistory(
     }
   }
 
-  return { imported, alreadyImported, matchedExisting, updatedExisting, skipped };
+  return {
+    imported,
+    alreadyImported,
+    matchedExisting,
+    updatedExisting,
+    skipped,
+    ...(historyFailures > 0 ? { historyFailures } : {}),
+  };
 }

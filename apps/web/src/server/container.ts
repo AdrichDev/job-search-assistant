@@ -4,6 +4,7 @@ import {
   DEFAULT_APPLICATION_LOG_PATH,
   DEFAULT_DISMISSAL_LOG_PATH,
   DEFAULT_FIXTURE_PATH,
+  DEFAULT_HISTORY_LOG_PATH,
   DEFAULT_JUNIOR_FILTER_CONFIG,
   DEFAULT_QUEUE_PATH,
   DEFAULT_RUN_STATE_PATH,
@@ -12,11 +13,13 @@ import {
   buildJobQueue,
   consoleLogger,
   createFixtureJobSource,
+  createJsonApplicationHistoryRepository,
   createJsonApplicationRepository,
   createJsonDismissalRepository,
   createJsonFileQueueReader,
   createJsonRunStateStore,
   loadCandidateProfile,
+  type ApplicationHistoryRepository,
   type ApplicationRepository,
   type DismissalRepository,
   type JobQueue,
@@ -44,6 +47,7 @@ import {
  */
 
 let repository: ApplicationRepository | null = null;
+let history: ApplicationHistoryRepository | null = null;
 let dismissals: DismissalRepository | null = null;
 let reader: QueueReader | null = null;
 let runState: RunStateStore | null = null;
@@ -51,6 +55,15 @@ let runState: RunStateStore | null = null;
 export function applicationRepository(): ApplicationRepository {
   repository ??= createJsonApplicationRepository({ filePath: DEFAULT_APPLICATION_LOG_PATH });
   return repository;
+}
+
+/**
+ * Append-only change history of applications. A singleton for the same reason as
+ * the application log: its adapter serialises appends through one in-process queue.
+ */
+export function applicationHistoryRepository(): ApplicationHistoryRepository {
+  history ??= createJsonApplicationHistoryRepository({ filePath: DEFAULT_HISTORY_LOG_PATH });
+  return history;
 }
 
 /**

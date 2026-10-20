@@ -124,3 +124,12 @@ export const DEFAULT_RUN_STATE_PATH = resolveDataPath(
   'JOB_QUEUE_RUN_STATE_PATH',
   resolve(WORKSPACE_ROOT, 'data/.fetch-run.json'),
 );
+
+/**
+ * Append-only change history of applications. Personal (it quotes notes), so it
+ * is git-ignored like the logs above, and relocatable for the same reason.
+ */
+export const DEFAULT_HISTORY_LOG_PATH = resolveDataPath(
+  'JOB_QUEUE_HISTORY_PATH',
+  resolve(WORKSPACE_ROOT, 'data/application-history.json'),
+);

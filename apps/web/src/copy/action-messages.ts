@@ -54,6 +54,17 @@ export const ACTION_MESSAGES = {
   invalidUrl: 'The link must start with http:// or https://.',
   listingIncomplete: 'To add offer details, company and title are both required.',
   tooLong: 'One of the fields is too long.',
+  applicationEditedNotLogged: 'Application updated, but the change history entry could not be saved.',
+
+  /* Change history and undo ----------------------------------------- */
+  changeReverted: 'Change undone.',
+  changeRevertedNotLogged: 'Change undone, but the undo could not be added to the change history.',
+  changeNotFound: 'That change does not exist.',
+  changeAlreadyReverted: 'That change was already undone.',
+  changeNotLatest: 'Only the most recent change that is still in effect can be undone.',
+  changeConflict:
+    'The application was changed outside the history, so this change cannot be undone safely.',
+  historyUnavailable: 'The change history is not available.',
 
   /* Fetch ------------------------------------------------------------ */
   fetchStarted: 'Fetch run started.',

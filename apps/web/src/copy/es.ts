@@ -5,6 +5,7 @@ import type {
   QueueApplicationStatus,
   ScoreDimension,
 } from '@job-queue/core/domain';
+import type { HistoryField } from '@job-queue/core';
 import { ACTION_MESSAGES, type ActionMessage } from '@/copy/action-messages';
 
 /**
@@ -129,6 +130,20 @@ const ACTION_RESULT: Record<ActionMessage, string> = {
   [ACTION_MESSAGES.invalidUrl]: 'El enlace debe empezar por http:// o https://. No se guardó nada.',
   [ACTION_MESSAGES.listingIncomplete]: 'Para añadir los datos de la oferta hacen falta la empresa y el puesto.',
   [ACTION_MESSAGES.tooLong]: 'Alguno de los campos es demasiado largo.',
+  [ACTION_MESSAGES.applicationEditedNotLogged]:
+    'Cambios guardados, pero no se pudo anotar el cambio en el historial.',
+
+  /* Historial de cambios y deshacer. Cada negativa dice por qué y no toca nada. */
+  [ACTION_MESSAGES.changeReverted]: 'Cambio deshecho.',
+  [ACTION_MESSAGES.changeRevertedNotLogged]:
+    'Cambio deshecho, pero no se pudo anotar el deshacer en el historial.',
+  [ACTION_MESSAGES.changeNotFound]: 'Ese cambio no existe.',
+  [ACTION_MESSAGES.changeAlreadyReverted]: 'Ese cambio ya se había deshecho.',
+  [ACTION_MESSAGES.changeNotLatest]:
+    'Solo se puede deshacer el último cambio que sigue vigente. Deshaz primero los más recientes.',
+  [ACTION_MESSAGES.changeConflict]:
+    'La postulación se modificó fuera del historial, así que este cambio no se puede deshacer sin perder esa modificación. No se tocó nada.',
+  [ACTION_MESSAGES.historyUnavailable]: 'El historial de cambios no está disponible.',
 
   /* Buscar ofertas. Es una búsqueda en las fuentes configuradas, no un scrapeo. */
   [ACTION_MESSAGES.fetchStarted]: 'Búsqueda iniciada.',
@@ -519,6 +534,7 @@ export const ES = {
     notice: {
       saved: 'Cambios guardados.',
       unchanged: 'No había cambios que guardar.',
+      savedNotLogged: 'Cambios guardados, pero no se pudo anotar el cambio en el historial.',
     },
     scrollRegion: 'Tabla de postulaciones, desplázala horizontalmente si no cabe',
     openOffer: 'Abrir oferta',
@@ -602,6 +618,52 @@ export const ES = {
       outcomeDate:
         'Si cambias el estado y dejas la fecha como está, se anota la de hoy.',
     },
+  },
+
+  /* Historial de cambios -------------------------------------------------- */
+  history: {
+    heading: 'Historial de cambios',
+    intro:
+      'Cada cambio que se guarda queda anotado aquí, del más reciente al más antiguo. El historial nunca se borra: deshacer un cambio añade una anotación nueva.',
+    caption: 'Cambios de esta postulación, del más reciente al más antiguo',
+    columns: { date: 'Fecha', source: 'Origen', changes: 'Cambios', action: 'Acción' },
+    sources: { manual: 'Manual', import: 'Importación', revert: 'Deshacer' },
+    emptyTitle: 'Todavía no hay cambios anotados',
+    emptyBody: 'Cuando edites esta postulación, cada cambio aparecerá aquí y podrás deshacerlo.',
+    warningTitle: 'No se pudo leer el historial',
+    warning: (detail: string) =>
+      `El historial de cambios no se pudo cargar, pero puedes seguir editando la postulación. ${detail}`,
+    unavailableWarning: 'El historial de cambios no está configurado en esta instalación.',
+    emptyValue: 'vacío',
+    arrow: 'antes → después',
+    before: 'Antes',
+    after: 'Después',
+    truncatedHint: 'Texto acortado aquí; el historial guarda el texto completo.',
+    noFieldChanges: 'Sin cambios en los campos (se anotó solo el deshacer).',
+    reverted: 'Deshecho',
+    revertsEntry: (date: string) => `Deshace el cambio del ${date}`,
+    undo: 'Deshacer',
+    undoHint: (date: string) => `Deshacer el cambio del ${date}`,
+    undoDescription:
+      'Solo se puede deshacer el último cambio vigente, y solo si la postulación no se modificó fuera del historial.',
+    fields: {
+      appliedAt: 'Fecha de solicitud',
+      outcome: 'Estado de la postulación',
+      outcomeUpdatedAt: 'Fecha de respuesta',
+      cvVariant: 'CV enviado',
+      notes: 'Notas',
+      sourceIds: 'Fuentes',
+      'listing.company': 'Empresa',
+      'listing.title': 'Puesto',
+      'listing.url': 'Enlace de la oferta',
+      'listing.portal': 'Portal',
+      'listing.city': 'Ciudad',
+      'listing.address': 'Dirección',
+      'listing.phone': 'Teléfono',
+      'listing.contact': 'Persona de contacto',
+      'listing.companyInfo': 'Datos de la empresa',
+      'listing.publishedAt': 'Fecha de publicación',
+    } as Readonly<Record<HistoryField, string>>,
   },
 
   /* Lookups ------------------------------------------------------------- */
