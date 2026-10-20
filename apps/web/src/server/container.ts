@@ -8,6 +8,8 @@ import {
   DEFAULT_FIXTURE_PATH,
   DEFAULT_HISTORY_LOG_PATH,
   DEFAULT_JUNIOR_FILTER_CONFIG,
+  DEFAULT_MAIL_PROPOSALS_PATH,
+  DEFAULT_MAIL_RUN_STATE_PATH,
   DEFAULT_QUEUE_PATH,
   DEFAULT_RUN_STATE_PATH,
   DEFAULT_SCORING_CONFIG,
@@ -21,6 +23,8 @@ import {
   createJsonApplicationRepository,
   createJsonDismissalRepository,
   createJsonFileQueueReader,
+  createJsonMailProposalRepository,
+  createJsonMailRunStateStore,
   createJsonRunStateStore,
   loadCandidateProfile,
   type ApplicationHistoryRepository,
@@ -30,6 +34,8 @@ import {
   type CvModelRepository,
   type DismissalRepository,
   type JobQueue,
+  type MailProposalRepository,
+  type MailRunStateStore,
   type QueueReader,
   type RunStateStore,
 } from '@job-queue/core';
@@ -60,6 +66,8 @@ let cvModels: CvModelRepository | null = null;
 let cvLib: CvLibrary | null = null;
 let reader: QueueReader | null = null;
 let runState: RunStateStore | null = null;
+let mailRunState: MailRunStateStore | null = null;
+let mailProposals: MailProposalRepository | null = null;
 
 export function applicationRepository(): ApplicationRepository {
   repository ??= createJsonApplicationRepository({ filePath: DEFAULT_APPLICATION_LOG_PATH });
@@ -122,6 +130,21 @@ export function queueReader(): QueueReader {
 export function runStateStore(): RunStateStore {
   runState ??= createJsonRunStateStore({ filePath: DEFAULT_RUN_STATE_PATH });
   return runState;
+}
+
+/**
+ * Mail check status board (last success/attempt, token marker). Holds no secrets.
+ * Singleton so its in-process serialisation covers every caller.
+ */
+export function mailRunStateStore(): MailRunStateStore {
+  mailRunState ??= createJsonMailRunStateStore({ filePath: DEFAULT_MAIL_RUN_STATE_PATH });
+  return mailRunState;
+}
+
+/** Pending and decided proposals made from mail. Holds no secrets. */
+export function mailProposalRepository(): MailProposalRepository {
+  mailProposals ??= createJsonMailProposalRepository({ filePath: DEFAULT_MAIL_PROPOSALS_PATH });
+  return mailProposals;
 }
 
 /**
