@@ -38,6 +38,10 @@ export interface TrackedApplication {
   readonly outcome: ApplicationOutcome;
   readonly outcomeUpdatedAt: Date;
   readonly notes?: string;
+  /** The spreadsheet's `Información breve empresa`, exactly as stored (newlines kept). Listing only. */
+  readonly companyInfo?: string;
+  /** Listing only; never derived for queue-made rows. */
+  readonly publishedAt?: Date;
   readonly origin: 'imported' | 'queue';
 }
 
@@ -120,6 +124,11 @@ export function buildTrackedApplications(
     const sourceIds = application.sourceIds.length > 0 ? application.sourceIds : queueSources;
     const portal = nonEmpty(application.listing?.portal);
     const notes = nonEmpty(application.notes);
+    // Exact text, not trimmed: only blank values are dropped.
+    const rawCompanyInfo = application.listing?.companyInfo;
+    const companyInfo =
+      rawCompanyInfo !== undefined && rawCompanyInfo.trim().length > 0 ? rawCompanyInfo : undefined;
+    const publishedAt = application.listing?.publishedAt;
 
     return {
       jobId: application.jobId,
@@ -133,6 +142,8 @@ export function buildTrackedApplications(
       outcome: application.outcome,
       outcomeUpdatedAt: application.outcomeUpdatedAt,
       ...(notes === undefined ? {} : { notes }),
+      ...(companyInfo === undefined ? {} : { companyInfo }),
+      ...(publishedAt === undefined ? {} : { publishedAt }),
       origin: application.listing === undefined ? 'queue' : 'imported',
     };
   });

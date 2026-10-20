@@ -16,6 +16,8 @@ if (QUEUED_JOB === undefined) {
   throw new Error('The healthy queue fixture is empty.');
 }
 
+const COMPANY_INFO = 'Consultora tecnológica.\n\nSector: banca\n  Equipo de 40 personas <b>';
+
 const APPLICATIONS: readonly SeedApplication[] = [
   {
     // Imported, safe url, still waiting.
@@ -29,6 +31,11 @@ const APPLICATIONS: readonly SeedApplication[] = [
       url: 'https://empleo.example.test/oferta/1',
       portal: 'InfoJobs',
       city: 'Alcobendas',
+      companyInfo: COMPANY_INFO,
+      publishedAt: '2026-02-27T00:00:00.000Z',
+      address: 'Calle Imaginaria 12, Madrid',
+      phone: '600123456',
+      contact: 'Marta Pérez (RR. HH.)',
     },
   },
   {
@@ -71,7 +78,13 @@ const APPLICATIONS: readonly SeedApplication[] = [
     appliedAt: '2026-01-15T00:00:00.000Z',
     sourceIds: ['linkedin'],
     outcome: 'no_reply',
-    listing: { company: 'Wizbii Iberia', title: 'Analista Júnior', url: 'ftp://files.example.test/x' },
+    listing: {
+      company: 'Wizbii Iberia',
+      title: 'Analista Júnior',
+      url: 'ftp://files.example.test/x',
+      // Publication date but no company info: the date must still be reachable.
+      publishedAt: '2026-01-10T00:00:00.000Z',
+    },
   },
 ];
 
@@ -124,6 +137,64 @@ test.describe('tracking view', () => {
     await expect(legacy).toContainText('Preselección');
   });
 
+  test('company info is available on demand in an accessible detail, with its publication date', async ({
+    page,
+  }) => {
+    await page.goto('/seguimiento');
+    const row = rowFor(page, 'Desarrollador Júnior Frontend');
+    const detail = row.locator('details');
+    await expect(detail).toHaveCount(1);
+    const summary = detail.locator('summary');
+    await expect(summary).toHaveText('Información breve empresa');
+    await expect(row.getByText('Información breve empresa', { exact: true })).toBeVisible();
+    // Closed until asked for: the text is not on screen, and it opens by keyboard-reachable summary.
+    await expect(detail).not.toHaveAttribute('open', '');
+    await expect(detail.getByText('Sector: banca', { exact: false })).toBeHidden();
+
+    await summary.click();
+    await expect(detail).toHaveAttribute('open', '');
+    const body = detail.getByText('Sector: banca', { exact: false });
+    await expect(body).toBeVisible();
+    // Exact text: newlines and indentation kept, markup escaped (React) and shown as text.
+    expect(await body.evaluate((node) => node.textContent)).toBe(COMPANY_INFO);
+    expect(await body.evaluate((node) => getComputedStyle(node).whiteSpace)).toBe('pre-wrap');
+    await expect(detail.getByText('27 feb 2026', { exact: false })).toBeVisible();
+
+    // Other rows have no company info: no empty control.
+    await expect(rowFor(page, 'Programador Júnior').locator('details')).toHaveCount(0);
+  });
+
+  test('a row with a publication date but no company info still offers the date on demand', async ({
+    page,
+  }) => {
+    await page.goto('/seguimiento');
+    const row = rowFor(page, 'Analista J\u00fanior');
+    const detail = row.locator('details');
+    await expect(detail).toHaveCount(1);
+    const summary = detail.locator('summary');
+    await expect(summary).toHaveText('Fecha de publicaci\u00f3n');
+    // Not mislabelled as company info, and no empty company-info text.
+    await expect(row).not.toContainText('Informaci\u00f3n breve empresa');
+    await expect(detail.getByText('10 ene 2026')).toBeHidden();
+
+    await summary.click();
+    await expect(detail.getByText('10 ene 2026')).toBeVisible();
+    expect(await detail.locator('p').count()).toBe(1);
+    await expect(page.locator('thead th[scope="col"]')).toHaveCount(10);
+  });
+
+  test('address, phone and contact stay out of the table and the column count is unchanged', async ({
+    page,
+  }) => {
+    await page.goto('/seguimiento');
+    await expect(page.locator('thead th[scope="col"]')).toHaveCount(10);
+    await expect(page.locator('main table')).not.toContainText('Calle Imaginaria');
+    await expect(page.locator('main table')).not.toContainText('600123456');
+    await expect(page.locator('main table')).not.toContainText('Marta Pérez');
+    await expect(page.locator('main table')).not.toContainText('Teléfono');
+    await expect(page.locator('main table')).not.toContainText('Dirección');
+  });
+
   test('the response date appears only for responses, and notes are shown', async ({ page }) => {
     await page.goto('/seguimiento');
 
@@ -134,8 +205,10 @@ test.describe('tracking view', () => {
     await expect(rejected).toContainText('Respondieron por correo');
     await expect(rejected.locator('time')).toHaveCount(2);
 
-    await expect(rowFor(page, 'Desarrollador Júnior Frontend').locator('time')).toHaveCount(1);
-    await expect(rowFor(page, 'Analista Júnior').locator('time')).toHaveCount(1);
+    // Applied date plus the publication date that lives inside the company-info detail.
+    await expect(rowFor(page, 'Desarrollador Júnior Frontend').locator('time')).toHaveCount(2);
+    // Applied date plus the publication date inside its detail.
+    await expect(rowFor(page, 'Analista Júnior').locator('time')).toHaveCount(2);
   });
 
   test('the offer link exists only for http(s) urls and opens safely', async ({ page }) => {

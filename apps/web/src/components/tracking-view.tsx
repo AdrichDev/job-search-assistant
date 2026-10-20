@@ -79,6 +79,29 @@ function Row({
             <span className="sr-only"> {ES.tracking.openOfferHint(row.title, row.company)}</span>
           </a>
         )}
+        {(row.companyInfo !== undefined || row.publishedAt !== undefined) && (
+          <details className="mt-2 max-w-md text-xs">
+            {/* A date-only detail is not labelled as company info: it has none. */}
+            <summary className="cursor-pointer font-medium text-indigo-700">
+              {row.companyInfo !== undefined
+                ? ES.tracking.companyInfo.summary
+                : ES.tracking.companyInfo.publishedAt}
+            </summary>
+            {row.companyInfo !== undefined && (
+              <p className="mt-1 whitespace-pre-wrap break-words text-slate-700">{row.companyInfo}</p>
+            )}
+            {row.publishedAt !== undefined && (
+              <p className="mt-1 text-slate-600">
+                {row.companyInfo !== undefined && (
+                  <>
+                    <span className="font-medium">{ES.tracking.companyInfo.publishedAt}:</span>{' '}
+                  </>
+                )}
+                <time dateTime={row.publishedAt.toISOString()}>{formatTrackingDate(row.publishedAt)}</time>
+              </p>
+            )}
+          </details>
+        )}
       </td>
       <td className="px-3 py-3">{sources.join(' · ')}</td>
       <td className="px-3 py-3">{row.city ?? ES.tracking.noCity}</td>

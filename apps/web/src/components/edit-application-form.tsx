@@ -200,7 +200,17 @@ export function EditApplicationForm({
         {text('contact', f.contact)}
         {text('phone', f.phone)}
         {text('address', f.address)}
-        {text('companyInfo', f.companyInfo)}
+        <div className="sm:col-span-2">
+          <Field id="edit-companyInfo" label={f.companyInfo}>
+            <textarea
+              id="edit-companyInfo"
+              name="companyInfo"
+              rows={6}
+              defaultValue={values.companyInfo}
+              className={INPUT}
+            />
+          </Field>
+        </div>
       </Group>
 
       <Group legend={ES.edit.groups.application}>

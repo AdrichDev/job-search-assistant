@@ -568,6 +568,11 @@ export const ES = {
     noCity: 'No indicada',
     noResponseDate: 'Sin respuesta todavía',
     noNotes: 'Sin notas',
+    /** The spreadsheet text may mix company and job facts, so it keeps the original column name. */
+    companyInfo: {
+      summary: 'Información breve empresa',
+      publishedAt: 'Fecha de publicación',
+    },
     emptyAllTitle: 'Todavía no hay postulaciones registradas',
     emptyAllBody:
       'Cuando te postules desde «Ofertas» o importes tu histórico, aparecerán aquí.',
@@ -639,7 +644,7 @@ export const ES = {
       address: 'Dirección',
       phone: 'Teléfono',
       contact: 'Persona de contacto',
-      companyInfo: 'Datos de la empresa',
+      companyInfo: 'Información breve empresa',
       publishedAt: 'Fecha de publicación',
     },
     hints: {
@@ -696,7 +701,7 @@ export const ES = {
       'listing.address': 'Dirección',
       'listing.phone': 'Teléfono',
       'listing.contact': 'Persona de contacto',
-      'listing.companyInfo': 'Datos de la empresa',
+      'listing.companyInfo': 'Información breve empresa',
       'listing.publishedAt': 'Fecha de publicación',
     } as Readonly<Record<HistoryField, string>>,
   },

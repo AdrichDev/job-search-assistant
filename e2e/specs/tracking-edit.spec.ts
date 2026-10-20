@@ -18,6 +18,7 @@ import {
 
 const IMPORTED_ID = 'import-aaaa1111';
 const LEGACY_ID = 'beta soluciones::qa júnior::barcelona';
+const COMPANY_INFO = 'Consultora tecnológica.\n\nSector: banca\n  Equipo de 40 personas';
 const LONG_NOTE = `${'Nota larga con ñ y acentos. '.repeat(120)}fin`;
 
 const APPLICATIONS: readonly SeedApplication[] = [
@@ -33,6 +34,7 @@ const APPLICATIONS: readonly SeedApplication[] = [
       url: 'https://empleo.example.test/oferta/1',
       portal: 'InfoJobs',
       city: 'Alcobendas',
+      companyInfo: COMPANY_INFO,
     },
   },
   {
@@ -88,6 +90,26 @@ test.describe('manual edit of an application', () => {
     await expect(page.getByLabel('CV enviado', { exact: true })).toHaveValue('');
     await expect(page.getByLabel('Fuentes (separadas por comas)', { exact: true })).toHaveValue('infojobs');
     await expect(page.getByLabel('Notas', { exact: true })).toHaveValue(LONG_NOTE);
+  });
+
+  test('company info is a multiline textarea labelled like the spreadsheet column', async ({ page }) => {
+    await page.goto(editUrl(IMPORTED_ID));
+    const field = page.getByLabel('Información breve empresa', { exact: true });
+    expect(await field.evaluate((node) => node.tagName)).toBe('TEXTAREA');
+    await expect(field).toHaveValue(COMPANY_INFO);
+    await expect(page.getByLabel('Datos de la empresa')).toHaveCount(0);
+    // The other contact fields remain single-line inputs.
+    expect(await page.getByLabel('Teléfono', { exact: true }).evaluate((node) => node.tagName)).toBe('INPUT');
+  });
+
+  test('saving an untouched multiline company info says no changes and keeps the file byte-identical', async ({
+    page,
+  }) => {
+    const before = await storedFile();
+    await page.goto(editUrl(IMPORTED_ID));
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+    await expect(page).toHaveURL(/edicion=sin-cambios$/);
+    expect(await storedFile()).toBe(before);
   });
 
   test('editing state and notes of an imported application shows in the table, the filter and the stats', async ({

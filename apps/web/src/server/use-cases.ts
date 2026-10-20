@@ -180,6 +180,11 @@ const LISTING_TEXT_FIELDS = [
   'companyInfo',
 ] as const;
 
+/** CRLF and a lone CR become LF: the canonical form of a multiline text. */
+function canonicalLineBreaks(value: string): string {
+  return value.replace(/\r\n?/g, '\n');
+}
+
 /**
  * Edits any field of an application by hand (CU7).
  *
@@ -336,8 +341,16 @@ export async function editApplication(input: unknown, deps: WriteDeps): Promise<
   }
 
   for (const key of LISTING_TEXT_FIELDS) {
-    const value = read(key);
-    if (value !== null && value !== undefined && value !== baseline[key]) {
+    const raw = read(key);
+    if (raw === null || raw === undefined) {
+      continue;
+    }
+    // Only the multiline field: a browser posts its line breaks as CRLF, so the text is
+    // compared and stored with LF. Every other field is taken exactly as posted.
+    const multiline = key === 'companyInfo';
+    const value = multiline ? canonicalLineBreaks(raw) : raw;
+    const unchanged = multiline ? canonicalLineBreaks(baseline[key]) : baseline[key];
+    if (value !== unchanged) {
       listing[key] = value;
     }
   }

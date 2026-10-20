@@ -39,6 +39,60 @@ const job = (overrides: Partial<TrackableQueueJob> = {}): TrackableQueueJob => (
   ...overrides,
 });
 
+describe('buildTrackedApplications company info and publication date', () => {
+  const COMPANY_INFO = 'Consultora tecnológica.\n\nSector: banca\n  Equipo de 40 personas';
+  const PUBLISHED_AT = new Date('2026-02-27T00:00:00Z');
+
+  it('projects the exact companyInfo and the publication date from the listing', () => {
+    const [row] = buildTrackedApplications(
+      [
+        imported('import-info', '2026-02-01T00:00:00Z', {
+          listing: {
+            company: 'Ñandú',
+            title: 'Júnior',
+            companyInfo: COMPANY_INFO,
+            publishedAt: PUBLISHED_AT,
+            address: 'Calle Falsa 123',
+            phone: '600000000',
+            contact: 'Ana',
+          },
+        }),
+      ],
+      [],
+    );
+
+    expect(row?.companyInfo).toBe(COMPANY_INFO);
+    expect(row?.publishedAt).toEqual(PUBLISHED_AT);
+    expect(row).not.toHaveProperty('address');
+    expect(row).not.toHaveProperty('phone');
+    expect(row).not.toHaveProperty('contact');
+  });
+
+  it('omits an empty companyInfo and a missing publication date', () => {
+    const base = imported('import-empty', '2026-02-01T00:00:00Z');
+    const [row] = buildTrackedApplications(
+      [{ ...base, listing: { company: 'Ñandú', title: 'Júnior', companyInfo: ' \n ' } }],
+      [],
+    );
+
+    expect(row).not.toHaveProperty('companyInfo');
+    expect(row).not.toHaveProperty('publishedAt');
+  });
+
+  it('does not invent them for queue-made and fingerprint-only rows', () => {
+    const rows = buildTrackedApplications(
+      [app({ jobId: 'acme::junior dev::madrid' }), app({ jobId: 'beta::qa::barcelona' })],
+      [job()],
+    );
+
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      expect(row).not.toHaveProperty('companyInfo');
+      expect(row).not.toHaveProperty('publishedAt');
+    }
+  });
+});
+
 describe('buildTrackedApplications resolution order', () => {
   it('prefers the application listing and marks it imported', () => {
     const [row] = buildTrackedApplications(

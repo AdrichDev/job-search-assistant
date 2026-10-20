@@ -9,6 +9,7 @@ import {
   type ApplicationRepository,
 } from '@job-queue/core';
 import { ACTION_MESSAGES } from '@/copy/action-messages';
+import { ES } from '@/copy/es';
 import { buildEditFormValues } from '@/server/edit-form';
 import { editApplication, type WriteDeps } from '@/server/use-cases';
 
@@ -421,5 +422,118 @@ describe('editApplication - an untouched pre-filled form changes nothing', () =>
 
     expect(result).toEqual({ ok: true, message: ACTION_MESSAGES.applicationEdited });
     expect((await repository.findByJobId(LEGACY_ID))?.outcome).toBe('rejected');
+  });
+});
+
+describe('T2d - Información breve empresa (CU9)', () => {
+  const LABEL = 'Información breve empresa';
+
+  it('uses the spreadsheet label for the edit field and for the history entry', () => {
+    expect(ES.edit.fields.companyInfo).toBe(LABEL);
+    expect(ES.history.fields['listing.companyInfo']).toBe(LABEL);
+  });
+
+  it('CRLF company info (what a browser posts) equal to the stored LF text is no change at all', async () => {
+    const stored = 'L\u00ednea uno.\n\nL\u00ednea tres.\n  Sangr\u00eda';
+    const seed = {
+      version: 1,
+      applications: [
+        {
+          jobId: 'import-eeee5555',
+          appliedAt: '2026-03-01T00:00:00.000Z',
+          sourceIds: ['infojobs'],
+          outcome: 'applied',
+          outcomeUpdatedAt: '2026-03-01T00:00:00.000Z',
+          listing: { company: '\u00d1and\u00fa S.L.', title: 'J\u00fanior', companyInfo: stored },
+        },
+      ],
+    };
+    await writeFile(filePath, `${JSON.stringify(seed, null, 2)}\n`, 'utf8');
+    const before = await bytes();
+    const application = await repository.findByJobId('import-eeee5555');
+    if (application === null) {
+      throw new Error('fixture missing');
+    }
+    // The use case always asks the repository; what matters is that the patch is empty.
+    const patches: unknown[] = [];
+    const spied: ApplicationRepository = {
+      ...repository,
+      update: async (input) => {
+        patches.push(input.patch);
+        return repository.update(input);
+      },
+    };
+    const appended: unknown[] = [];
+    const history = {
+      append: async (entry: unknown) => void appended.push(entry),
+      listFor: async () => [],
+      find: async () => null,
+    };
+
+    const values = buildEditFormValues(application, buildTrackedApplications([application], [])[0]);
+    const result = await editApplication(
+      form({ ...values, companyInfo: stored.replace(/\n/g, '\r\n') }),
+      { ...deps, applicationRepository: spied, historyRepository: history },
+    );
+
+    expect(result).toEqual({ ok: true, message: ACTION_MESSAGES.applicationUnchanged });
+    expect(patches).toEqual([{}]);
+    expect(appended).toEqual([]);
+    expect(await bytes()).toBe(before);
+  });
+
+  it('a really changed CRLF company info is stored with LF newlines', async () => {
+    const application = await repository.findByJobId(IMPORTED_ID);
+    if (application === null) {
+      throw new Error('fixture missing');
+    }
+    const values = buildEditFormValues(application, buildTrackedApplications([application], [])[0]);
+
+    const result = await editApplication(form({ ...values, companyInfo: 'Uno\r\nDos\r\n\r\nTres' }), deps);
+
+    expect(result).toEqual({ ok: true, message: ACTION_MESSAGES.applicationEdited });
+    expect((await repository.findByJobId(IMPORTED_ID))?.listing?.companyInfo).toBe('Uno\nDos\n\nTres');
+  });
+
+  it('does not normalise line breaks of other fields', async () => {
+    const application = await repository.findByJobId(IMPORTED_ID);
+    if (application === null) {
+      throw new Error('fixture missing');
+    }
+    const values = buildEditFormValues(application, buildTrackedApplications([application], [])[0]);
+
+    await editApplication(form({ ...values, notes: 'a\r\nb' }), deps);
+
+    expect((await repository.findByJobId(IMPORTED_ID))?.notes).toBe('a\r\nb');
+  });
+
+  it('an untouched multiline company info is a no-op that leaves the file byte-identical', async () => {
+    const multiline = 'Línea uno.\n\nLínea tres, con ñ.\n  Sangría final';
+    const seed = {
+      version: 1,
+      applications: [
+        {
+          jobId: 'import-dddd4444',
+          appliedAt: '2026-03-01T00:00:00.000Z',
+          sourceIds: ['infojobs'],
+          outcome: 'applied',
+          outcomeUpdatedAt: '2026-03-01T00:00:00.000Z',
+          listing: { company: 'Ñandú S.L.', title: 'Júnior', companyInfo: multiline },
+        },
+      ],
+    };
+    await writeFile(filePath, `${JSON.stringify(seed, null, 2)}\n`, 'utf8');
+    const before = await bytes();
+    const application = await repository.findByJobId('import-dddd4444');
+    if (application === null) {
+      throw new Error('fixture missing');
+    }
+
+    const values = buildEditFormValues(application, buildTrackedApplications([application], [])[0]);
+    expect(values.companyInfo).toBe(multiline);
+    const result = await editApplication(form({ ...values }), deps);
+
+    expect(result).toEqual({ ok: true, message: ACTION_MESSAGES.applicationUnchanged });
+    expect(await bytes()).toBe(before);
   });
 });
