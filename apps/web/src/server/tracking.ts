@@ -7,10 +7,13 @@ import {
   type Application,
   type ApplicationOutcome,
   type ApplicationRepository,
+  type CvModelRepository,
+  type CvVariant,
   type QueueReader,
   type TrackedApplication,
   type TrackableQueueJob,
 } from '@job-queue/core';
+import { loadModelCatalog, type ModelCatalog, EMPTY_CATALOG } from '@/server/model-catalog';
 
 /**
  * Read model of the tracking view (`/seguimiento`). Read-only on purpose: it
@@ -21,7 +24,7 @@ export type EstadoFilter = ApplicationOutcome | 'all';
 
 /** A non-fatal read problem. Structured so the UI words it in Spanish. */
 export interface TrackingWarning {
-  readonly kind: 'applications' | 'queue';
+  readonly kind: 'applications' | 'queue' | 'models';
   readonly detail: string;
 }
 
@@ -30,11 +33,24 @@ export interface TrackingData {
   readonly rows: readonly TrackedApplication[];
   readonly counts: Readonly<Record<ApplicationOutcome, number>>;
   readonly warnings: readonly TrackingWarning[];
+  /** The documents each application used, by job id (the table shows them in one column). */
+  readonly documents: ReadonlyMap<string, DocumentRefs>;
+  /** The model registry, read once for the whole page. */
+  readonly catalog: ModelCatalog;
+}
+
+/** What one application says about the documents it used. Only keys that have a value. */
+export interface DocumentRefs {
+  readonly cvVariant?: CvVariant;
+  readonly cvModelId?: string;
+  readonly letterModelId?: string;
 }
 
 export interface TrackingDeps {
   readonly applicationRepository: ApplicationRepository;
   readonly queueReader: QueueReader;
+  /** Optional: without it model references are listed without names. */
+  readonly cvModelRepository?: CvModelRepository;
 }
 
 function describe(cause: unknown): string {
@@ -100,11 +116,33 @@ export async function loadTracking(deps: TrackingDeps): Promise<TrackingData> {
   }
 
   let rows: readonly TrackedApplication[] = [];
+  const documents = new Map<string, DocumentRefs>();
   try {
-    rows = buildTrackedApplications(await deps.applicationRepository.list(), jobs);
+    const applications = await deps.applicationRepository.list();
+    rows = buildTrackedApplications(applications, jobs);
+    for (const application of applications) {
+      const refs: DocumentRefs = {
+        ...(application.cvVariant === undefined ? {} : { cvVariant: application.cvVariant }),
+        ...(application.cvModelId === undefined ? {} : { cvModelId: application.cvModelId }),
+        ...(application.letterModelId === undefined ? {} : { letterModelId: application.letterModelId }),
+      };
+      if (Object.keys(refs).length > 0) {
+        documents.set(application.jobId, refs);
+      }
+    }
   } catch (cause: unknown) {
     warnings.push({ kind: 'applications', detail: describe(cause) });
   }
 
-  return { rows, counts: countByOutcome(rows), warnings };
+  // One registry read per page, and none when no application references a model.
+  const anyModel = [...documents.values()].some(
+    (refs) => refs.cvModelId !== undefined || refs.letterModelId !== undefined,
+  );
+  const catalog = anyModel ? await loadModelCatalog(deps.cvModelRepository) : EMPTY_CATALOG;
+  if (catalog.unavailable) {
+    // Fixed text only: the registry error can name a personal path.
+    warnings.push({ kind: 'models', detail: '' });
+  }
+
+  return { rows, counts: countByOutcome(rows), warnings, documents, catalog };
 }

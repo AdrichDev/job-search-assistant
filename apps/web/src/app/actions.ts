@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { consoleLogger, type FetchRunState } from '@job-queue/core';
 import {
   applicationHistoryRepository,
+  cvModelRepository,
   applicationRepository,
   buildFallbackQueue,
   cvModelDeps,
@@ -48,6 +49,7 @@ function deps(): WriteDeps {
   return {
     applicationRepository: applicationRepository(),
     historyRepository: applicationHistoryRepository(),
+    cvModelRepository: cvModelRepository(),
     dismissalRepository: dismissalRepository(),
     // Falls back to the offline catalogue so an Apply click still resolves when
     // no CLI run has been persisted yet - the same queue the page is showing.

@@ -5,6 +5,7 @@ import {
   dismissJob,
   editApplication as editApplicationUseCase,
   isApplicationOutcome,
+  MAX_MODEL_ID_LENGTH,
   recordApplication,
   restoreJob,
   revertApplicationChange,
@@ -13,6 +14,8 @@ import {
   type ApplicationHistoryRepository,
   type ApplicationPatch,
   type ApplicationRepository,
+  type CvModelKind,
+  type CvModelRepository,
   type CvVariant,
   type ListingPatch,
   type PatchRefusalReason,
@@ -55,6 +58,13 @@ export interface WriteDeps {
    * IS configured a failed log write is reported to the person, never hidden.
    */
   readonly historyRepository?: ApplicationHistoryRepository;
+  /**
+   * The registry the model ids of an edit are checked against. OPTIONAL like the
+   * other stores, but wired explicitly by the server actions: without it an edit
+   * that CHANGES a model id is refused as "registry unavailable" (an unchanged id
+   * is never checked), rather than silently reaching a global singleton.
+   */
+  readonly cvModelRepository?: CvModelRepository;
 }
 
 export interface ActionOutcome {
@@ -143,6 +153,21 @@ const REFUSAL_MESSAGE: Record<PatchRefusalReason, string> = {
   too_long: ACTION_MESSAGES.tooLong,
 };
 
+const MODEL_FIELDS = [
+  { key: 'cvModelId', kind: 'cv', unknown: ACTION_MESSAGES.unknownCvModel, wrongKind: ACTION_MESSAGES.notACvModel },
+  {
+    key: 'letterModelId',
+    kind: 'letter',
+    unknown: ACTION_MESSAGES.unknownLetterModel,
+    wrongKind: ACTION_MESSAGES.notALetterModel,
+  },
+] as const satisfies readonly {
+  key: 'cvModelId' | 'letterModelId';
+  kind: CvModelKind;
+  unknown: string;
+  wrongKind: string;
+}[];
+
 const LISTING_TEXT_FIELDS = [
   'company',
   'title',
@@ -187,7 +212,7 @@ export async function editApplication(input: unknown, deps: WriteDeps): Promise<
     }
     return typeof value === 'string' ? value : undefined;
   };
-  const keys = ['jobId', 'appliedAt', 'outcome', 'outcomeUpdatedAt', 'cvVariant', 'notes', 'sourceIds', 'publishedAt', ...LISTING_TEXT_FIELDS];
+  const keys = ['jobId', 'appliedAt', 'outcome', 'outcomeUpdatedAt', 'cvVariant', 'cvModelId', 'letterModelId', 'notes', 'sourceIds', 'publishedAt', ...LISTING_TEXT_FIELDS];
   if (keys.some((key) => read(key) === undefined)) {
     return { ok: false, message: ACTION_MESSAGES.invalidInput };
   }
@@ -254,6 +279,44 @@ export async function editApplication(input: unknown, deps: WriteDeps): Promise<
     if (cvVariant !== baseline.cvVariant) {
       patch.cvVariant = cvVariant === '' ? null : (cvVariant as CvVariant);
     }
+  }
+
+  // A model id equal to what the form pre-filled is never re-validated: a stored id
+  // that left the registry must survive an unrelated edit. Only a CHANGED id is
+  // checked: it must exist and be of the right kind. Blank clears.
+  for (const field of MODEL_FIELDS) {
+    const raw = read(field.key);
+    if (raw === null || raw === undefined) {
+      continue;
+    }
+    const id = raw.trim();
+    if (id === baseline[field.key]) {
+      continue;
+    }
+    if (id === '') {
+      patch[field.key] = null;
+      continue;
+    }
+    if (id.length > MAX_MODEL_ID_LENGTH) {
+      return { ok: false, message: ACTION_MESSAGES.tooLong };
+    }
+    const registry = deps.cvModelRepository;
+    let found;
+    try {
+      found = registry === undefined ? undefined : await registry.find(id);
+    } catch {
+      return { ok: false, message: ACTION_MESSAGES.modelRegistryUnavailable };
+    }
+    if (registry === undefined) {
+      return { ok: false, message: ACTION_MESSAGES.modelRegistryUnavailable };
+    }
+    if (found === null || found === undefined) {
+      return { ok: false, message: field.unknown };
+    }
+    if (found.kind !== field.kind) {
+      return { ok: false, message: field.wrongKind };
+    }
+    patch[field.key] = id;
   }
 
   const notes = read('notes');

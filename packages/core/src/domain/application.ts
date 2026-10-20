@@ -73,6 +73,14 @@ export interface Application {
    */
   readonly cvVariant?: CvVariant;
   /**
+   * Reference (id only, never a copy) to the CV model of the registry that was
+   * used. Independent of the legacy `cvVariant` lane. Absent when unrecorded; the
+   * id may later dangle if the model is removed from the registry.
+   */
+  readonly cvModelId?: string;
+  /** Same as `cvModelId`, for the cover letter model. */
+  readonly letterModelId?: string;
+  /**
    * The score at the moment of applying, frozen on purpose. Retuning the
    * weights later must not rewrite what the ranking believed back then.
    * Absent for imported history.
@@ -95,6 +103,8 @@ export interface ApplicationDraft {
   readonly jobId: string;
   readonly appliedAt: Date;
   readonly cvVariant?: CvVariant;
+  readonly cvModelId?: string;
+  readonly letterModelId?: string;
   readonly scoreAtApply?: number;
   /** Defaults to none. Trimmed and de-duplicated by `createApplication`. */
   readonly sourceIds?: readonly string[];
@@ -129,6 +139,28 @@ export function isAdvance(outcome: ApplicationOutcome): boolean {
   return outcome === 'screening' || outcome === 'interview' || outcome === 'offer';
 }
 
+/** Longest model id accepted; registry ids are short random values. */
+export const MAX_MODEL_ID_LENGTH = 80;
+
+/** Trimmed id, or undefined when blank/absent. */
+function cleanModelId(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed;
+}
+
+/** Only the model keys that carry a value (absent keys, never `undefined`). */
+function modelIdKeys(
+  cvModelId: string | undefined,
+  letterModelId: string | undefined,
+): { cvModelId?: string; letterModelId?: string } {
+  const cv = cleanModelId(cvModelId);
+  const letter = cleanModelId(letterModelId);
+  return {
+    ...(cv === undefined ? {} : { cvModelId: cv }),
+    ...(letter === undefined ? {} : { letterModelId: letter }),
+  };
+}
+
 /**
  * The only way to mint an `Application`.
  *
@@ -151,6 +183,7 @@ export function createApplication(draft: ApplicationDraft): Application {
     jobId,
     appliedAt: draft.appliedAt,
     ...(draft.cvVariant === undefined ? {} : { cvVariant: draft.cvVariant }),
+    ...modelIdKeys(draft.cvModelId, draft.letterModelId),
     ...(draft.scoreAtApply === undefined ? {} : { scoreAtApply: draft.scoreAtApply }),
     sourceIds: [...new Set((draft.sourceIds ?? []).map((id) => id.trim()).filter((id) => id.length > 0))],
     outcome,
@@ -230,6 +263,9 @@ export interface ApplicationPatch {
   readonly outcome?: ApplicationOutcome;
   readonly outcomeUpdatedAt?: Date;
   readonly cvVariant?: CvVariant | null;
+  /** Id of a registry model. `null` or blank clears it. Existence is checked by the caller. */
+  readonly cvModelId?: string | null;
+  readonly letterModelId?: string | null;
   readonly notes?: string;
   readonly sourceIds?: readonly string[];
   readonly listing?: ListingPatch;
@@ -303,6 +339,8 @@ export function applicationsEqual(a: Application, b: Application): boolean {
     a.jobId === b.jobId &&
     sameDate(a.appliedAt, b.appliedAt) &&
     a.cvVariant === b.cvVariant &&
+    a.cvModelId === b.cvModelId &&
+    a.letterModelId === b.letterModelId &&
     a.scoreAtApply === b.scoreAtApply &&
     a.sourceIds.length === b.sourceIds.length &&
     a.sourceIds.every((id, index) => id === b.sourceIds[index]) &&
@@ -344,6 +382,19 @@ export function applyApplicationPatch(
     !(CV_VARIANTS as readonly string[]).includes(patch.cvVariant)
   ) {
     return refuse('invalid_cv_variant');
+  }
+
+  let cvModelId = application.cvModelId;
+  if (patch.cvModelId !== undefined) {
+    cvModelId = cleanModelId(patch.cvModelId);
+    if (cvModelId !== undefined && cvModelId.length > MAX_MODEL_ID_LENGTH) return refuse('too_long');
+  }
+  let letterModelId = application.letterModelId;
+  if (patch.letterModelId !== undefined) {
+    letterModelId = cleanModelId(patch.letterModelId);
+    if (letterModelId !== undefined && letterModelId.length > MAX_MODEL_ID_LENGTH) {
+      return refuse('too_long');
+    }
   }
 
   let notes = application.notes;
@@ -420,6 +471,7 @@ export function applyApplicationPatch(
     jobId: application.jobId,
     appliedAt: patch.appliedAt ?? application.appliedAt,
     ...(cvVariant === undefined ? {} : { cvVariant }),
+    ...modelIdKeys(cvModelId, letterModelId),
     ...(application.scoreAtApply === undefined ? {} : { scoreAtApply: application.scoreAtApply }),
     sourceIds,
     outcome,

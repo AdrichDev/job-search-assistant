@@ -156,6 +156,9 @@ export interface SeedApplication {
   readonly jobId: string;
   readonly appliedAt: string;
   readonly cvVariant?: string;
+  /** References to registry models (T3b). Absent on legacy and imported rows. */
+  readonly cvModelId?: string;
+  readonly letterModelId?: string;
   readonly scoreAtApply?: number;
   readonly sourceIds?: readonly string[];
   readonly outcome: string;
@@ -189,8 +192,10 @@ export async function seedApplications(rows: readonly SeedApplication[]): Promis
 export interface RecordedApplication {
   readonly jobId: string;
   readonly appliedAt: string;
-  readonly cvVariant: string;
-  readonly scoreAtApply: number;
+  readonly cvVariant?: string;
+  readonly cvModelId?: string;
+  readonly letterModelId?: string;
+  readonly scoreAtApply?: number;
   readonly outcome: string;
   readonly outcomeUpdatedAt: string;
   readonly notes?: string;

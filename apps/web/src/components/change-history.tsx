@@ -2,6 +2,7 @@ import { revertChangeAction } from '@/app/actions';
 import { describeChangeValue, formatHistoryDate, historyFieldLabel } from '@/components/history-format';
 import { ES } from '@/copy/es';
 import type { ApplicationHistoryData, HistoryEntryView, RevertNotice } from '@/server/history';
+import { EMPTY_CATALOG, type ModelCatalog } from '@/server/model-catalog';
 
 const NOTICE_TONE: Record<RevertNotice['tone'], string> = {
   success: 'border-emerald-300 bg-emerald-50 text-emerald-900',
@@ -9,12 +10,20 @@ const NOTICE_TONE: Record<RevertNotice['tone'], string> = {
   error: 'border-red-300 bg-red-50 text-red-900',
 };
 
-function Value({ field, value }: { field: HistoryEntryView['changes'][number]['field']; value: Parameters<typeof describeChangeValue>[1] }) {
-  const shown = describeChangeValue(field, value);
+function Value({
+  field,
+  value,
+  catalog,
+}: {
+  field: HistoryEntryView['changes'][number]['field'];
+  value: Parameters<typeof describeChangeValue>[1];
+  catalog: ModelCatalog;
+}) {
+  const shown = describeChangeValue(field, value, catalog);
   return <span className={shown.empty ? 'italic text-slate-500' : 'text-slate-900'}>{shown.text}</span>;
 }
 
-function Changes({ entry }: { entry: HistoryEntryView }) {
+function Changes({ entry, catalog }: { entry: HistoryEntryView; catalog: ModelCatalog }) {
   if (entry.changes.length === 0) {
     return <p className="text-slate-600">{ES.history.noFieldChanges}</p>;
   }
@@ -24,10 +33,10 @@ function Changes({ entry }: { entry: HistoryEntryView }) {
         <li key={change.field}>
           <span className="font-medium text-slate-800">{historyFieldLabel(change.field)}:</span>{' '}
           <span className="sr-only">{ES.history.before} </span>
-          <Value field={change.field} value={change.before} />{' '}
+          <Value field={change.field} value={change.before} catalog={catalog} />{' '}
           <span aria-hidden="true">→</span>
           <span className="sr-only"> {ES.history.after} </span>{' '}
-          <Value field={change.field} value={change.after} />
+          <Value field={change.field} value={change.after} catalog={catalog} />
         </li>
       ))}
     </ul>
@@ -43,16 +52,19 @@ function Changes({ entry }: { entry: HistoryEntryView }) {
 export function ChangeHistory({
   data,
   notice,
+  models = EMPTY_CATALOG,
 }: {
   data: ApplicationHistoryData;
   notice: RevertNotice | null;
+  /** The model registry, read once by the page; ids are shown as names. */
+  models?: ModelCatalog;
 }) {
   const byId = new Map(data.entries.map((entry) => [entry.id, entry]));
   const anyTruncated = data.entries.some((entry) =>
     entry.changes.some(
       (change) =>
-        describeChangeValue(change.field, change.before).truncated === true ||
-        describeChangeValue(change.field, change.after).truncated === true,
+        describeChangeValue(change.field, change.before, models).truncated === true ||
+        describeChangeValue(change.field, change.after, models).truncated === true,
     ),
   );
 
@@ -119,7 +131,7 @@ export function ChangeHistory({
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      <Changes entry={entry} />
+                      <Changes entry={entry} catalog={models} />
                     </td>
                     <td className="px-3 py-2">
                       {entry.undoable ? (

@@ -133,6 +133,12 @@ const ACTION_RESULT: Record<ActionMessage, string> = {
   [ACTION_MESSAGES.tooLong]: 'Alguno de los campos es demasiado largo.',
   [ACTION_MESSAGES.applicationEditedNotLogged]:
     'Cambios guardados, pero no se pudo anotar el cambio en el historial.',
+  [ACTION_MESSAGES.unknownCvModel]: 'Ese modelo de CV no está registrado. No se guardó nada.',
+  [ACTION_MESSAGES.notACvModel]: 'El modelo elegido para el CV no es un CV. No se guardó nada.',
+  [ACTION_MESSAGES.unknownLetterModel]: 'Esa carta no está registrada como modelo. No se guardó nada.',
+  [ACTION_MESSAGES.notALetterModel]: 'El modelo elegido para la carta no es una carta de presentación. No se guardó nada.',
+  [ACTION_MESSAGES.modelRegistryUnavailable]:
+    'No se pudo leer el registro de modelos, así que no se guardó nada. Inténtalo otra vez.',
 
   /* Historial de cambios y deshacer. Cada negativa dice por qué y no toca nada. */
   [ACTION_MESSAGES.changeReverted]: 'Cambio deshecho.',
@@ -216,9 +222,17 @@ export const ES = {
     advanced: 'Avanzaron',
     advancedHint: (count: number) => `${count} llegaron a preselección o más`,
     pending: 'Esperando respuesta',
-    byVariantHeading: 'Por versión del CV',
-    variantTableCaption: 'Tasa de respuesta y de avance para cada versión del CV',
+    byVariantHeading: 'Por versión del CV (antiguo, por tipo de oferta)',
+    variantTableCaption:
+      'Tasa de respuesta y de avance para cada versión del CV, el desglose antiguo por tipo de oferta',
     columnVariant: 'Versión del CV',
+    byModelHeading: 'Por modelo de CV',
+    modelTableCaption: 'Tasa de respuesta y de avance para cada modelo de CV registrado',
+    columnModel: 'Modelo de CV',
+    noModelsYet:
+      'Todavía no has marcado ningún modelo de CV en tus postulaciones. Márcalo al editar una postulación y aquí verás cuál convierte mejor.',
+    smallModelSample:
+      'Menos de 10 postulaciones con modelo de CV marcado: trata estos porcentajes como anécdotas, no como evidencia.',
     bySourceHeading: 'Por fuente',
     sourceTableCaption: 'Tasa de respuesta y de avance para cada fuente de ofertas',
     columnSource: 'Fuente',
@@ -518,7 +532,8 @@ export const ES = {
       all: 'Todas',
       option: (label: string, count: number) => `${label} (${count})`,
     },
-    caption: 'Postulaciones con su empresa, puesto, fuente, ciudad, fechas, estado y notas',
+    caption:
+      'Postulaciones con su empresa, puesto, fuente, ciudad, fechas, estado, documentos usados y notas',
     columns: {
       company: 'Empresa',
       title: 'Puesto',
@@ -527,8 +542,15 @@ export const ES = {
       appliedAt: 'Fecha de solicitud',
       status: 'Estado',
       respondedAt: 'Fecha de respuesta',
+      documents: 'Documentos',
       notes: 'Notas',
       actions: 'Acciones',
+    },
+    documents: {
+      cv: 'CV',
+      letter: 'Carta',
+      legacyVariant: (label: string) => `${label} (versión antigua)`,
+      none: 'Sin documentos registrados',
     },
     edit: 'Editar',
     editHint: (company: string, title: string) =>
@@ -556,6 +578,8 @@ export const ES = {
     warning: {
       applications: (detail: string) =>
         `No se pudo leer el registro de postulaciones, así que la lista puede estar incompleta. ${detail}`,
+      models: (_detail: string) =>
+        'No se pudo leer el registro de modelos: los documentos se muestran sin nombre.',
       queue: (detail: string) =>
         `No se pudo leer la cola guardada: las postulaciones sin datos propios se muestran con lo que se guardó al postularte. ${detail}`,
     },
@@ -599,6 +623,13 @@ export const ES = {
       notes: 'Notas',
       cvVariant: 'CV enviado',
       noCv: 'Sin CV registrado',
+      cvModel: 'Modelo de CV',
+      letterModel: 'Modelo de carta',
+      noModel: 'Sin modelo',
+      danglingModel: (id: string) => `Modelo ya no registrado (${id})`,
+      noModelsHint: 'Todavía no hay modelos de este tipo registrados.',
+      noModelsLink: 'Registrar modelos',
+      modelsUnavailableHint: 'No se pudo leer el registro de modelos; se conserva la opción actual.',
       sourceIds: 'Fuentes (separadas por comas)',
       company: 'Empresa',
       title: 'Puesto',
@@ -653,6 +684,8 @@ export const ES = {
       outcome: 'Estado de la postulación',
       outcomeUpdatedAt: 'Fecha de respuesta',
       cvVariant: 'CV enviado',
+      cvModelId: 'Modelo de CV',
+      letterModelId: 'Modelo de carta',
       notes: 'Notas',
       sourceIds: 'Fuentes',
       'listing.company': 'Empresa',
@@ -688,6 +721,8 @@ export const ES = {
       status: 'Estado',
       actions: 'Acciones',
     },
+    notRegisteredAnymore: 'Modelo ya no registrado',
+    nameUnavailable: 'Nombre no disponible',
     kinds: { cv: 'CV', letter: 'Carta de presentación' } as const,
     languages: { es: 'Español', en: 'Inglés' } as const,
     noTags: 'Sin etiquetas',

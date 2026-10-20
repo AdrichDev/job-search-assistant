@@ -13,6 +13,7 @@
 export {
   APPLICATION_OUTCOMES,
   ApplicationPatchError,
+  MAX_MODEL_ID_LENGTH,
   MAX_NOTES_LENGTH,
   MAX_TEXT_LENGTH,
   PATCH_REFUSAL_REASONS,
@@ -36,6 +37,7 @@ export {
 export {
   computeApplicationStats,
   type ApplicationStats,
+  type ModelStats,
   type VariantStats,
 } from './domain/application-stats.js';
 

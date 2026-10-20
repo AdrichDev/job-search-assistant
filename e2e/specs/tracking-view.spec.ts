@@ -256,7 +256,7 @@ test.describe('tracking view accessibility', () => {
     await expect(page.getByRole('main')).toHaveCount(1);
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.getByRole('table', { name: /Postulaciones con su empresa/ })).toBeVisible();
-    await expect(page.locator('thead th[scope="col"]')).toHaveCount(9);
+    await expect(page.locator('thead th[scope="col"]')).toHaveCount(10);
     await expect(page.locator('tbody th[scope="row"]')).toHaveCount(5);
     // Layout tables are forbidden: the only table is the data table.
     await expect(page.locator('table')).toHaveCount(1);

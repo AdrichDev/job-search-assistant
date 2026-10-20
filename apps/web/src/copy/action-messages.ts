@@ -55,6 +55,11 @@ export const ACTION_MESSAGES = {
   listingIncomplete: 'To add offer details, company and title are both required.',
   tooLong: 'One of the fields is too long.',
   applicationEditedNotLogged: 'Application updated, but the change history entry could not be saved.',
+  unknownCvModel: 'That CV model is not registered.',
+  notACvModel: 'That model is not a CV.',
+  unknownLetterModel: 'That cover letter model is not registered.',
+  notALetterModel: 'That model is not a cover letter.',
+  modelRegistryUnavailable: 'The model registry could not be read.',
 
   /* Change history and undo ----------------------------------------- */
   changeReverted: 'Change undone.',

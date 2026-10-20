@@ -5,6 +5,7 @@ import { useActionState } from 'react';
 import { submitEditApplicationForm, type EditFormState } from '@/app/actions';
 import { ES, translateActionMessage } from '@/copy/es';
 import type { EditFormValues } from '@/server/edit-form';
+import type { ModelSelect } from '@/server/model-catalog';
 
 const INITIAL: EditFormState = { message: null, values: null, attempt: 0 };
 
@@ -61,11 +62,16 @@ export function EditApplicationForm({
   outcomes,
   cvVariants,
   hasListing,
+  cvModels,
+  letterModels,
 }: {
   initial: EditFormValues;
   outcomes: readonly string[];
   cvVariants: readonly string[];
   hasListing: boolean;
+  /** Options of the model selects, built on the server from the registry. */
+  cvModels: ModelSelect;
+  letterModels: ModelSelect;
 }) {
   const [state, formAction] = useActionState(submitEditApplicationForm, INITIAL);
   const values: EditFormValues = { ...initial, ...(state.values ?? {}) };
@@ -89,6 +95,40 @@ export function EditApplicationForm({
       />
     </Field>
   );
+
+  const modelField = (name: 'cvModelId' | 'letterModelId', label: string, select: ModelSelect) => {
+    const hint = select.unavailable
+      ? f.modelsUnavailableHint
+      : select.empty
+        ? f.noModelsHint
+        : undefined;
+    return (
+      <Field id={`edit-${name}`} label={label}>
+        <select
+          id={`edit-${name}`}
+          name={name}
+          defaultValue={values[name]}
+          disabled={select.disabled}
+          {...(hint === undefined ? {} : { 'aria-describedby': `edit-${name}-hint` })}
+          className={`${INPUT} disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500`}
+        >
+          {select.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {hint !== undefined && (
+          <p id={`edit-${name}-hint`} className="text-xs text-slate-600">
+            {hint}{' '}
+            <Link href="/modelos" className="font-medium text-indigo-700 underline">
+              {f.noModelsLink}
+            </Link>
+          </p>
+        )}
+      </Field>
+    );
+  };
 
   return (
     <form key={`${state.attempt}:${JSON.stringify(initial)}`} action={formAction} className="space-y-5">
@@ -132,6 +172,8 @@ export function EditApplicationForm({
             ))}
           </select>
         </Field>
+        {modelField('cvModelId', f.cvModel, cvModels)}
+        {modelField('letterModelId', f.letterModel, letterModels)}
         <div className="sm:col-span-2">
           <Field id="edit-notes" label={f.notes}>
             <textarea

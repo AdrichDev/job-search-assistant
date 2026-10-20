@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { TrackingView } from '@/components/tracking-view';
 import { ES } from '@/copy/es';
-import { applicationRepository, queueReader } from '@/server/container';
+import { applicationRepository, cvModelRepository, queueReader } from '@/server/container';
 import { revertNoticeFor } from '@/server/history';
 import { filterTrackedRows, loadTracking, parseEstadoFilter } from '@/server/tracking';
 
@@ -29,9 +29,10 @@ export default async function TrackingPage({
           ? { text: ES.tracking.notice.savedNotLogged, warning: true }
           : null;
   const undoNotice = revertNoticeFor(query.deshacer);
-  const { rows, counts, warnings } = await loadTracking({
+  const { rows, counts, warnings, documents, catalog } = await loadTracking({
     applicationRepository: applicationRepository(),
     queueReader: queueReader(),
+    cvModelRepository: cvModelRepository(),
   });
 
   return (
@@ -74,6 +75,8 @@ export default async function TrackingPage({
         counts={counts}
         filter={filter}
         warnings={warnings}
+        documents={documents}
+        catalog={catalog}
       />
     </main>
   );

@@ -7,10 +7,12 @@ import { ES } from '@/copy/es';
 import {
   applicationHistoryRepository,
   applicationRepository,
+  cvModelRepository,
   queueReader,
 } from '@/server/container';
 import { loadApplicationHistory, revertNoticeFor } from '@/server/history';
 import { buildEditFormValues } from '@/server/edit-form';
+import { buildModelSelect, loadModelCatalog } from '@/server/model-catalog';
 import { decodeJobIdParam, loadEditableApplication } from '@/server/tracking';
 
 /** Always read the current log: the form must show what is stored right now. */
@@ -40,6 +42,8 @@ export default async function EditApplicationPage({
           historyRepository: applicationHistoryRepository(),
         });
   const notice = revertNoticeFor((await searchParams).deshacer);
+  // The registry is read once: the selects and the history both resolve names from it.
+  const catalog = await loadModelCatalog(cvModelRepository());
 
   return (
     <main id="seguimiento" className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
@@ -69,8 +73,10 @@ export default async function EditApplicationPage({
             outcomes={APPLICATION_OUTCOMES}
             cvVariants={Object.keys(ES.cvVariant)}
             hasListing={found.application.listing !== undefined}
+            cvModels={buildModelSelect(catalog, 'cv', found.application.cvModelId ?? '')}
+            letterModels={buildModelSelect(catalog, 'letter', found.application.letterModelId ?? '')}
           />
-          {history !== null && <ChangeHistory data={history} notice={notice} />}
+          {history !== null && <ChangeHistory data={history} notice={notice} models={catalog} />}
         </>
       )}
     </main>

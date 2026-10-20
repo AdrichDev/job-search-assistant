@@ -2,11 +2,13 @@ import type { ReactNode } from 'react';
 import {
   applicationRepository,
   buildFallbackQueue,
+  cvModelRepository,
   dismissalRepository,
   queueReader,
   runStateStore,
 } from '@/server/container';
 import { loadDashboard } from '@/server/dashboard';
+import { loadModelCatalog } from '@/server/model-catalog';
 import { DismissedSection } from '@/components/dismissed-section';
 import { FetchPanel } from '@/components/fetch-panel';
 import { QueueView } from '@/components/queue-view';
@@ -55,6 +57,8 @@ export default async function DashboardPage() {
   const fetchState = await runStateStore().read();
 
   const { queue, stats, origin, sampleDataCount, dismissed, warnings } = dashboard;
+  // Read once, and only when some application names a model: the stats table needs names.
+  const modelCatalog = await loadModelCatalog(stats.byModel.length > 0 ? cvModelRepository() : undefined);
   const now = new Date(queue.generatedAt).getTime();
   const failedSources = queue.sourceReports.filter((report) => report.status === 'failed');
 
@@ -151,7 +155,7 @@ export default async function DashboardPage() {
       */}
       <FetchPanel initialState={fetchState} />
 
-      <StatsPanel stats={stats} />
+      <StatsPanel stats={stats} models={modelCatalog} />
 
       <QueueView entries={queue.jobs} now={now} degraded={degraded} />
 

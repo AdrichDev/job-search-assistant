@@ -2,8 +2,10 @@ import Link from 'next/link';
 import type { ApplicationOutcome, TrackedApplication } from '@job-queue/core';
 import { APPLICATION_OUTCOMES, isResponse } from '@job-queue/core';
 import { StatusChip } from '@/components/chips';
+import { describeDocuments, type DocumentRefsView } from '@/components/documents-format';
 import { formatTrackingDate, trackingSourceLabels } from '@/components/tracking-format';
 import { ES } from '@/copy/es';
+import { EMPTY_CATALOG, type ModelCatalog } from '@/server/model-catalog';
 import type { EstadoFilter, TrackingWarning } from '@/server/tracking';
 
 const BASE_PATH = '/seguimiento';
@@ -48,8 +50,17 @@ function FilterLinks({
   );
 }
 
-function Row({ row }: { row: TrackedApplication }) {
+function Row({
+  row,
+  documents,
+  catalog,
+}: {
+  row: TrackedApplication;
+  documents: DocumentRefsView | undefined;
+  catalog: ModelCatalog;
+}) {
   const sources = trackingSourceLabels(row);
+  const lines = describeDocuments(documents, catalog);
   return (
     <tr className="align-top">
       <th scope="row" className="px-3 py-3 text-left font-medium text-slate-900">
@@ -89,6 +100,33 @@ function Row({ row }: { row: TrackedApplication }) {
           </>
         )}
       </td>
+      <td className="px-3 py-3 text-slate-700">
+        {lines.length === 0 ? (
+          <>
+            <span aria-hidden="true">—</span>
+            <span className="sr-only">{ES.tracking.documents.none}</span>
+          </>
+        ) : (
+          <ul className="space-y-0.5">
+            {lines.map((line) => (
+              <li key={line.label}>
+                <span className="text-xs font-medium text-slate-500">{line.label}:</span>{' '}
+                <span
+                  className={
+                    line.tone === 'warning'
+                      ? 'italic text-amber-800'
+                      : line.tone === 'legacy'
+                        ? 'text-slate-600'
+                        : 'text-slate-900'
+                  }
+                >
+                  {line.text}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </td>
       <td className="max-w-xs px-3 py-3 text-slate-700">
         {row.notes ?? (
           <>
@@ -117,12 +155,17 @@ export function TrackingView({
   counts,
   filter,
   warnings,
+  documents,
+  catalog = EMPTY_CATALOG,
 }: {
   rows: readonly TrackedApplication[];
   visibleRows: readonly TrackedApplication[];
   counts: Readonly<Record<ApplicationOutcome, number>>;
   filter: EstadoFilter;
   warnings: readonly TrackingWarning[];
+  /** Documents used per job id; resolved to names through `catalog` (read once by the page). */
+  documents?: ReadonlyMap<string, DocumentRefsView>;
+  catalog?: ModelCatalog;
 }) {
   const logUnreadable = warnings.some((warning) => warning.kind === 'applications');
   const columns = ES.tracking.columns;
@@ -185,13 +228,14 @@ export function TrackingView({
                     <th scope="col" className="px-3 py-2">{columns.appliedAt}</th>
                     <th scope="col" className="px-3 py-2">{columns.status}</th>
                     <th scope="col" className="px-3 py-2">{columns.respondedAt}</th>
+                    <th scope="col" className="px-3 py-2">{columns.documents}</th>
                     <th scope="col" className="px-3 py-2">{columns.notes}</th>
                     <th scope="col" className="px-3 py-2">{columns.actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {visibleRows.map((row) => (
-                    <Row key={row.jobId} row={row} />
+                    <Row key={row.jobId} row={row} documents={documents?.get(row.jobId)} catalog={catalog} />
                   ))}
                 </tbody>
               </table>

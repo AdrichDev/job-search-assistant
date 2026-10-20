@@ -24,6 +24,16 @@ export interface VariantStats {
   readonly advanceRate: number;
 }
 
+export interface ModelStats {
+  /** Registry id of the CV model; may no longer exist in the registry. */
+  readonly modelId: string;
+  readonly applied: number;
+  readonly responses: number;
+  readonly advances: number;
+  readonly responseRate: number;
+  readonly advanceRate: number;
+}
+
 export interface SourceStats {
   /** Source adapter id, or `unknown` for applications recorded before source tracking. */
   readonly sourceId: string;
@@ -64,6 +74,8 @@ export interface ApplicationStats {
   readonly byOutcome: Readonly<Record<ApplicationOutcome, number>>;
   /** Only variants actually used, most-used first. */
   readonly byVariant: readonly VariantStats[];
+  /** Only CV models actually marked on an application, most-used first (then by id). */
+  readonly byModel: readonly ModelStats[];
   /** Each source that carried a vacancy gets credit; legacy rows use `unknown`. */
   readonly bySource: readonly SourceStats[];
   readonly funnel: ApplicationFunnel;
@@ -92,6 +104,7 @@ export function computeApplicationStats(
   const byOutcome = emptyOutcomeTally();
   const variants = new Map<CvVariant, VariantAccumulator>();
   const sources = new Map<string, VariantAccumulator>();
+  const models = new Map<string, VariantAccumulator>();
 
   let responses = 0;
   let advances = 0;
@@ -127,6 +140,14 @@ export function computeApplicationStats(
       variants.set(application.cvVariant, accumulator);
     }
 
+    if (application.cvModelId !== undefined) {
+      const model = models.get(application.cvModelId) ?? { applied: 0, responses: 0, advances: 0 };
+      model.applied += 1;
+      model.responses += responded ? 1 : 0;
+      model.advances += advanced ? 1 : 0;
+      models.set(application.cvModelId, model);
+    }
+
     // A deduped vacancy can carry several source refs. Each source gets credit:
     // the question is "does this source lead to replies?", not "which source won?".
     const sourceIds = application.sourceIds.length === 0 ? ['unknown'] : application.sourceIds;
@@ -153,6 +174,19 @@ export function computeApplicationStats(
     // Most-used variant first; the name breaks ties so the panel is stable.
     .sort((a, b) =>
       b.applied !== a.applied ? b.applied - a.applied : a.cvVariant.localeCompare(b.cvVariant),
+    );
+
+  const byModel = [...models.entries()]
+    .map(([modelId, accumulator]) => ({
+      modelId,
+      applied: accumulator.applied,
+      responses: accumulator.responses,
+      advances: accumulator.advances,
+      responseRate: rate(accumulator.responses, accumulator.applied),
+      advanceRate: rate(accumulator.advances, accumulator.applied),
+    }))
+    .sort((a, b) =>
+      b.applied !== a.applied ? b.applied - a.applied : a.modelId.localeCompare(b.modelId),
     );
 
   const surfaced = Math.max(context?.surfaced ?? totalApplied, totalApplied);
@@ -194,6 +228,7 @@ export function computeApplicationStats(
     advanceRate: rate(advances, totalApplied),
     byOutcome,
     byVariant,
+    byModel,
     bySource,
     funnel,
   };

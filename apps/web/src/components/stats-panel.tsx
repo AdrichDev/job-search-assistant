@@ -1,5 +1,7 @@
 import type { ApplicationStats } from '@job-queue/core/domain';
+import { buildModelStatsRows } from '@/components/model-stats-format';
 import { ES, cvVariantLabel } from '@/copy/es';
+import { EMPTY_CATALOG, type ModelCatalog } from '@/server/model-catalog';
 
 /**
  * The payoff panel: "does my Microsoft CV convert better than my React one?".
@@ -75,7 +77,16 @@ function ConversionTable({
   );
 }
 
-export function StatsPanel({ stats }: { stats: ApplicationStats }) {
+export function StatsPanel({
+  stats,
+  models = EMPTY_CATALOG,
+}: {
+  stats: ApplicationStats;
+  /** The model registry, read once per page load; ids become names, removed ones a fallback. */
+  models?: ModelCatalog;
+}) {
+  const modelRows = buildModelStatsRows(stats.byModel, models);
+  const modelApplied = stats.byModel.reduce((sum, row) => sum + row.applied, 0);
   return (
     <section aria-labelledby="stats-heading" className="mb-10">
       <h2
@@ -135,6 +146,29 @@ export function StatsPanel({ stats }: { stats: ApplicationStats }) {
             />
             <Metric label={ES.stats.pending} value={String(stats.pending)} />
           </dl>
+
+          {modelRows.length === 0 ? (
+            <>
+              <h3 className="mb-2 mt-6 text-sm font-semibold text-slate-800">{ES.stats.byModelHeading}</h3>
+              <p className="prose-measure rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm leading-relaxed text-slate-600">
+                {ES.stats.noModelsYet}
+              </p>
+            </>
+          ) : (
+            <>
+              <ConversionTable
+                heading={ES.stats.byModelHeading}
+                caption={ES.stats.modelTableCaption}
+                firstColumn={ES.stats.columnModel}
+                rows={modelRows}
+              />
+              {modelApplied < 10 && (
+                <p className="prose-measure mt-2 text-xs leading-relaxed text-slate-500">
+                  {ES.stats.smallModelSample}
+                </p>
+              )}
+            </>
+          )}
 
           <ConversionTable
             heading={ES.stats.byVariantHeading}

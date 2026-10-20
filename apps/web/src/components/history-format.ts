@@ -1,6 +1,7 @@
 import type { ChangeValue, HistoryField } from '@job-queue/core';
 import { ES, LOCALE, cvVariantLabel } from '@/copy/es';
 import { formatTrackingDate } from '@/components/tracking-format';
+import { EMPTY_CATALOG, resolveModel, type ModelCatalog } from '@/server/model-catalog';
 
 /**
  * Pure presentation helpers of the change history (kept out of JSX so they are
@@ -33,7 +34,11 @@ function cut(value: string): { text: string; truncated: boolean } {
 }
 
 /** One before/after value as the person reads it. */
-export function describeChangeValue(field: HistoryField, value: ChangeValue): ShownValue {
+export function describeChangeValue(
+  field: HistoryField,
+  value: ChangeValue,
+  catalog: ModelCatalog = EMPTY_CATALOG,
+): ShownValue {
   const empty: ShownValue = { text: ES.history.emptyValue, empty: true };
   if (value === null) {
     return empty;
@@ -49,6 +54,10 @@ export function describeChangeValue(field: HistoryField, value: ChangeValue): Sh
       text: ES.outcomeOption[value as keyof typeof ES.outcomeOption] ?? value,
       empty: false,
     };
+  }
+  if (field === 'cvModelId' || field === 'letterModelId') {
+    // The history stores ids; names are resolved when shown, never the raw id.
+    return { text: resolveModel(catalog, value).text, empty: false };
   }
   if (field === 'cvVariant') {
     return { text: cvVariantLabel(value), empty: false };

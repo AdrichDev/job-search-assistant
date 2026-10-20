@@ -5,6 +5,7 @@ import {
   ApplicationPatchError,
   applyApplicationPatch,
   createApplication,
+  MAX_MODEL_ID_LENGTH,
   withOutcome,
   type Application,
   type ApplicationDraft,
@@ -54,6 +55,9 @@ const applicationSchema = z.object({
   appliedAt: isoDate,
   // Absent for imported history, where nobody recorded the CV or the score.
   cvVariant: z.enum(CV_VARIANTS).optional(),
+  // Additive: references to registry models, absent in every log written before them.
+  cvModelId: z.string().min(1).max(MAX_MODEL_ID_LENGTH).optional(),
+  letterModelId: z.string().min(1).max(MAX_MODEL_ID_LENGTH).optional(),
   scoreAtApply: z.number().finite().optional(),
   // Absent in logs written before source tracking.
   sourceIds: z.array(z.string()).default([]),
@@ -72,6 +76,8 @@ function serialize(application: Application) {
     jobId: application.jobId,
     appliedAt: application.appliedAt.toISOString(),
     ...(application.cvVariant === undefined ? {} : { cvVariant: application.cvVariant }),
+    ...(application.cvModelId === undefined ? {} : { cvModelId: application.cvModelId }),
+    ...(application.letterModelId === undefined ? {} : { letterModelId: application.letterModelId }),
     ...(application.scoreAtApply === undefined ? {} : { scoreAtApply: application.scoreAtApply }),
     sourceIds: application.sourceIds,
     outcome: application.outcome,
@@ -121,6 +127,8 @@ export function createJsonApplicationRepository(
           jobId: entry.jobId,
           appliedAt: entry.appliedAt,
           ...(entry.cvVariant === undefined ? {} : { cvVariant: entry.cvVariant }),
+          ...(entry.cvModelId === undefined ? {} : { cvModelId: entry.cvModelId }),
+          ...(entry.letterModelId === undefined ? {} : { letterModelId: entry.letterModelId }),
           ...(entry.scoreAtApply === undefined ? {} : { scoreAtApply: entry.scoreAtApply }),
           sourceIds: entry.sourceIds,
           outcome: entry.outcome,

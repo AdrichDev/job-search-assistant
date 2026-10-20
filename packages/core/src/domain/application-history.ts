@@ -19,6 +19,8 @@ export const HISTORY_FIELDS = [
   'outcome',
   'outcomeUpdatedAt',
   'cvVariant',
+  'cvModelId',
+  'letterModelId',
   'notes',
   'sourceIds',
   'listing.company',
@@ -72,6 +74,10 @@ export function fieldValue(application: Application, field: HistoryField): Chang
       return application.outcomeUpdatedAt.toISOString();
     case 'cvVariant':
       return application.cvVariant ?? null;
+    case 'cvModelId':
+      return application.cvModelId ?? null;
+    case 'letterModelId':
+      return application.letterModelId ?? null;
     case 'notes':
       return application.notes ?? null;
     case 'sourceIds':
@@ -138,6 +144,12 @@ export function patchRestoring(changes: readonly FieldChange[]): ApplicationPatc
         break;
       case 'cvVariant':
         patch.cvVariant = text === null ? null : (text as CvVariant);
+        break;
+      case 'cvModelId':
+        patch.cvModelId = text;
+        break;
+      case 'letterModelId':
+        patch.letterModelId = text;
         break;
       case 'notes':
         patch.notes = text ?? '';
