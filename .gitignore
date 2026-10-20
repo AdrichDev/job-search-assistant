@@ -8,8 +8,8 @@ dist/
 out/
 next-env.d.ts
 
-# Pipeline output
-output/
+# Pipeline output at the repository root (do not hide source folders named output).
+/output/
 
 # Application log: personal job-hunting history, not source.
 # data/sample-jobs.json IS tracked - it is the offline fixture.
