@@ -152,6 +152,20 @@ export type {
 } from './ports/run-state-store.js';
 export { EMPTY_MAIL_RUN_STATE } from './ports/mail-run-state-store.js';
 export type { MailRunState, MailRunStateStore } from './ports/mail-run-state-store.js';
+export type {
+  GmailFetchResult,
+  GmailQuery,
+  GmailReader,
+  MailMessage,
+  MailUnavailableReason,
+} from './ports/gmail-reader.js';
+export {
+  DEFAULT_MAIL_STALE_RUN_MS,
+  runMailCheck,
+  type RunMailCheckDeps,
+  type RunMailCheckOptions,
+  type RunMailCheckResult,
+} from './app/run-mail-check.js';
 export {
   MAIL_RUN_HOUR,
   MAIL_TIME_ZONE,

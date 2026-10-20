@@ -8,8 +8,8 @@
  * Deliberately NOT the fetch `RunStateStore`: the two features run on different
  * schedules and have different failure meanings.
  *
- * Single-flight locking (`claim`) is not part of this port; it belongs to U2,
- * where the run that needs it is built.
+ * Single-flight is built on `update` (serialised in-process) plus the
+ * `runningSince` marker; there is no separate lock primitive.
  */
 export interface MailRunState {
   readonly lastSuccessAt: string | null;
@@ -19,6 +19,12 @@ export interface MailRunState {
   readonly tokenIssuedAt: string | null;
   /** When Google last refused the token (`invalid_grant`). */
   readonly authFailedAt: string | null;
+  /**
+   * When a run claimed the single-flight marker, or null when none is running.
+   * Optional so a state file written before this field existed still reads;
+   * absent means the same as null.
+   */
+  readonly runningSince?: string | null;
 }
 
 export const EMPTY_MAIL_RUN_STATE: MailRunState = {

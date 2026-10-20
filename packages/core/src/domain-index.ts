@@ -141,6 +141,13 @@ export type { FetchRunState, FetchRunSummary } from './ports/run-state-store.js'
 
 /** Mail check state shape (type-only) and the pure schedule / token-expiry rules. */
 export type { MailRunState, MailRunStateStore } from './ports/mail-run-state-store.js';
+export type {
+  GmailFetchResult,
+  GmailQuery,
+  GmailReader,
+  MailMessage,
+  MailUnavailableReason,
+} from './ports/gmail-reader.js';
 export {
   MAIL_RUN_HOUR,
   MAIL_TIME_ZONE,

@@ -32,6 +32,7 @@ const fileSchema = z
     lastError: z.string().nullable(),
     tokenIssuedAt: isoDate,
     authFailedAt: isoDate,
+    runningSince: isoDate.optional(),
   })
   .strict();
 
@@ -89,8 +90,9 @@ export function createJsonMailRunStateStore(
       );
     }
 
-    const { version: _version, ...state } = parsed.data;
-    return state;
+    const { version: _version, runningSince, ...rest } = parsed.data;
+    // Absent in files written before the marker existed: keep it absent.
+    return runningSince === undefined ? rest : { ...rest, runningSince };
   }
 
   async function writeState(state: MailRunState): Promise<void> {
@@ -102,6 +104,7 @@ export function createJsonMailRunStateStore(
         lastError: state.lastError,
         tokenIssuedAt: state.tokenIssuedAt,
         authFailedAt: state.authFailedAt,
+        ...(state.runningSince === undefined ? {} : { runningSince: state.runningSince }),
       },
       null,
       2,

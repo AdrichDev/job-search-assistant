@@ -69,6 +69,31 @@ describe('createJsonMailRunStateStore', () => {
     expect(await readdir(directory)).toEqual(['.mail-run.json']);
   });
 
+  it('parses a file written before runningSince existed', async () => {
+    await writeFile(filePath, JSON.stringify({ version: 1, ...sample }), 'utf8');
+    const state = await createJsonMailRunStateStore({ filePath }).read();
+    expect(state).toEqual(sample);
+    expect(state.runningSince ?? null).toBeNull();
+  });
+
+  it('round-trips runningSince, set and cleared', async () => {
+    const store = createJsonMailRunStateStore({ filePath });
+    const running = { ...sample, runningSince: '2026-01-16T07:00:00.000Z' };
+    await store.write(running);
+    expect(await createJsonMailRunStateStore({ filePath }).read()).toEqual(running);
+    await store.update((c) => ({ ...c, runningSince: null }));
+    expect((await store.read()).runningSince).toBeNull();
+  });
+
+  it('refuses an invalid runningSince and leaves the file byte-identical', async () => {
+    const content = JSON.stringify({ ...sample, version: 1, runningSince: 'soon' });
+    await writeFile(filePath, content, 'utf8');
+    const store = createJsonMailRunStateStore({ filePath });
+    await expect(store.read()).rejects.toThrow(/Refusing to overwrite/);
+    await expect(store.update((c) => c)).rejects.toThrow(/Refusing to overwrite/);
+    expect(await readFile(filePath, 'utf8')).toBe(content);
+  });
+
   const corrupt: ReadonlyArray<readonly [string, string]> = [
     ['invalid JSON', '{not json'],
     ['a wrong shape', JSON.stringify({ version: 1, lastSuccessAt: 5 })],
