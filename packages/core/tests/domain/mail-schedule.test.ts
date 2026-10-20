@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MAIL_RETRY_COOLDOWN_MS,
   TOKEN_LIFETIME_DAYS,
+  isMailCheckAllowed,
   isMailRunDue,
   latestScheduledRun,
   tokenExpiresAt,
@@ -178,5 +180,57 @@ describe('token expiry (Google testing mode)', () => {
 
   it('is unknown with no issue date and no failure', () => {
     expect(tokenStatus(new Date('2026-01-02T00:00:00.000Z'), null, null)).toBe('unknown');
+  });
+});
+
+describe('isMailCheckAllowed (retry cooldown)', () => {
+  const now = new Date('2026-06-10T10:00:00.000Z');
+  const at = (offsetMs: number): string => new Date(now.getTime() + offsetMs).toISOString();
+  const state = (lastAttemptAt: string | null, lastSuccessAt: string | null = null) => ({
+    lastAttemptAt,
+    lastSuccessAt,
+  });
+
+  it('uses a 30 minute cooldown', () => {
+    expect(MAIL_RETRY_COOLDOWN_MS).toBe(30 * 60 * 1000);
+  });
+
+  it('allows when there was no attempt, or the attempt is unparseable', () => {
+    expect(isMailCheckAllowed(now, state(null))).toBe(true);
+    expect(isMailCheckAllowed(now, state('not a date'))).toBe(true);
+    expect(isMailCheckAllowed(now, state(''))).toBe(true);
+  });
+
+  it('blocks a recent failed attempt and allows it exactly at the cooldown', () => {
+    expect(isMailCheckAllowed(now, state(at(-MAIL_RETRY_COOLDOWN_MS + 1)))).toBe(false);
+    expect(isMailCheckAllowed(now, state(at(-MAIL_RETRY_COOLDOWN_MS)))).toBe(true);
+    expect(isMailCheckAllowed(now, state(at(-MAIL_RETRY_COOLDOWN_MS - 1)))).toBe(true);
+    expect(isMailCheckAllowed(now, state(at(-1000)))).toBe(false);
+  });
+
+  it('lets force bypass the cooldown', () => {
+    expect(isMailCheckAllowed(now, state(at(-1000)), { force: true })).toBe(true);
+    expect(isMailCheckAllowed(now, state(at(-1000)), { force: false })).toBe(false);
+  });
+
+  it('does not block on a finished success', () => {
+    expect(isMailCheckAllowed(now, state(at(-1000), at(-1000)))).toBe(true);
+    expect(isMailCheckAllowed(now, state(at(-1000), at(500)))).toBe(true);
+  });
+
+  it('still blocks when the last success is older than the recent attempt', () => {
+    expect(isMailCheckAllowed(now, state(at(-1000), at(-5000)))).toBe(false);
+  });
+
+  it('ignores an unparseable lastSuccessAt', () => {
+    expect(isMailCheckAllowed(now, state(at(-1000), 'garbage'))).toBe(false);
+  });
+
+  it('treats a future attempt as blocked only until now reaches it plus the cooldown', () => {
+    const future = at(60 * 60 * 1000);
+    expect(isMailCheckAllowed(now, state(future))).toBe(false);
+    const later = new Date(now.getTime() + 60 * 60 * 1000 + MAIL_RETRY_COOLDOWN_MS);
+    expect(isMailCheckAllowed(later, state(future))).toBe(true);
+    expect(isMailCheckAllowed(new Date(later.getTime() - 1), state(future))).toBe(false);
   });
 });

@@ -267,3 +267,32 @@ describe('source provenance copy', () => {
     expect(ES.queue.sourceOption('Lever', 3)).toBe('Lever (3)');
   });
 });
+
+describe('mail copy', () => {
+  const groups = Object.entries(ES.mail) as [string, Record<string, string>][];
+  const ENGLISH = /\b(the|and|please|error|failed|try again|token|expired|accepted|not found)\b/i;
+
+  it('has every group the mail screens use', () => {
+    expect(groups.map(([name]) => name).sort()).toEqual(
+      ['accept', 'dismiss', 'labels', 'run', 'status', 'token'].sort(),
+    );
+  });
+
+  it('is Spanish, with no placeholders, enum keys or English', () => {
+    for (const [group, entries] of groups) {
+      for (const [key, text] of Object.entries(entries)) {
+        const label = `${group}.${key}`;
+        expect(isSpanishSentence(text), label).toBe(true);
+        expect(text, label).not.toMatch(/\{|\}|\$\{|undefined|TODO|lorem/i);
+        expect(text, label).not.toMatch(ENGLISH);
+      }
+    }
+  });
+
+  it('keeps the agreed texts and does not duplicate the outcome labels', () => {
+    expect(ES.mail.accept.accepted).toBe('Estado actualizado. Puedes deshacerlo en el historial.');
+    expect(ES.mail.run.state_corrupt).toContain('Mueve el archivo');
+    expect(ES.mail.labels.checkNow).toBe('Revisar correo ahora');
+    expect(Object.keys(ES.mail)).not.toContain('outcomeOption');
+  });
+});

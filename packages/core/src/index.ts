@@ -204,9 +204,11 @@ export {
   type RunMailCheckResult,
 } from './app/run-mail-check.js';
 export {
+  MAIL_RETRY_COOLDOWN_MS,
   MAIL_RUN_HOUR,
   MAIL_TIME_ZONE,
   TOKEN_LIFETIME_DAYS,
+  isMailCheckAllowed,
   isMailRunDue,
   latestScheduledRun,
   tokenExpiresAt,

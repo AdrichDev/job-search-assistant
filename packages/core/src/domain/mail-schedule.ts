@@ -121,3 +121,40 @@ export function tokenStatus(
   }
   return remaining <= EXPIRING_WINDOW_MS ? 'expiring' : 'valid';
 }
+
+/** Minimum wait before an automatic retry after an attempt that did not succeed. */
+export const MAIL_RETRY_COOLDOWN_MS = 30 * 60 * 1000;
+
+function parseInstant(value: string | null): number | null {
+  if (value === null) {
+    return null;
+  }
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? null : time;
+}
+
+/**
+ * Whether an automatic mail check may start now. `force` (the manual button)
+ * always may. Otherwise a recent attempt blocks only when it did not end in a
+ * success: a finished success is governed by `isMailRunDue`, not by the cooldown.
+ * A future `lastAttemptAt` (clock skew) simply blocks until `now` reaches it plus
+ * the cooldown, so it can never block forever.
+ */
+export function isMailCheckAllowed(
+  now: Date,
+  state: { readonly lastAttemptAt: string | null; readonly lastSuccessAt: string | null },
+  options: { readonly force?: boolean } = {},
+): boolean {
+  if (options.force === true) {
+    return true;
+  }
+  const attempt = parseInstant(state.lastAttemptAt);
+  if (attempt === null) {
+    return true;
+  }
+  const success = parseInstant(state.lastSuccessAt);
+  if (success !== null && attempt <= success) {
+    return true;
+  }
+  return now.getTime() - attempt >= MAIL_RETRY_COOLDOWN_MS;
+}

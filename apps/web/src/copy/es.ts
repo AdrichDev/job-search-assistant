@@ -833,6 +833,52 @@ export const ES = {
     disclaimer: 'Orientativa: no selecciona ni asigna ningún modelo de CV.',
   },
 
+  /* Gmail proposals ----------------------------------------------------- */
+  mail: {
+    accept: {
+      accepted: 'Estado actualizado. Puedes deshacerlo en el historial.',
+      accepted_untracked: 'Estado actualizado, pero la propuesta no se pudo marcar como aceptada.',
+      conflict: 'Ya estaba aplicado o lo cambiaste tú después. No se tocó nada.',
+      already_decided: 'Esta propuesta ya estaba resuelta.',
+      application_not_found: 'La postulación de esa propuesta ya no existe.',
+      refused: 'No se pudo aplicar el cambio.',
+      not_found: 'Esa propuesta no existe.',
+    },
+    dismiss: {
+      dismissed: 'Propuesta descartada.',
+      not_found: 'Esa propuesta no existe.',
+      already_decided: 'Esta propuesta ya estaba resuelta.',
+    },
+    run: {
+      not_configured: 'El correo no está configurado.',
+      auth_expired: 'Google rechazó el permiso (caduca cada 7 días). Renuévalo.',
+      network: 'Sin conexión con Gmail.',
+      rate_limited: 'Gmail pide esperar; reinténtalo más tarde.',
+      server: 'Gmail no responde.',
+      bad_response: 'Gmail respondió algo inesperado.',
+      failed: 'Falló la revisión del correo. Mira el registro.',
+      already_running: 'Ya hay una revisión en curso.',
+      not_due: 'Al día.',
+      cooldown: 'Se reintentará más tarde.',
+      state_corrupt:
+        'El estado del correo está dañado. Mueve el archivo de estado del correo a otra carpeta y reinténtalo.',
+      ok: 'Correo revisado.',
+    },
+    token: {
+      expiring: 'El permiso de Google caduca en menos de 24 horas.',
+      expired: 'El permiso de Google ha caducado. Renuévalo para seguir leyendo el correo.',
+    },
+    status: {
+      heading: 'Propuestas del correo',
+      empty: 'No hay propuestas pendientes del correo.',
+    },
+    labels: {
+      accept: 'Aceptar',
+      dismiss: 'Descartar',
+      checkNow: 'Revisar correo ahora',
+    },
+  },
+
   /* Lookups ------------------------------------------------------------- */
   status: STATUS,
   outcomeOption: OUTCOME,
