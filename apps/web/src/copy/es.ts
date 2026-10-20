@@ -1,5 +1,6 @@
 import type {
   ApplicationOutcome,
+  CvCategory,
   CvVariant,
   JobRequirements,
   QueueApplicationStatus,
@@ -62,6 +63,16 @@ const CV_VARIANT: Record<CvVariant, string> = {
   frontend: 'CV Frontend',
   microsoft: 'CV Microsoft',
   general: 'CV General',
+};
+
+const CV_CATEGORY_NAME: Record<CvCategory, string> = {
+  java_spring_backend: 'Java / Spring backend',
+  full_stack: 'Full stack',
+  python_data_ai: 'Python / datos / IA',
+  frontend: 'Frontend',
+  qa_testing: 'QA / testing',
+  microsoft_power_platform: 'Microsoft / Power Platform',
+  general: 'General',
 };
 
 const WORK_MODE: Record<JobRequirements['workMode'], string> = {
@@ -807,6 +818,19 @@ export const ES = {
       registry_unavailable:
         'No se pudo leer el registro de modelos. No se ha modificado nada; revisa el archivo de registro o los registros del servidor.',
     } as Readonly<Record<CvModelNoticeCode, string>>,
+  },
+
+  /*
+   * Suggested CV category: an evidence-backed recommendation only. It never
+   * names a registered model or file and never selects anything.
+   */
+  cvCategory: {
+    heading: 'Categoría de CV sugerida',
+    names: CV_CATEGORY_NAME,
+    evidence: (terms: string) => `Términos detectados: ${terms}`,
+    noEvidence: 'Sin evidencia suficiente en el título ni en la descripción.',
+    tie: (categories: string) => `Empate entre ${categories}`,
+    disclaimer: 'Orientativa: no selecciona ni asigna ningún modelo de CV.',
   },
 
   /* Lookups ------------------------------------------------------------- */

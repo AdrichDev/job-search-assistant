@@ -2,6 +2,7 @@ import { hasSampleDataSource, type QueueEntry } from '@job-queue/core/domain';
 
 import { ApplyLink } from '@/components/apply-link';
 import { Chip, RequirementChips, StatusChip } from '@/components/chips';
+import { describeCvCategorySuggestion } from '@/components/cv-category-copy';
 import { DismissButton } from '@/components/dismiss-button';
 import { OutcomeForm } from '@/components/outcome-form';
 import { ScoreBreakdown } from '@/components/score-breakdown';
@@ -76,6 +77,15 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
    */
   const sourceLabels = entrySourceLabels(entry);
   const isUnverified = entry.liveness?.verdict === 'unverified';
+  /*
+   * Absent on a queue written before the suggestion existed: those cards show
+   * nothing rather than pretend they were analysed. A General suggestion on a
+   * newly analysed offer IS rendered, with its explanation.
+   */
+  const categoryView =
+    entry.cvCategorySuggestion === undefined
+      ? null
+      : describeCvCategorySuggestion(entry.cvCategorySuggestion);
 
   return (
     <article
@@ -150,6 +160,21 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
               <Chip tone="neutral">{cvVariantLabel(entry.cvVariant)}</Chip>
               <StatusChip status={entry.applicationStatus} />
             </div>
+
+            {categoryView !== null && (
+              <section
+                data-testid="cv-category-suggestion"
+                aria-labelledby={`cv-category-${entry.id}`}
+                className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
+              >
+                <h4 id={`cv-category-${entry.id}`} className="font-semibold text-slate-800">
+                  {categoryView.heading}
+                </h4>
+                <p className="mt-0.5 text-sm font-medium text-slate-900">{categoryView.categoryName}</p>
+                <p className="mt-0.5">{categoryView.explanation}</p>
+                <p className="mt-0.5 text-slate-500">{categoryView.disclaimer}</p>
+              </section>
+            )}
           </div>
 
           {/*

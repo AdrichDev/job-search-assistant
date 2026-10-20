@@ -272,6 +272,14 @@ The **Modelos** page (`/modelos`) is a library of the CVs and cover letters you 
 - **Remove / edit.** `Quitar del registro` asks for confirmation and removes the registry entry only; the PDF stays in your folder. A model whose file moved shows **No disponible** instead of failing. Editing changes name, type, language, tags and note, never the path.
 - Marking which model an application used, suggestions and analysis are separate slices (T3b-T3d).
 
+### Suggested CV category
+
+Each offer card can show a **Categoría de CV sugerida**: Java / Spring backend, Full stack, Python / datos / IA, Frontend, QA / testing, Microsoft / Power Platform or General. It is a **category recommendation** that stands in until your final Canva PDFs are registered; later it can point at the registered PDF.
+
+- **Evidence-based.** It reads only the offer's title and description, and the card lists the matched terms (`Términos detectados: …`). Company, location, your profile and the model registry are never consulted. Ambiguous words such as `test`, `power`, `data`, `api` or `sql` do not count on their own, and `java` does not match `javascript`.
+- **General when unsure.** No evidence, or a tie for the top score, gives General with the reason (`Sin evidencia suficiente…` / `Empate entre …`). `full stack`, `full-stack` or `fullstack` written in the offer is decisive; Full stack is never inferred from frontend plus backend terms.
+- **It never picks a CV.** It does not select, assign or name any model or PDF, and it does not change the legacy CV version chip and filter. Queue files written before this feature simply show no suggestion until the next run.
+
 ### Storage
 
 The application and dismissal logs share one JSON-log store for the mechanics they must agree on: schema validation, refusal to overwrite unreadable data, in-process serialization and atomic writes. Each repository still owns its entity schema and business rules. A uniquely named temp file is written in the same directory and then renamed over the target; a crash leaves either the old complete file or the new complete file, never a truncated one.

@@ -29,6 +29,16 @@ export interface QueueEntryFile {
     readonly englishRequired: 'not_stated' | 'basic' | 'intermediate' | 'advanced';
     readonly workMode: 'onsite' | 'hybrid' | 'remote' | 'unknown';
   };
+  /**
+   * The category recommendation, written by builds that know about it. Absent
+   * on a legacy queue file, which must render no suggestion at all.
+   */
+  readonly cvCategorySuggestion?: {
+    readonly category: string;
+    readonly matchedTerms: readonly string[];
+    readonly reason: 'evidence' | 'no_evidence' | 'tie';
+    readonly tiedCategories?: readonly string[];
+  };
   readonly applicationStatus: string;
   readonly appliedAt: string | null;
   readonly outcomeUpdatedAt: string | null;
@@ -151,6 +161,7 @@ interface EntrySeed {
   readonly sourceId: string;
   readonly score: number;
   readonly stack: readonly string[];
+  readonly cvCategorySuggestion?: QueueEntryFile['cvCategorySuggestion'];
 }
 
 function entry(seed: EntrySeed): QueueEntryFile {
@@ -167,6 +178,9 @@ function entry(seed: EntrySeed): QueueEntryFile {
       englishRequired: 'not_stated',
       workMode: 'hybrid',
     },
+    ...(seed.cvCategorySuggestion === undefined
+      ? {}
+      : { cvCategorySuggestion: seed.cvCategorySuggestion }),
     applicationStatus: 'not_applied',
     appliedAt: null,
     outcomeUpdatedAt: null,
@@ -381,3 +395,78 @@ export const MIXED_LIVENESS_QUEUE: QueueFile = build(
 
 /** The title of the posting the checker could not vouch for. */
 export const UNVERIFIED_TITLE = SEEDS[0]?.title ?? '';
+
+/**
+ * Four offers for the CV category suggestion.
+ *
+ * Three carry a suggestion - evidence, no evidence and a tie - and the fourth
+ * is a LEGACY entry written before the field existed, which must stay silent.
+ * The three legacy `cvVariant` values are spread across them so the old filter
+ * can be checked against the same page.
+ */
+export const CV_CATEGORY_QUEUE: QueueFile = build([
+  entry({
+    rank: 1,
+    id: 'cat::evidence::madrid',
+    title: 'Desarrollador Java Spring',
+    company: 'Categoria Uno',
+    location: 'Madrid',
+    cvVariant: 'frontend',
+    externalId: 'cat-1',
+    sourceId: 'greenhouse',
+    score: 60,
+    stack: ['java'],
+    url: 'https://boards.greenhouse.io/categoria/jobs/cat-1',
+    cvCategorySuggestion: {
+      category: 'java_spring_backend',
+      matchedTerms: ['java', 'spring'],
+      reason: 'evidence',
+    },
+  }),
+  entry({
+    rank: 2,
+    id: 'cat::no-evidence::madrid',
+    title: 'Desarrollador de software',
+    company: 'Categoria Dos',
+    location: 'Madrid',
+    cvVariant: 'microsoft',
+    externalId: 'cat-2',
+    sourceId: 'lever',
+    score: 55,
+    stack: ['git'],
+    url: 'https://jobs.lever.co/categoria/cat-2',
+    cvCategorySuggestion: { category: 'general', matchedTerms: [], reason: 'no_evidence' },
+  }),
+  entry({
+    rank: 3,
+    id: 'cat::tie::madrid',
+    title: 'Desarrollador Java y React',
+    company: 'Categoria Tres',
+    location: 'Madrid',
+    cvVariant: 'general',
+    externalId: 'cat-3',
+    sourceId: 'aggregator',
+    score: 50,
+    stack: ['react'],
+    url: 'https://www.aggregator.es/land/ad/cat-3',
+    cvCategorySuggestion: {
+      category: 'general',
+      matchedTerms: [],
+      reason: 'tie',
+      tiedCategories: ['java_spring_backend', 'frontend'],
+    },
+  }),
+  entry({
+    rank: 4,
+    id: 'cat::legacy::madrid',
+    title: 'Desarrollador antiguo',
+    company: 'Categoria Legado',
+    location: 'Madrid',
+    cvVariant: 'general',
+    externalId: 'cat-4',
+    sourceId: 'aggregator',
+    score: 45,
+    stack: ['git'],
+    url: 'https://www.aggregator.es/land/ad/cat-4',
+  }),
+]);
