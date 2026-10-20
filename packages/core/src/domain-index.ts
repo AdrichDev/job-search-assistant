@@ -51,6 +51,15 @@ export {
   type WorkMode,
 } from './domain/requirements.js';
 
+export {
+  CV_CATEGORIES,
+  suggestCvCategory,
+  type CvCategory,
+  type CvCategoryInput,
+  type CvCategoryReason,
+  type CvCategorySuggestion,
+} from './domain/cv-category.js';
+
 export { createJob, jobFingerprint, type CvVariant, type Job } from './domain/job.js';
 
 /*
