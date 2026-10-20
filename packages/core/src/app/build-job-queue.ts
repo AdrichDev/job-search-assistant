@@ -1,4 +1,5 @@
 import { indexApplicationsByJobId, type Application } from '../domain/application.js';
+import { suggestCvCategory } from '../domain/cv-category.js';
 import { dedupeJobs } from '../domain/dedupe.js';
 import type { Job } from '../domain/job.js';
 import { judgeHardEligibility } from '../domain/hard-eligibility.js';
@@ -460,6 +461,8 @@ export async function buildJobQueue(
       score: entry.score.total,
       cvVariant: entry.score.cvVariant,
       requirements: extractRequirements(entry.job, deps.scoringConfig),
+      // Built here, while the raw Job exists: title and description only.
+      cvCategorySuggestion: suggestCvCategory(entry.job),
       ...statusFieldsFor(entry.job.id, applicationIndex),
       title: entry.job.title,
       company: entry.job.company,

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { buildJobQueue } from '../../src/app/build-job-queue.js';
 import { createApplication, withOutcome } from '../../src/domain/application.js';
+import { extractRequirements } from '../../src/domain/requirements.js';
+import { suggestCvCategory } from '../../src/domain/cv-category.js';
 import type { JobSource, JobSourceQuery } from '../../src/ports/job-source.js';
 import type { Job } from '../../src/domain/job.js';
 import { DEFAULT_JUNIOR_FILTER_CONFIG } from '../../src/config/junior-filter-config.js';
@@ -193,6 +195,75 @@ describe('buildJobQueue', () => {
     expect(requirements?.matchedStack).toContain('react');
     expect(requirements?.englishRequired).toBe('basic');
     expect(requirements?.senioritySignals.some((signal) => signal.level === 'junior')).toBe(true);
+  });
+
+  it('adds a CV category suggestion built only from title and description', async () => {
+    const neutral = makeJob({
+      sourceId: 'alpha',
+      externalId: 'neutral',
+      title: 'Desarrollador Junior',
+      company: 'Java Python Labs',
+      location: 'React City, Madrid',
+      description: 'Equipo agil en Madrid. Sin experiencia previa.',
+      postedAt: daysAgo(2),
+    });
+    const queue = await buildJobQueue(
+      { queries: [QUERY] },
+      { ...deps, sources: [stubSource('alpha', [GOOD_JOB, BAD_JOB, neutral])] },
+    );
+    const byCompany = (company: string) => queue.jobs.find((entry) => entry.company === company);
+
+    expect(byCompany('ACME')?.cvCategorySuggestion).toEqual(
+      suggestCvCategory({ title: GOOD_JOB.title, description: GOOD_JOB.description }),
+    );
+    expect(byCompany('ACME')?.cvCategorySuggestion?.category).toBe('frontend');
+    expect(byCompany('Globex')?.cvCategorySuggestion?.category).toBe('java_spring_backend');
+    // Company and location carry category words and must not count.
+    expect(byCompany('Java Python Labs')?.cvCategorySuggestion).toEqual({
+      category: 'general',
+      matchedTerms: [],
+      reason: 'no_evidence',
+    });
+    expect(() => JSON.stringify(queue)).not.toThrow();
+  });
+
+  it('leaves requirements, cvVariant and the rest of the entry exactly as before', async () => {
+    const queue = await buildJobQueue(
+      { queries: [QUERY] },
+      { ...deps, sources: [stubSource('alpha', [GOOD_JOB, BAD_JOB])] },
+    );
+
+    for (const job of [GOOD_JOB, BAD_JOB]) {
+      const entry = queue.jobs.find((candidate) => candidate.id === job.id);
+      expect(entry?.requirements).toEqual(extractRequirements(job, DEFAULT_SCORING_CONFIG));
+      expect(entry?.cvVariant).toBe(entry?.requirements.cvVariant);
+    }
+    expect(queue.jobs.find((entry) => entry.id === GOOD_JOB.id)?.cvVariant).toBe('frontend');
+    expect(Object.keys(queue.jobs[0] ?? {}).sort()).toEqual(
+      [
+        'applicationStatus',
+        'appliedAt',
+        'breakdown',
+        'company',
+        'contractType',
+        'cvCategorySuggestion',
+        'cvVariant',
+        'id',
+        'liveness',
+        'location',
+        'notes',
+        'outcomeUpdatedAt',
+        'postedAt',
+        'rank',
+        'requirements',
+        'salaryMax',
+        'salaryMin',
+        'score',
+        'sources',
+        'title',
+        'url',
+      ].sort(),
+    );
   });
 
   it('marks every job as not applied when no application log is supplied', async () => {

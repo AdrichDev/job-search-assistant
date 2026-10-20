@@ -1,4 +1,5 @@
 import type { ApplicationOutcome } from '../domain/application.js';
+import type { CvCategorySuggestion } from '../domain/cv-category.js';
 import type { CvVariant, JobSourceRef } from '../domain/job.js';
 import type { LivenessRecord } from '../domain/link-liveness.js';
 import type { JobRequirements } from '../domain/requirements.js';
@@ -59,6 +60,17 @@ export interface QueueEntry {
   readonly cvVariant: CvVariant;
   /** Structured signals for the UI chips. */
   readonly requirements: JobRequirements;
+  /**
+   * Which KIND of CV the offer's own wording supports, with the evidence.
+   *
+   * OPTIONAL on purpose: a queue written before this existed carries no
+   * analysis, and the UI renders nothing for it rather than pretending it was
+   * analysed. A newly analysed offer with no evidence still carries a General
+   * suggestion, which is a statement, not an absence. It is a category
+   * recommendation only - never a registry model, a path or a selection - and
+   * it is independent of the legacy `cvVariant` above.
+   */
+  readonly cvCategorySuggestion?: CvCategorySuggestion;
   readonly applicationStatus: QueueApplicationStatus;
   /** ISO timestamps, or null when the job was never applied to. */
   readonly appliedAt: string | null;

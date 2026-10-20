@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 import { APPLICATION_OUTCOMES } from '../../domain/application.js';
+import { CV_CATEGORIES } from '../../domain/cv-category.js';
 import { SCORE_DIMENSIONS } from '../../domain/scoring/types.js';
 import type { QueueReader } from '../../ports/queue-reader.js';
 import type { JobQueue } from '../../ports/queue-writer.js';
@@ -41,6 +42,20 @@ const requirementsSchema = z.object({
   workMode: z.enum(['onsite', 'hybrid', 'remote', 'unknown']),
 });
 
+const cvCategorySchema = z.enum(CV_CATEGORIES);
+
+/*
+ * Optional, with NO default: a legacy entry made no analysis, and inventing a
+ * `general` for it would claim it was analysed and found nothing. Unknown keys
+ * (a stray model id or path) are stripped by zod's default object behaviour.
+ */
+const cvCategorySuggestionSchema = z.object({
+  category: cvCategorySchema,
+  matchedTerms: z.array(z.string()),
+  reason: z.enum(['evidence', 'no_evidence', 'tie']),
+  tiedCategories: z.array(cvCategorySchema).optional(),
+});
+
 const livenessRecordSchema = z.object({
   verdict: z.enum(['alive', 'gone', 'unverified']),
   status: z.number().nullable(),
@@ -54,6 +69,7 @@ const queueEntrySchema = z.object({
   score: z.number(),
   cvVariant: cvVariantSchema,
   requirements: requirementsSchema,
+  cvCategorySuggestion: cvCategorySuggestionSchema.optional(),
   applicationStatus: z.enum(['not_applied', ...APPLICATION_OUTCOMES]),
   appliedAt: z.string().nullable(),
   outcomeUpdatedAt: z.string().nullable(),

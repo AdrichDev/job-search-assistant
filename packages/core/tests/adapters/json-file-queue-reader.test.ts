@@ -64,6 +64,95 @@ describe('createJsonFileQueueReader', () => {
     expect(loaded?.jobs[0]?.requirements.matchedStack).toContain('react');
   });
 
+  async function buildOne(...jobs: readonly ReturnType<typeof makeJob>[]) {
+    return buildJobQueue(
+      { queries: [QUERY], candidateName: 'Alex Example' },
+      {
+        sources: [{ id: 'stub', fetchJobs: async () => jobs }],
+        scoringConfig: DEFAULT_SCORING_CONFIG,
+        juniorFilterConfig: DEFAULT_JUNIOR_FILTER_CONFIG,
+        logger: silentLogger,
+        now: () => REFERENCE_NOW,
+      },
+    );
+  }
+
+  it('round-trips the CV category suggestion, including tie and no-evidence shapes', async () => {
+    const queue = await buildOne(
+      makeJob({ externalId: 'a', title: 'Junior Java Developer', description: 'Spring Boot.' }),
+      makeJob({ externalId: 'b', title: 'Junior Software Developer', description: 'Java y React.' }),
+      makeJob({ externalId: 'c', title: 'Junior Software Engineer', description: 'Equipo agil.' }),
+    );
+
+    await createJsonFileQueueWriter({ filePath }).write(queue);
+    const loaded = await createJsonFileQueueReader({ filePath }).read();
+
+    expect(loaded?.jobs.map((entry) => entry.cvCategorySuggestion)).toEqual(
+      queue.jobs.map((entry) => entry.cvCategorySuggestion),
+    );
+    const reasons = loaded?.jobs.map((entry) => entry.cvCategorySuggestion?.reason).sort();
+    expect(reasons).toEqual(['evidence', 'no_evidence', 'tie']);
+    const tie = loaded?.jobs.find((entry) => entry.cvCategorySuggestion?.reason === 'tie');
+    expect(tie?.cvCategorySuggestion?.tiedCategories).toEqual(['java_spring_backend', 'frontend']);
+  });
+
+  it('keeps reading a legacy entry that has no suggestion, without inventing one', async () => {
+    const queue = await buildOne(makeJob({ title: 'Junior React Developer' }));
+    const legacyJobs = queue.jobs.map(({ cvCategorySuggestion: _omitted, ...rest }) => rest);
+    await writeFile(filePath, JSON.stringify({ ...queue, jobs: legacyJobs }));
+
+    const loaded = await createJsonFileQueueReader({ filePath }).read();
+
+    expect(loaded?.jobs).toHaveLength(1);
+    expect(loaded?.jobs[0]?.title).toBe(queue.jobs[0]?.title);
+    expect(loaded?.jobs[0]).not.toHaveProperty('cvCategorySuggestion');
+  });
+
+  it.each([
+    ['an unknown category', { category: 'cobol', matchedTerms: [], reason: 'no_evidence' }],
+    ['an unknown reason', { category: 'general', matchedTerms: [], reason: 'because' }],
+    ['matched terms that are not strings', { category: 'frontend', matchedTerms: [1], reason: 'evidence' }],
+    ['a missing reason', { category: 'frontend', matchedTerms: ['react'] }],
+    ['tied categories that are unknown', { category: 'general', matchedTerms: [], reason: 'tie', tiedCategories: ['cobol'] }],
+  ])('rejects a malformed suggestion: %s', async (_label, suggestion) => {
+    const queue = await buildOne(makeJob({ title: 'Junior React Developer' }));
+    await writeFile(
+      filePath,
+      JSON.stringify({
+        ...queue,
+        jobs: queue.jobs.map((entry) => ({ ...entry, cvCategorySuggestion: suggestion })),
+      }),
+    );
+
+    await expect(createJsonFileQueueReader({ filePath }).read()).rejects.toThrow(/queue format/i);
+  });
+
+  it('does not let a model id or path ride along inside a persisted suggestion', async () => {
+    const queue = await buildOne(makeJob({ title: 'Junior React Developer' }));
+    const tainted = {
+      category: 'frontend',
+      matchedTerms: ['react'],
+      reason: 'evidence',
+      modelId: 'x',
+      path: 'a.pdf',
+    };
+    await writeFile(
+      filePath,
+      JSON.stringify({
+        ...queue,
+        jobs: queue.jobs.map((entry) => ({ ...entry, cvCategorySuggestion: tainted })),
+      }),
+    );
+
+    const loaded = await createJsonFileQueueReader({ filePath }).read();
+
+    expect(loaded?.jobs[0]?.cvCategorySuggestion).toEqual({
+      category: 'frontend',
+      matchedTerms: ['react'],
+      reason: 'evidence',
+    });
+  });
+
   it('rejects a truncated file instead of returning half a queue', async () => {
     await writeFile(filePath, '{"generatedAt":');
     await expect(createJsonFileQueueReader({ filePath }).read()).rejects.toThrow(/valid JSON/i);
