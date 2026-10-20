@@ -169,7 +169,6 @@ export const COMPANY_BOARDS: readonly CompanyBoard[] = [
   { slug: 'stripe', provider: 'greenhouse', displayName: 'Stripe', verifiedOn: '2026-09-10', spainOpeningsAtVerification: 4, softwareOpeningsAtVerification: 2 },
   { slug: 'twilio', provider: 'greenhouse', displayName: 'Twilio', verifiedOn: '2026-09-10', spainOpeningsAtVerification: 3, softwareOpeningsAtVerification: 2 },
   { slug: 'adyen', provider: 'greenhouse', displayName: 'Adyen', verifiedOn: '2026-09-10', spainOpeningsAtVerification: 3, softwareOpeningsAtVerification: 2 },
-  { slug: 'clarityai', provider: 'greenhouse', displayName: 'Clarity AI', verifiedOn: '2026-09-10', spainOpeningsAtVerification: 2, softwareOpeningsAtVerification: 1 },
   { slug: 'dataiku', provider: 'greenhouse', displayName: 'Dataiku', verifiedOn: '2026-09-10', spainOpeningsAtVerification: 1, softwareOpeningsAtVerification: 1 },
 
   // --- Lever ----------------------------------------------------------------
