@@ -36,6 +36,27 @@ Order = lowest external risk first. Each task is a work-unit commit with tests. 
 - [ ] T6 (CU2) Parse job-alert emails per portal (InfoJobs first, then Indeed, LinkedIn, Tecnoempleo, Michael Page, EmpleosIT, Wizbii) as fallback source; one parser per real sample. Route: test-first on real samples. Commit: pending
 - [ ] T7 (CU4) When profile coverage of an offer's requirements is BELOW 65%, generate the TEXT of a tailored CV and cover letter for the user to edit and apply by hand. Method (language model vs templates) decided at the start of this task. Route: test-first. Commit: pending
 - [ ] T8 (CU3) Confirm the selected sources list (all of docs/sources.md except Experteer, plus current sources) and align docs/sources.md and the UI labels. Route: inline. Commit: pending
+- Progress of T4 and T5 (Gmail), split in L42 and L47; T4 and T5 stay unchecked until U5d to U8 are done:
+  - [x] U1 schedule, token expiry and mail-run state. Commit c411930.
+  - [x] U2 `GmailReader` port, `runMailCheck` and single-flight lock. Commit 5e15cc8.
+  - [x] U3 reply classification and pending proposals (T5). Commit 690ac18.
+  - [x] U4 `email` history source, accept and dismiss. Commit 6d45ad6.
+  - [x] U5a retry cooldown and Spanish copy. Commit b35329e.
+  - [x] U5b server composition (`server/mail.ts`, only module reading `GOOGLE_*`). Commit 35ff007.
+  - [x] U5c server actions and on-open catch-up component. Commit e9382e9.
+  - [ ] U5d confirmation MODAL (L51-L52): ONE modal listing every candidatura that would change, `Aceptar` applies all through the reversible edit path, `Cancelar` applies nothing and keeps the proposals pending; opens once per visit; accessible dialog; no-JS fallback; needs a new batch-accept use case; page computes `due` as a read; a corrupt mail-run state never 500s. Also the token banner, status line and pending count. To be built on the dark theme, after UI-3 to UI-5.
+  - [ ] U5e e2e isolation and mail journey spec (`JOB_QUEUE_WEB_MAIL=fake`, seeds, offline guard, modal open/accept/cancel/Escape/conflict); the only coverage of the `'use server'` shell and the client component.
+  - [ ] U6 real Gmail adapter with raw `fetch` (`gmail.readonly`, refresh-token exchange, `invalid_grant` to `auth_expired`, secrets never logged), tested with a mocked `fetch`; replaces only the factory branch in `server/mail.ts`.
+  - [ ] U7 CLI `mail-check` and a Windows Task Scheduler recipe for 08:00 Europe/Madrid (the user registers the task).
+  - [ ] U8 HUMAN STEP: the user approves read-only access once in the browser to obtain the refresh token, kept in the git-ignored `data/dev-env.json`. Blocked on the user, isolated last.
+- UI work from L54 and L57 (user: "algo mas operativo", grid-paper background, dark mode "Siempre oscuro"):
+  - [x] UI-1 always-dark theme and grid-paper background. Commit f6082dd, evidence L58.
+  - [x] UI-2 tracking table: 10 per page, Excel colours, `¿Contestó?` column, denser rows, sticky header. Commit 2a167c1, evidence L59. Known limitation: rows stay tall with long text.
+  - [ ] UI-3 offer cards: compact one-line layout, score breakdown folded into a `<details>`, Apply, Descartar and the outcome form kept at hand. Contrast and shadows already shipped with UI-1.
+  - [ ] UI-4 offer filters: sticky bar and filter state in the URL (search, CV version, source, status).
+  - [ ] UI-5 shorter intro texts on `/`, `/seguimiento` and `/modelos`.
+  - [ ] UI-6 contrast safety net in the e2e (computed WCAG ratio from `getComputedStyle`, no new dependency; an axe dependency needs the user's approval).
+- [ ] T9 (open, needs the user) The registered model "CV base ES - Desarrollador de software (alternativo)" shows "No disponible": `CV_Desarrollador_SoftwareAdrian_Chozas_Vinuesa.pdf` is no longer in `D:\Adrian\3. Curriculum` (the folder fingerprint changed from `38685ae72b06337f` to `88aa87591a8cc0ed`, still 54 files), probably renamed or moved by the user. The app never writes there and the registry was not touched. The user must put the file back, or remove that entry and register the new name from `/modelos`.
 
 ## Log
 - L1 (user, verbatim): the eight use cases above, in answer to "dame los casos de uso".
