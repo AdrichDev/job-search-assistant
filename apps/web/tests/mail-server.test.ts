@@ -49,23 +49,6 @@ describe('gmailReader', () => {
     });
   });
 
-  it('fully configured: still no adapter, no network (stub)', async () => {
-    const original = globalThis.fetch;
-    let called = false;
-    globalThis.fetch = (() => {
-      called = true;
-      throw new Error('network must not be used');
-    }) as typeof fetch;
-    try {
-      expect(await gmailReader(FULL).fetchRecent(QUERY)).toEqual({
-        status: 'unavailable',
-        reason: 'bad_response',
-      });
-      expect(called).toBe(false);
-    } finally {
-      globalThis.fetch = original;
-    }
-  });
 
   it('fake returns empty ok by default', async () => {
     expect(await gmailReader({ JOB_QUEUE_WEB_MAIL: 'fake' }).fetchRecent(QUERY)).toEqual({

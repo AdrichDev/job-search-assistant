@@ -327,6 +327,10 @@ export { htmlToPlainText } from './adapters/boards/html-text.js';
 export type { BoardSourceFactoryOptions } from './adapters/boards/board-job-source.js';
 export { createFixtureJobSource } from './adapters/fixture/fixture-job-source.js';
 export {
+  createGmailReader,
+  type CreateGmailReaderConfig,
+} from './adapters/gmail/gmail-reader.js';
+export {
   DEFAULT_LIVENESS_CONCURRENCY,
   DEFAULT_LIVENESS_TIMEOUT_MS,
   DEFAULT_LIVENESS_TTL_MS,

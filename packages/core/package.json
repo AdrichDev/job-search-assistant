@@ -33,7 +33,9 @@
     "start:boards": "tsx src/cli/main.ts --source=boards",
     "seed:queue": "tsx scripts/seed-queue.ts",
     "import:history": "tsx scripts/import-history.ts",
-    "verify:boards": "tsx scripts/verify-boards.ts"
+    "verify:boards": "tsx scripts/verify-boards.ts",
+    "google:consent": "tsx scripts/google-consent.ts",
+    "mail:live": "tsx scripts/mail-live-check.ts"
   },
   "dependencies": {
     "exceljs": "^4.4.0",

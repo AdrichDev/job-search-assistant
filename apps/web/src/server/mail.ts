@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { createGmailReader } from '@job-queue/core';
 import type { GmailFetchResult, GmailReader, MailUnavailableReason } from '@job-queue/core';
 
 /**
@@ -71,10 +72,17 @@ function createReader(env: Env): GmailReader {
     return createFakeReader(readEnv(env, 'JOB_QUEUE_WEB_MAIL_FAKE'));
   }
   if (hasGoogleCredentials(env)) {
-    // U6 REPLACES ONLY THIS BRANCH with the real raw-fetch Gmail adapter built
-    // from the three GOOGLE_* variables. Until then credentials alone must never
-    // cause a network call, so this branch returns the not-configured stub.
-    return notConfiguredReader;
+    // U6: this branch is now the REAL raw-fetch Gmail adapter, built from the
+    // three GOOGLE_* variables. The refresh-token exchange and every Gmail call
+    // live in `packages/core/src/adapters/gmail/gmail-reader.ts`; expected
+    // failures come back as values (`auth_expired`, `unavailable`), never as
+    // thrown errors. No credential is exposed here: callers get a reader and a
+    // flag, nothing else.
+    return createGmailReader({
+      clientId: readEnv(env, 'GOOGLE_CLIENT_ID')!,
+      clientSecret: readEnv(env, 'GOOGLE_CLIENT_SECRET')!,
+      refreshToken: readEnv(env, 'GOOGLE_REFRESH_TOKEN')!,
+    });
   }
   return notConfiguredReader;
 }
