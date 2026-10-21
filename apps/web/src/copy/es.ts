@@ -283,11 +283,9 @@ export const ES = {
   source: {
     /** Solo fuentes con adaptador real; nada de portales que no soportamos. */
     labels: {
-      arbeitnow: 'Arbeitnow',
       ashby: 'Ashby',
       fixture: 'Ejemplo (catálogo)',
       greenhouse: 'Greenhouse',
-      landingjobs: 'Landing.jobs',
       lever: 'Lever',
       manfred: 'Manfred',
       smartrecruiters: 'SmartRecruiters',

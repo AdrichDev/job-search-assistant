@@ -89,17 +89,9 @@ Options:
                                   lever           Lever company boards
                                   ashby           Ashby company boards
                                   smartrecruiters SmartRecruiters company boards
-                                  landingjobs     landing.jobs, European tech. Measured
-                                                  2026-09-10: 54 postings total, none in
-                                                  Spain, none junior. Kept because boards
-                                                  change; do not expect much from it.
-                                  arbeitnow       arbeitnow.com, European. Berlin/London/
-                                                  Paris dominated: 2 of 800 postings were
-                                                  located in Spain. Remote roles are kept.
                                 Shortcuts: 'boards' = greenhouse,lever,ashby,smartrecruiters
                                            'all'    = every REAL source above (manfred,greenhouse,
-                                             lever,ashby,smartrecruiters,landingjobs,
-                                             arbeitnow)
+                                             lever,ashby,smartrecruiters)
                                 'fixture' is NEVER included in a shortcut and may not
                                 share a run with a real source: demo postings competing
                                 for position in a list you act on is the defect this

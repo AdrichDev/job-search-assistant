@@ -96,11 +96,11 @@ function sourcesFor(ids: readonly SelectableSourceId[]): readonly JobSource[] {
     ashby: () => stubSource('ashby', ['https://jobs.ashbyhq.com/acme/8a2b1c3d-4e5f-6071-8293-a4b5c6d7e8f9']),
 
     /*
-     * The four sources added in this change.
+     * The sources whose payload shape was verified against live data.
      *
      * Every address below is a REAL one, copied out of the live payloads (or,
      * for Manfred, out of the published sitemap) on 2026-09-10 and confirmed
-     * HTTP 200 by curl. They are here precisely because two of these providers
+     * HTTP 200 by curl. They are here precisely because some of these providers
      * do not put an apply URL in the job payload at all, which is the exact
      * situation that produced this project's fabricated-link defect.
      */
@@ -114,14 +114,6 @@ function sourcesFor(ids: readonly SelectableSourceId[]): readonly JobSource[] {
       stubSource('smartrecruiters', [
         // The detail payload's own `postingUrl`.
         'https://jobs.smartrecruiters.com/Devoteam/744000148470573-big-data-administrator-100-remoto-',
-      ]),
-    landingjobs: () =>
-      stubSource('landingjobs', [
-        'https://landing.jobs/at/damia-group-portugal/principal-cloud-security-engineer',
-      ]),
-    arbeitnow: () =>
-      stubSource('arbeitnow', [
-        'https://www.arbeitnow.com/jobs/companies/jessyworks/datev-techniker-operations-manager-remote-vollzeit-teilzeit-munich-18836',
       ]),
 
   };
@@ -160,10 +152,9 @@ describe('link provenance of a PIPELINE-PRODUCED queue', () => {
     expect(problems, describeLinkProblems(problems)).toHaveLength(0);
   });
 
-  it('PASSES on the four sources added in this change', async () => {
+  it('PASSES on the sources whose payload does not carry the apply URL', async () => {
     /*
-     * Called out separately from the `all` case below because two of these
-     * providers publish no apply URL in the job payload:
+     * Two providers publish no apply URL in the job payload itself:
      *
      *   manfred          - the address exists only in `sitemap-offers.xml`
      *   smartrecruiters  - the address exists only on the per-posting detail
@@ -174,11 +165,9 @@ describe('link provenance of a PIPELINE-PRODUCED queue', () => {
      * this suite was written after. The audit's `title-derived` rule is what
      * would catch that, and this is where it gets pointed at them.
      */
-    const queue = await runPipeline(
-      sourcesFor(['manfred', 'smartrecruiters', 'landingjobs', 'arbeitnow']),
-    );
+    const queue = await runPipeline(sourcesFor(['manfred', 'smartrecruiters']));
 
-    expect(queue.jobs.length).toBe(4);
+    expect(queue.jobs.length).toBe(2);
     expect(countSampleDataEntries(queue.jobs)).toBe(0);
 
     const problems = auditQueueLinks(queue);

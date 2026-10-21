@@ -17,7 +17,7 @@ import { silentLogger } from '../helpers/silent-logger.js';
  * Two questions are asked here that a per-adapter contract test structurally
  * cannot answer:
  *
- *   1. Does one dead API sink a run that now has nine sources in it?
+ *   1. Does one dead API sink a run that now has five real sources in it?
  *   2. Now that the SAME vacancy can arrive from Manfred, a SmartRecruiters
  *      board and the greenhouse with three different spellings, does the
  *      conservative identity logic still behave the way it was designed to?
@@ -87,14 +87,14 @@ async function run(sources: readonly JobSource[]): Promise<JobQueue> {
   );
 }
 
-describe('per-source isolation with the full nine-source selection', () => {
+describe('per-source isolation with the full --source=all selection', () => {
   it('lists every new source in --source=all, and never the fixture', () => {
     const selected = parseSourceSelection('all');
 
     expect(selected).toContain('manfred');
     expect(selected).toContain('smartrecruiters');
-    expect(selected).toContain('landingjobs');
-    expect(selected).toContain('arbeitnow');
+    expect(selected).toContain('lever');
+    expect(selected).toContain('ashby');
     expect(selected).not.toContain('fixture');
     expect(selected).toEqual([...REAL_SOURCE_IDS]);
   });
@@ -104,8 +104,8 @@ describe('per-source isolation with the full nine-source selection', () => {
       // Manfred's own failure mode: the sitemap that carries its addresses is
       // unreachable, so it refuses to produce anything rather than guess.
       deadSource('manfred', "manfred's offer sitemap could not be read (HTTP 503)"),
-      deadSource('landingjobs', 'request timed out after 15000ms'),
-      deadSource('arbeitnow', 'HTTP 429'),
+      deadSource('lever', 'request timed out after 15000ms'),
+      deadSource('ashby', 'HTTP 429'),
       sourceOf('smartrecruiters', [
         {
           title: 'Big Data Administrator',
@@ -129,13 +129,13 @@ describe('per-source isolation with the full nine-source selection', () => {
 
     const failed = queue.sourceReports.filter((report) => report.status === 'failed');
     expect(failed.map((report) => report.sourceId).sort()).toEqual([
-      'arbeitnow',
-      'landingjobs',
+      'ashby',
+      'lever',
       'manfred',
     ]);
     // Each failure keeps its own message; they are not collapsed into one.
     expect(failed.find((report) => report.sourceId === 'manfred')?.error).toContain('sitemap');
-    expect(failed.find((report) => report.sourceId === 'arbeitnow')?.error).toContain('429');
+    expect(failed.find((report) => report.sourceId === 'ashby')?.error).toContain('429');
   });
 
   it('reports what each new source contributed on the Contributed line', async () => {
@@ -156,15 +156,15 @@ describe('per-source isolation with the full nine-source selection', () => {
           url: 'https://jobs.smartrecruiters.com/Devoteam/744000148470573-big-data-administrator',
         },
       ]),
-      sourceOf('landingjobs', [
+      sourceOf('lever', [
         {
           title: 'Data Platform Engineer',
-          company: 'Damia Group Portugal',
-          location: 'PT',
-          url: 'https://landing.jobs/at/damia-group-portugal/data-platform-engineer-in',
+          company: 'Cabify',
+          location: 'Madrid',
+          url: 'https://jobs.lever.co/cabify/data-platform-engineer',
         },
       ]),
-      deadSource('arbeitnow', 'HTTP 500'),
+      deadSource('ashby', 'HTTP 500'),
     ]);
 
     const summary = renderRunSummary(queue);
@@ -172,9 +172,9 @@ describe('per-source isolation with the full nine-source selection', () => {
     expect(summary).toContain('Contributed:');
     expect(summary).toContain('manfred 1');
     expect(summary).toContain('smartrecruiters 1');
-    expect(summary).toContain('landingjobs 1');
+    expect(summary).toContain('lever 1');
     // A failure is named as a failure, never printed as a silent zero.
-    expect(summary).toContain('arbeitnow 0 (failed)');
+    expect(summary).toContain('ashby 0 (failed)');
   });
 });
 
@@ -266,12 +266,12 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
           url: 'https://www.getmanfred.com/ofertas-empleo/8457/grupo-gof-net-developer-ago26',
         },
       ]),
-      sourceOf('arbeitnow', [
+      sourceOf('ashby', [
         {
           title: '.NET Developer',
           company: 'Grupo GOF',
           location: 'Madrid, Spain',
-          url: 'https://www.arbeitnow.com/jobs/companies/grupo-gof/net-developer-santander-11111',
+          url: 'https://jobs.ashbyhq.com/grupo-gof/net-developer-santander-11111',
         },
       ]),
     ]);
@@ -281,24 +281,25 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
   });
 
   it('REFUSES to merge two anonymous postings even when everything else matches', async () => {
-    // Landing.jobs has no company field, so a URL that does not carry `/at/x/`
-    // yields an empty employer. With no anchor, `crossSourceKey` returns null
-    // and `dedupe` falls back to URL and source ref only.
+    // Any source can yield a posting with an empty employer. With no anchor,
+    // `crossSourceKey` returns null and `dedupe` falls back to URL and source
+    // ref only - so two anonymous "Junior Developer, Madrid" postings from two
+    // different sources stay two rows, even with identical titles.
     const queue = await run([
-      sourceOf('landingjobs', [
+      sourceOf('lever', [
         {
           title: 'Junior Developer',
           company: '',
           location: 'Madrid',
-          url: 'https://landing.jobs/jobs/11111',
+          url: 'https://jobs.lever.co/anon/junior-developer-madrid-11111',
         },
       ]),
-      sourceOf('arbeitnow', [
+      sourceOf('ashby', [
         {
           title: 'Junior Developer',
           company: '',
           location: 'Madrid',
-          url: 'https://www.arbeitnow.com/jobs/companies/anon/junior-developer-madrid-22222',
+          url: 'https://jobs.ashbyhq.com/anon/junior-developer-madrid-22222',
         },
       ]),
     ]);
@@ -310,19 +311,19 @@ describe('cross-source identity now that the sources genuinely overlap', () => {
   it('still collapses the same posting reported twice by the same source', async () => {
     // Paging overlap, which every paginated source here can produce.
     const queue = await run([
-      sourceOf('arbeitnow', [
+      sourceOf('greenhouse', [
         {
           title: 'DATEV Techniker',
           company: 'Jessyworks',
           location: 'Madrid',
-          url: 'https://www.arbeitnow.com/jobs/companies/jessyworks/datev-18836',
+          url: 'https://job-boards.greenhouse.io/jessyworks/datev-18836',
           externalId: 'datev-18836',
         },
         {
           title: 'DATEV Techniker',
           company: 'Jessyworks',
           location: 'Madrid',
-          url: 'https://www.arbeitnow.com/jobs/companies/jessyworks/datev-18836',
+          url: 'https://job-boards.greenhouse.io/jessyworks/datev-18836',
           externalId: 'datev-18836',
         },
       ]),

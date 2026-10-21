@@ -259,7 +259,7 @@ describe('liveness copy', () => {
 
 describe('source provenance copy', () => {
   it('has Spanish labels for every known source id and a fallback for unknown ones', () => {
-    for (const id of ['arbeitnow', 'ashby', 'fixture', 'greenhouse', 'landingjobs', 'lever', 'manfred', 'smartrecruiters']) {
+    for (const id of ['ashby', 'fixture', 'greenhouse', 'lever', 'manfred', 'smartrecruiters']) {
       expect(ES.source.labels[id]).toBeTruthy();
     }
     expect(ES.source.unknown('abc')).toContain('abc');

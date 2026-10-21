@@ -85,7 +85,7 @@ describe('parseSourceSelection', () => {
      * rather than asserted loosely: `boards` describes a KIND of source (a
      * per-company ATS with no key and no search endpoint), so a new member is a
      * deliberate decision that should have to be written down here. What must
-     * never appear is `manfred`, `landingjobs`, `arbeitnow` or `aggregator` -
+     * never appear is `manfred` or `aggregator` -
      * none of them is a company board, and a shortcut that
      * quietly widened would make `--source=boards` unpredictable.
      */

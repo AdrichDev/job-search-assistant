@@ -68,9 +68,7 @@ export type SelectableSourceId =
   | 'greenhouse'
   | 'lever'
   | 'ashby'
-  | 'smartrecruiters'
-  | 'landingjobs'
-  | 'arbeitnow';
+  | 'smartrecruiters';
 
 /**
  * The company-board providers: per-company APIs, no key, no search endpoint.
@@ -107,12 +105,6 @@ export const REAL_SOURCE_IDS: readonly SelectableSourceId[] = [
   // market, in Spanish, and the only source that publishes a salary.
   'manfred',
   ...BOARD_SOURCE_IDS,
-  // These two are European rather than Spanish and are near the bottom for
-  // that reason. See their adapters for the measured Spanish yield - it is
-  // small, and saying so where the order is decided is more useful than a
-  // comment nobody reads twice.
-  'landingjobs',
-  'arbeitnow',
 ];
 
 /**

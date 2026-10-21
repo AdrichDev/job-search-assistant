@@ -32,14 +32,12 @@ reaches the network; the rest are the allowed routes above, each registered once
 |----|------------|-------|--------|
 | `manfred` | Manfred's public job API (archive endpoint; closed offers are filtered out) | Official API | Implemented |
 | `smartrecruiters` | SmartRecruiters posting API, covering its company boards | Official API | Implemented |
-| `landingjobs` | `landing.jobs` public jobs API | Official API | Implemented |
-| `arbeitnow` | Arbeitnow's free, key-less European job-board API (terms travel in the payload) | Official API | Implemented |
 | `greenhouse` | Employer ATS endpoint, per company board | Employer ATS endpoint | Implemented |
 | `lever` | Employer ATS endpoint, per company board | Employer ATS endpoint | Implemented |
 | `ashby` | Employer ATS endpoint, per company board | Employer ATS endpoint | Implemented |
 | `fixture` | Local sample catalogue, for tests and the sample badge | None (no network) | Implemented |
 
-The web UI labels exactly these eight ids and nothing else: a portal without an
+The web UI labels exactly these six ids and nothing else: a portal without an
 adapter has no label, so it cannot appear in the queue by accident.
 
 ## Intended route per portal

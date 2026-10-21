@@ -32,7 +32,7 @@ describe('entrySourceIds / entrySourceLabels', () => {
   });
 
   it('keeps every source of a multi-source entry', () => {
-    expect(entrySourceLabels(entry('arbeitnow', 'manfred'))).toHaveLength(2);
+    expect(entrySourceLabels(entry('greenhouse', 'manfred'))).toHaveLength(2);
   });
 
   it('returns nothing for an entry without sources', () => {

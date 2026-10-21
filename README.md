@@ -51,8 +51,6 @@ npm run start:boards      # Greenhouse + Lever + Ashby
 | `lever` | Per-company boards | No | Same list |
 | `ashby` | Per-company boards | No | Same list |
 | `smartrecruiters` | Per-company boards | No | Same list |
-| `landingjobs` | European job board API | No | Whatever the API returns |
-| `arbeitnow` | European job board API | No | Whatever the API returns |
 
 Every source is read through a public API or an employer's own ATS endpoint. InfoJobs, Indeed, LinkedIn, Tecnoempleo, Michael Page, Knowmad Mood and Experteer are **not implemented**; their intended routes are in [docs/sources.md](docs/sources.md). Email alerts are an allowed route but **no email ingestion exists today**.
 

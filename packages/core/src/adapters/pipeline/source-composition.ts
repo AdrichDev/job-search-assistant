@@ -3,13 +3,11 @@ import type { SelectableSourceId } from '../../cli/source-selection.js';
 import type { JobSource } from '../../ports/job-source.js';
 import type { LinkChecker } from '../../ports/link-checker.js';
 import type { Logger } from '../../ports/logger.js';
-import { createArbeitnowJobSource } from '../arbeitnow/arbeitnow-job-source.js';
 import { createAshbyJobSource } from '../boards/ashby-board.js';
 import { createGreenhouseJobSource } from '../boards/greenhouse-board.js';
 import { createLeverJobSource } from '../boards/lever-board.js';
 import { createSmartRecruitersJobSource } from '../boards/smartrecruiters-board.js';
 import { createFixtureJobSource } from '../fixture/fixture-job-source.js';
-import { createLandingJobsSource } from '../landingjobs/landingjobs-job-source.js';
 import {
   createHttpLinkChecker,
   DEFAULT_LIVENESS_CONCURRENCY,
@@ -87,9 +85,5 @@ export function buildSourceFactories(
         ...boardOptions,
         companies: companiesFor('smartrecruiters'),
       }),
-
-    landingjobs: () => createLandingJobsSource({ logger, timeoutMs, now }),
-    arbeitnow: () => createArbeitnowJobSource({ logger, timeoutMs, now }),
-
   };
 }
