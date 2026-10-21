@@ -110,6 +110,24 @@ describe('write lock', () => {
     expect(await readdir(directory)).toContain(WRITE_LOCK_FILE_NAME);
   }, 60_000);
 
+  it('leaves a lock whose record it cannot prove is its own, instead of deleting it', async () => {
+    const directory = await scratch();
+    const lockPath = join(directory, WRITE_LOCK_FILE_NAME);
+
+    await withWriteLock(directory, async () => {
+      // A record that is not ours: mangled by something else while we held the lock.
+      await writeFile(
+        lockPath,
+        `${JSON.stringify({ pid: process.pid, startedAt: Date.now(), token: 'not-ours' })}\n`,
+        'utf8',
+      );
+    });
+
+    // Deleting it would risk dropping someone else's lock, which is the one mistake
+    // this module exists to prevent. A leaked lock fails loudly on the next write.
+    expect(await readdir(directory)).toContain(WRITE_LOCK_FILE_NAME);
+  });
+
   it('fails with an actionable message when a live process holds the lock', async () => {
     const directory = await scratch();
     const holder = startHolder(directory, 5_000);

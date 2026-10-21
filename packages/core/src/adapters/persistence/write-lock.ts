@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { randomUUID } from 'node:crypto';
 import { mkdir, open, readFile, unlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
@@ -68,6 +69,14 @@ const directoryQueues = new Map<string, Promise<unknown>>();
 interface LockRecord {
   readonly pid: number;
   readonly startedAt: number;
+  /** Written by this version; absent on a lock created by an older one. */
+  readonly token?: string;
+}
+
+/** What this process holds: the path it created and the token it wrote into it. */
+interface HeldLock {
+  readonly lockPath: string;
+  readonly token: string;
 }
 
 const defaultIsProcessAlive = (pid: number): boolean => {
@@ -90,9 +99,9 @@ async function readRecord(lockPath: string): Promise<LockRecord | null> {
   try {
     const parsed: unknown = JSON.parse(await readFile(lockPath, 'utf8'));
     if (typeof parsed !== 'object' || parsed === null) return null;
-    const { pid, startedAt } = parsed as { pid?: unknown; startedAt?: unknown };
+    const { pid, startedAt, token } = parsed as { pid?: unknown; startedAt?: unknown; token?: unknown };
     if (typeof pid !== 'number' || typeof startedAt !== 'number') return null;
-    return { pid, startedAt };
+    return typeof token === 'string' ? { pid, startedAt, token } : { pid, startedAt };
   } catch {
     // Missing between our failed create and this read, or not valid JSON yet.
     // Either way the caller decides from the file's own metadata next.
@@ -100,7 +109,7 @@ async function readRecord(lockPath: string): Promise<LockRecord | null> {
   }
 }
 
-async function tryCreate(lockPath: string): Promise<boolean> {
+async function tryCreate(lockPath: string, token: string): Promise<boolean> {
   let handle;
   try {
     handle = await open(lockPath, 'wx');
@@ -109,7 +118,10 @@ async function tryCreate(lockPath: string): Promise<boolean> {
     throw cause;
   }
   try {
-    await handle.writeFile(`${JSON.stringify({ pid: process.pid, startedAt: Date.now() })}\n`, 'utf8');
+    await handle.writeFile(
+      `${JSON.stringify({ pid: process.pid, startedAt: Date.now(), token })}\n`,
+      'utf8',
+    );
   } finally {
     await handle.close();
   }
@@ -126,7 +138,7 @@ function contention(lockPath: string, directory: string, record: LockRecord | nu
   );
 }
 
-async function acquire(directory: string, options: WriteLockOptions): Promise<string> {
+async function acquire(directory: string, options: WriteLockOptions): Promise<HeldLock> {
   const lockPath = join(directory, WRITE_LOCK_FILE_NAME);
   const waitMs = options.waitMs ?? DEFAULT_WAIT_MS;
   const now = options.now ?? Date.now;
@@ -136,7 +148,8 @@ async function acquire(directory: string, options: WriteLockOptions): Promise<st
   await mkdir(directory, { recursive: true });
 
   for (;;) {
-    if (await tryCreate(lockPath)) return lockPath;
+    const token = `${process.pid}-${randomUUID()}`;
+    if (await tryCreate(lockPath, token)) return { lockPath, token };
 
     // Never deleted here: the check and the delete cannot be one atomic step, so a
     // "dead lock" cleanup is a lost write waiting for a second reclaimer.
@@ -148,12 +161,14 @@ async function acquire(directory: string, options: WriteLockOptions): Promise<st
   }
 }
 
-async function release(lockPath: string): Promise<void> {
-  const record = await readRecord(lockPath);
-  // Only remove our own lock. It cannot have been reclaimed by another process -
-  // nothing reclaims - but the guard keeps this true if that ever changes.
-  if (record !== null && record.pid !== process.pid) return;
-  await unlink(lockPath).catch(() => undefined);
+async function release(held: HeldLock): Promise<void> {
+  const record = await readRecord(held.lockPath);
+  // Only a lock whose recorded token is OURS may be removed. An unreadable record
+  // is not proof of ownership, and deleting it could drop another process's lock -
+  // the one mistake this module exists to prevent. A lock we cannot prove is ours is
+  // left in place, and it surfaces on the next acquisition with the manual fix.
+  if (record?.token !== held.token) return;
+  await unlink(held.lockPath).catch(() => undefined);
 }
 
 /**
@@ -196,11 +211,11 @@ async function lockAndRun<T>(
   operation: () => Promise<T>,
   options: WriteLockOptions,
 ): Promise<T> {
-  const lockPath = await acquire(key, options);
+  const heldLock = await acquire(key, options);
   const held = heldByContext.getStore() ?? new Set<string>();
   try {
     return await heldByContext.run(new Set([...held, key]), operation);
   } finally {
-    await release(lockPath);
+    await release(heldLock);
   }
 }
