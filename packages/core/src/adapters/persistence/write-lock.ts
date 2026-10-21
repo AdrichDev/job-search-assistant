@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { mkdir, open, readFile, stat, unlink } from 'node:fs/promises';
+import { mkdir, open, readFile, unlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 /**
@@ -19,13 +19,16 @@ import { join, resolve } from 'node:path';
  * lock, which is what makes a read-modify-write cycle safe: the caller reads and
  * writes while holding it, so a second process cannot slip a write in between.
  *
- * ## Why it recovers instead of waiting forever
+ * ## Why it never reclaims a lock it did not create
  *
- * A crashed process leaves the file behind, and a lock nobody can take is a hang
- * in an app the user is using. Two independent signals decide it is abandoned:
- * the recorded pid is gone, or the lock is older than {@link STALE_AFTER_MS}.
- * Recovery deletes the file and retries the create; it never writes through a
- * lock it did not take.
+ * A crashed process leaves the file behind, and reclaiming it automatically is the
+ * tempting answer. It does not survive review: deciding "this lock is dead" and
+ * deleting the path are two separate steps, and no portable compare-and-delete
+ * closes the gap. Two reclaimers can observe the same corpse and the second one
+ * deletes the REPLACEMENT the first just created, putting two writers on the
+ * directory again. So a lock is never deleted by a process that did not create it: a
+ * provably gone owner is reported at once with the manual step spelled out, and a
+ * live owner is waited for up to {@link DEFAULT_WAIT_MS}.
  */
 
 /** Name of the lock file inside the protected directory. */
@@ -40,21 +43,11 @@ export const WRITE_LOCK_FILE_NAME = '.write.lock';
  */
 export const DEFAULT_WAIT_MS = 5_000;
 
-/**
- * Age at which a lock is treated as abandoned even when its pid still exists.
- *
- * Pid reuse is real on Windows. A lock older than this cannot belong to a live
- * store operation, so waiting on it would only delay a failure the user has to
- * see anyway.
- */
-export const STALE_AFTER_MS = 30_000;
-
 /** Sleep between acquisition attempts. */
 const RETRY_DELAY_MS = 25;
 
 export interface WriteLockOptions {
   readonly waitMs?: number;
-  readonly staleAfterMs?: number;
   readonly now?: () => number;
   /** Injected so abandonment can be tested without a real second process. */
   readonly isProcessAlive?: (pid: number) => boolean;
@@ -72,16 +65,9 @@ const heldByContext = new AsyncLocalStorage<ReadonlySet<string>>();
 /** Tail of the queue that serialises independent callers per directory. */
 const directoryQueues = new Map<string, Promise<unknown>>();
 
-/** Suffix of the marker that serialises reclaimers of one abandoned lock. */
-const RECOVERY_SUFFIX = '.recovery';
-
 interface LockRecord {
   readonly pid: number;
   readonly startedAt: number;
-}
-
-function ownerIsGone(record: LockRecord, options: Required<Pick<WriteLockOptions, 'isProcessAlive'>>): boolean {
-  return !options.isProcessAlive(record.pid);
 }
 
 const defaultIsProcessAlive = (pid: number): boolean => {
@@ -114,23 +100,6 @@ async function readRecord(lockPath: string): Promise<LockRecord | null> {
   }
 }
 
-async function isAbandoned(
-  lockPath: string,
-  options: { readonly staleAfterMs: number; readonly now: () => number; readonly isProcessAlive: (pid: number) => boolean },
-): Promise<boolean> {
-  let mtimeMs: number;
-  try {
-    mtimeMs = (await stat(lockPath)).mtimeMs;
-  } catch {
-    return false; // Gone already: the next create attempt will decide.
-  }
-  if (options.now() - mtimeMs > options.staleAfterMs) return true;
-
-  const record = await readRecord(lockPath);
-  if (record === null) return false; // Fresh but unreadable: give the writer a moment.
-  return ownerIsGone(record, { isProcessAlive: options.isProcessAlive });
-}
-
 async function tryCreate(lockPath: string): Promise<boolean> {
   let handle;
   try {
@@ -147,44 +116,19 @@ async function tryCreate(lockPath: string): Promise<boolean> {
   return true;
 }
 
-/**
- * Reclaim an abandoned lock, serialising the reclaimers themselves. Two processes
- * that judged the same corpse must not both delete it: the first takes a fresh
- * lock and the second would then delete that FRESH one on an earlier decision,
- * leaving two writers that both believe they own the directory.
- */
-async function reclaimAbandoned(
-  lockPath: string,
-  context: {
-    readonly staleAfterMs: number;
-    readonly now: () => number;
-    readonly isProcessAlive: (pid: number) => boolean;
-  },
-): Promise<boolean> {
-  const recoveryPath = `${lockPath}${RECOVERY_SUFFIX}`;
-  if (!(await tryCreate(recoveryPath))) {
-    // Only a reclaimer that crashed may be cleared, on the same staleness rule.
-    const age = await stat(recoveryPath).then(
-      (info) => context.now() - info.mtimeMs,
-      () => 0,
-    );
-    if (age > context.staleAfterMs) await unlink(recoveryPath).catch(() => undefined);
-    return false;
-  }
-
-  try {
-    if (!(await isAbandoned(lockPath, context))) return false;
-    await unlink(lockPath).catch(() => undefined);
-    return true;
-  } finally {
-    await unlink(recoveryPath).catch(() => undefined);
-  }
+function contention(lockPath: string, directory: string, record: LockRecord | null, ownerGone: boolean): Error {
+  const owner = record === null ? 'an unknown process' : `pid ${record.pid}`;
+  const state = ownerGone ? 'and that process is no longer running' : 'and did not finish in time';
+  return new Error(
+    `Another process (${owner}) is writing to ${directory} ${state}. ` +
+      `Refusing to write without the lock at ${lockPath}. ` +
+      'If no such process is running, delete that file and retry.',
+  );
 }
 
 async function acquire(directory: string, options: WriteLockOptions): Promise<string> {
   const lockPath = join(directory, WRITE_LOCK_FILE_NAME);
   const waitMs = options.waitMs ?? DEFAULT_WAIT_MS;
-  const staleAfterMs = options.staleAfterMs ?? STALE_AFTER_MS;
   const now = options.now ?? Date.now;
   const isProcessAlive = options.isProcessAlive ?? defaultIsProcessAlive;
   const deadline = now() + waitMs;
@@ -194,17 +138,11 @@ async function acquire(directory: string, options: WriteLockOptions): Promise<st
   for (;;) {
     if (await tryCreate(lockPath)) return lockPath;
 
-    if (await reclaimAbandoned(lockPath, { staleAfterMs, now, isProcessAlive })) continue;
-
-    if (now() >= deadline) {
-      const record = await readRecord(lockPath);
-      const owner = record === null ? 'an unknown process' : `pid ${record.pid}`;
-      throw new Error(
-        `Another process (${owner}) is writing to ${directory}. ` +
-          `Refusing to write without the lock at ${lockPath}. ` +
-          'Wait for it to finish, or delete that file if no such process exists.',
-      );
-    }
+    // Never deleted here: the check and the delete cannot be one atomic step, so a
+    // "dead lock" cleanup is a lost write waiting for a second reclaimer.
+    const record = await readRecord(lockPath);
+    const ownerGone = record !== null && !isProcessAlive(record.pid);
+    if (ownerGone || now() >= deadline) throw contention(lockPath, directory, record, ownerGone);
 
     await sleep(RETRY_DELAY_MS);
   }
@@ -212,8 +150,8 @@ async function acquire(directory: string, options: WriteLockOptions): Promise<st
 
 async function release(lockPath: string): Promise<void> {
   const record = await readRecord(lockPath);
-  // Only remove our own lock: a stale-recovery in another process may have taken
-  // it over while we were finishing.
+  // Only remove our own lock. It cannot have been reclaimed by another process -
+  // nothing reclaims - but the guard keeps this true if that ever changes.
   if (record !== null && record.pid !== process.pid) return;
   await unlink(lockPath).catch(() => undefined);
 }

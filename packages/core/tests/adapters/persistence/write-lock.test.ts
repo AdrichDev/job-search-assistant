@@ -3,11 +3,7 @@ import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-  STALE_AFTER_MS,
-  WRITE_LOCK_FILE_NAME,
-  withWriteLock,
-} from '../../../src/adapters/persistence/write-lock.js';
+import { WRITE_LOCK_FILE_NAME, withWriteLock } from '../../../src/adapters/persistence/write-lock.js';
 
 const HOLDER = resolve(import.meta.dirname, '../../fixtures/lock-holder.ts');
 const NODE_ARGS = ['--import', 'tsx'];
@@ -93,9 +89,8 @@ describe('write lock', () => {
     await expect(withWriteLock(directory, async () => 'after')).resolves.toBe('after');
   });
 
-  it('recovers a lock left behind by a process that is gone', async () => {
+  it('never deletes the lock of a process that is gone, and names the manual fix', async () => {
     const directory = await scratch();
-
     const deadPid = await spawnDeadPid();
 
     await writeFile(
@@ -104,28 +99,16 @@ describe('write lock', () => {
       'utf8',
     );
 
-    await expect(withWriteLock(directory, async () => 'recovered', { waitMs: 1_000 })).resolves.toBe(
-      'recovered',
+    // A dead owner is reported, not reclaimed: the file must survive untouched.
+    const started = Date.now();
+    await expect(withWriteLock(directory, async () => 'never', { waitMs: 30_000 })).rejects.toThrow(
+      /is no longer running[\s\S]*delete that file and retry/,
     );
-  });
+    // A provably dead owner fails at once instead of burning the whole wait.
+    expect(Date.now() - started).toBeLessThan(2_000);
 
-  it('recovers a lock that is older than the staleness horizon', async () => {
-    const directory = await scratch();
-
-    // Alive pid (ours), ancient mtime: only the age can justify recovery.
-    await writeFile(
-      join(directory, WRITE_LOCK_FILE_NAME),
-      `${JSON.stringify({ pid: process.pid, startedAt: Date.now() - STALE_AFTER_MS * 2 })}\n`,
-      'utf8',
-    );
-
-    await expect(
-      withWriteLock(directory, async () => 'recovered', {
-        waitMs: 1_000,
-        now: () => Date.now() + STALE_AFTER_MS * 3,
-      }),
-    ).resolves.toBe('recovered');
-  });
+    expect(await readdir(directory)).toContain(WRITE_LOCK_FILE_NAME);
+  }, 60_000);
 
   it('fails with an actionable message when a live process holds the lock', async () => {
     const directory = await scratch();
@@ -187,25 +170,4 @@ describe('write lock', () => {
     expect(peak).toBe(1);
   });
 
-  it('does not delete a lock while another reclaimer holds the recovery marker', async () => {
-    const directory = await scratch();
-    const deadPid = await spawnDeadPid();
-    const lockPath = join(directory, WRITE_LOCK_FILE_NAME);
-    await writeFile(lockPath, `${JSON.stringify({ pid: deadPid, startedAt: Date.now() })}\n`, 'utf8');
-    // A reclaimer mid-decision. Two of them deleting the same corpse is how the
-    // second ends up deleting the first one's REPLACEMENT lock.
-    await writeFile(`${lockPath}.recovery`, `${JSON.stringify({ pid: process.pid, startedAt: Date.now() })}\n`, 'utf8');
-
-    await expect(withWriteLock(directory, async () => 'never', { waitMs: 300 })).rejects.toThrow(
-      /Refusing to write without the lock/,
-    );
-
-    // The abandoned lock must still be there: nobody else was allowed to judge it.
-    expect(await readdir(directory)).toContain(WRITE_LOCK_FILE_NAME);
-
-    await rm(`${lockPath}.recovery`, { force: true });
-    await expect(withWriteLock(directory, async () => 'recovered', { waitMs: 1_000 })).resolves.toBe(
-      'recovered',
-    );
-  }, 60_000);
 });

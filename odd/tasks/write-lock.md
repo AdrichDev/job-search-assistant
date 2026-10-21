@@ -20,8 +20,10 @@ would still let two processes read the same base and lose one update.
 S4 — Contention is bounded: a waiter retries for a limited time and then fails with an actionable
 message naming the lock file. It never writes anyway, and it never waits forever.
 
-S5 — A lock left behind by a dead process must be recovered, not deadlock the app. Recovery is
-based on the recorded pid being gone, or the lock being older than a fixed staleness horizon.
+S5 — A lock left behind by a dead process is **reported, never reclaimed**. The next acquisition fails
+with a message naming the holder's pid and the lock file, and the operator deletes it. Automatic
+reclaim is refused by design: judging a lock dead and deleting the path are two steps, no portable
+compare-and-delete closes them, and two reclaimers can each delete the other's replacement.
 
 S6 — A failed operation must release the lock. A thrown error inside the critical section may not
 poison later writes in the same process or in another one.
@@ -101,3 +103,16 @@ string from `collectBindings[0]`, after a fresh STATUS re-offered the same slot.
 there is no verdict, and the lineage stays in `correction_required`. Per the contract the attempt
 stopped after the single reasoned relaunch; nothing was acknowledged, nothing was burned, and no
 verdict was invented.
+
+L10 — User authorized option A (verbatim: `a`) after the second refuter round: remove automatic lock
+reclamation instead of adding another layer to it. Reason: the refuter found the same defect class
+three times — check-then-delete on a pathname — first in the abandonment path, then in the recovery
+marker. With `fs.open(..., 'wx')` there is atomic create but no portable compare-and-delete, and the
+real primitive (`LockFileEx`/`flock`) needs a native dependency this project refuses by design.
+Deleting the reclamation machinery removes the class instead of the instance: 170 diff lines against a
+declared plan of 170, and the module shrinks by ~99 lines.
+
+Behaviour now: a lock is never deleted by a process that did not create it. A provably gone owner fails
+at once (fast, not after the full wait) with the file named and the manual step written out; a live
+owner is waited for up to 5 s. Tests that pinned reclamation were replaced by one that asserts the dead
+owner's lock survives and the message is actionable; core suite 1475/1475, typecheck clean.
