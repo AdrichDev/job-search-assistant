@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { z } from 'zod';
 import { writeFileAtomically } from './atomic-file.js';
+import { withWriteLock } from './write-lock.js';
 
 /**
  * The mechanics every single-file JSON log shares: read and validate, refuse to
@@ -13,8 +14,9 @@ import { writeFileAtomically } from './atomic-file.js';
  * ordering). Two copies of this plumbing used to drift apart; each new persisted
  * field would have had to be wired through both.
  *
- * Concurrency is in-process only. A second OS process writing the same file is an
- * accepted limitation for a single-user local app.
+ * Concurrency is cross-process safe inside one data directory: every cycle takes
+ * the directory's write lock, so a CLI run and the web app cannot interleave a
+ * read and a write. See `write-lock.ts` for the mechanism and its recovery rules.
  */
 
 const CURRENT_VERSION = 1;
@@ -52,12 +54,16 @@ export function createJsonLogStore<Raw, Entity, Serialized>(
   options: JsonLogStoreOptions<Raw, Entity, Serialized>,
 ): JsonLogStore<Entity> {
   const target = resolve(options.filePath);
+  const directory = dirname(target);
   const { label, entriesKey } = options;
 
   let queue: Promise<unknown> = Promise.resolve();
 
   function exclusive<T>(operation: () => Promise<T>): Promise<T> {
-    const run = queue.then(operation, operation);
+    // The in-process queue keeps the directory lock itself uncontended between
+    // cycles of this store; the lock is what makes two PROCESSES safe.
+    const guarded = (): Promise<T> => withWriteLock(directory, operation);
+    const run = queue.then(guarded, guarded);
     // The queue must survive a rejected operation, otherwise one failed write
     // would poison every later one.
     queue = run.then(
