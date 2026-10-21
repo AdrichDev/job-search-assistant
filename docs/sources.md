@@ -22,7 +22,30 @@ portal the author uses.
 - **Guessing a format.** An email parser is written only against a real saved
   sample.
 
+## Implemented sources
+
+Every source with an adapter today. `fixture` is a local sample file and never
+reaches the network; the rest are the allowed routes above, each registered once in
+`packages/core/src/adapters/pipeline/source-composition.ts`.
+
+| Id | What it is | Route | Status |
+|----|------------|-------|--------|
+| `manfred` | Manfred's public job API (archive endpoint; closed offers are filtered out) | Official API | Implemented |
+| `smartrecruiters` | SmartRecruiters posting API, covering its company boards | Official API | Implemented |
+| `landingjobs` | `landing.jobs` public jobs API | Official API | Implemented |
+| `arbeitnow` | Arbeitnow's free, key-less European job-board API (terms travel in the payload) | Official API | Implemented |
+| `greenhouse` | Employer ATS endpoint, per company board | Employer ATS endpoint | Implemented |
+| `lever` | Employer ATS endpoint, per company board | Employer ATS endpoint | Implemented |
+| `ashby` | Employer ATS endpoint, per company board | Employer ATS endpoint | Implemented |
+| `fixture` | Local sample catalogue, for tests and the sample badge | None (no network) | Implemented |
+
+The web UI labels exactly these eight ids and nothing else: a portal without an
+adapter has no label, so it cannot appear in the queue by accident.
+
 ## Intended route per portal
+
+Portals the author uses that have **no adapter yet**. Nothing here is wired into a
+run; each row states the route that would be allowed if one is built.
 
 | Portal | Route today | Status |
 |--------|-------------|--------|
