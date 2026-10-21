@@ -76,3 +76,28 @@ the contract starts one only when `reviewDue` is true or the user asks for it.
 
 L7 — README updated in the same commit: the old limitation paragraph was replaced by the new guarantee
 plus the residual limit (a lock covers a directory, not a transaction).
+
+L8 — Native review `review-0da4d3da89e65514` (risk, resilience, reliability + refuter) raised two
+candidate-caused CRITICALs, both real, both introduced by 6520495:
+
+- `R3-recovery-race` — abandonment check and deletion were not coordinated, so two reclaimers could
+  delete each other's replacement lock and a crash restart still admitted two writers.
+- `R3-reentrancy` — the depth counter was process-global, so two INDEPENDENT operations in one
+  directory both looked nested: they ran with one filesystem lock between them and the first to
+  finish dropped it under the second.
+
+Fix in `04bb82b` (189 diff lines against a declared plan of 190, budget 200): reclaiming takes a
+recovery marker and re-verifies abandonment inside it; ownership is tracked per async context
+(`AsyncLocalStorage`) and independent callers queue per directory. Both rules are pinned by tests
+that FAIL against 6520495 — the independent-caller test observes a peak of 2 concurrent writers, and
+the recovery test observes the lock being deleted while another reclaimer holds the marker.
+
+Verification of record: core typecheck clean, core **1477/1477**, web **376/376**, web typecheck clean.
+
+L9 — BLOCKED, authority preserved: the provider requested `targeted_validation_required` for the
+correction. Two capture attempts were rejected with `capture-binding-rejected: collectBinding is
+missing or stale for current STATUS` — first an object reconstruction, then the exact serialized
+string from `collectBindings[0]`, after a fresh STATUS re-offered the same slot. No validator ran, so
+there is no verdict, and the lineage stays in `correction_required`. Per the contract the attempt
+stopped after the single reasoned relaunch; nothing was acknowledged, nothing was burned, and no
+verdict was invented.
