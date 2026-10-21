@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { mkdir, open, readFile, stat, unlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
@@ -59,20 +60,25 @@ export interface WriteLockOptions {
   readonly isProcessAlive?: (pid: number) => boolean;
 }
 
+/**
+ * Directories the CURRENT async context holds. A per-directory counter is shared
+ * by every caller, so two independent operations in one directory would both look
+ * like a nested re-entry: they run without the lock between them, and the first
+ * to finish drops it while the second still writes. Per context separates a real
+ * nested call from an unrelated concurrent one, which must queue.
+ */
+const heldByContext = new AsyncLocalStorage<ReadonlySet<string>>();
+
+/** Tail of the queue that serialises independent callers per directory. */
+const directoryQueues = new Map<string, Promise<unknown>>();
+
+/** Suffix of the marker that serialises reclaimers of one abandoned lock. */
+const RECOVERY_SUFFIX = '.recovery';
+
 interface LockRecord {
   readonly pid: number;
   readonly startedAt: number;
 }
-
-/**
- * Locks this process already holds, keyed by resolved directory.
- *
- * Nested use must not self-deadlock: an operation that reaches a second store in
- * the same directory re-enters the same lock, so it increments a depth and skips
- * the file entirely. `exclusive` in `json-log-store.ts` is the only caller today,
- * but the rule belongs to the lock, not to its callers.
- */
-const heldDepth = new Map<string, number>();
 
 function ownerIsGone(record: LockRecord, options: Required<Pick<WriteLockOptions, 'isProcessAlive'>>): boolean {
   return !options.isProcessAlive(record.pid);
@@ -141,6 +147,40 @@ async function tryCreate(lockPath: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Reclaim an abandoned lock, serialising the reclaimers themselves. Two processes
+ * that judged the same corpse must not both delete it: the first takes a fresh
+ * lock and the second would then delete that FRESH one on an earlier decision,
+ * leaving two writers that both believe they own the directory.
+ */
+async function reclaimAbandoned(
+  lockPath: string,
+  context: {
+    readonly staleAfterMs: number;
+    readonly now: () => number;
+    readonly isProcessAlive: (pid: number) => boolean;
+  },
+): Promise<boolean> {
+  const recoveryPath = `${lockPath}${RECOVERY_SUFFIX}`;
+  if (!(await tryCreate(recoveryPath))) {
+    // Only a reclaimer that crashed may be cleared, on the same staleness rule.
+    const age = await stat(recoveryPath).then(
+      (info) => context.now() - info.mtimeMs,
+      () => 0,
+    );
+    if (age > context.staleAfterMs) await unlink(recoveryPath).catch(() => undefined);
+    return false;
+  }
+
+  try {
+    if (!(await isAbandoned(lockPath, context))) return false;
+    await unlink(lockPath).catch(() => undefined);
+    return true;
+  } finally {
+    await unlink(recoveryPath).catch(() => undefined);
+  }
+}
+
 async function acquire(directory: string, options: WriteLockOptions): Promise<string> {
   const lockPath = join(directory, WRITE_LOCK_FILE_NAME);
   const waitMs = options.waitMs ?? DEFAULT_WAIT_MS;
@@ -154,10 +194,7 @@ async function acquire(directory: string, options: WriteLockOptions): Promise<st
   for (;;) {
     if (await tryCreate(lockPath)) return lockPath;
 
-    if (await isAbandoned(lockPath, { staleAfterMs, now, isProcessAlive })) {
-      await unlink(lockPath).catch(() => undefined);
-      continue;
-    }
+    if (await reclaimAbandoned(lockPath, { staleAfterMs, now, isProcessAlive })) continue;
 
     if (now() >= deadline) {
       const record = await readRecord(lockPath);
@@ -184,9 +221,10 @@ async function release(lockPath: string): Promise<void> {
 /**
  * Run `operation` while holding the write lock for `directory`.
  *
- * Re-entrant within one process, so a store operation that reaches another store
- * in the same directory does not deadlock. The lock is released on success and on
- * failure; nothing may keep it after the operation settles.
+ * Independent callers queue per directory, so the lock is never dropped while a
+ * second operation here is still writing. A call made from inside the holder's
+ * own async context is a genuine re-entry and runs directly, which keeps nested
+ * store use from deadlocking. Released on success and on failure.
  */
 export async function withWriteLock<T>(
   directory: string,
@@ -194,24 +232,37 @@ export async function withWriteLock<T>(
   options: WriteLockOptions = {},
 ): Promise<T> {
   const key = resolve(directory);
-  const depth = heldDepth.get(key) ?? 0;
-  if (depth > 0) {
-    heldDepth.set(key, depth + 1);
-    try {
-      return await operation();
-    } finally {
-      const remaining = (heldDepth.get(key) ?? 1) - 1;
-      if (remaining <= 0) heldDepth.delete(key);
-      else heldDepth.set(key, remaining);
-    }
-  }
 
-  const lockPath = await acquire(key, options);
-  heldDepth.set(key, 1);
+  if (heldByContext.getStore()?.has(key) === true) return operation();
+
+  const previous = directoryQueues.get(key) ?? Promise.resolve();
+  const run = previous.then(
+    () => lockAndRun(key, operation, options),
+    () => lockAndRun(key, operation, options),
+  );
+  const settled = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  directoryQueues.set(key, settled);
   try {
-    return await operation();
+    return await run;
   } finally {
-    heldDepth.delete(key);
+    // Only the current tail may delete the queue, so a later waiter is not lost.
+    if (directoryQueues.get(key) === settled) directoryQueues.delete(key);
+  }
+}
+
+async function lockAndRun<T>(
+  key: string,
+  operation: () => Promise<T>,
+  options: WriteLockOptions,
+): Promise<T> {
+  const lockPath = await acquire(key, options);
+  const held = heldByContext.getStore() ?? new Set<string>();
+  try {
+    return await heldByContext.run(new Set([...held, key]), operation);
+  } finally {
     await release(lockPath);
   }
 }

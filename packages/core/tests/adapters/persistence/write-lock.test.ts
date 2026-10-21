@@ -20,6 +20,18 @@ async function scratch(): Promise<string> {
   return directory;
 }
 
+/** A real pid that is guaranteed gone: the child exits before we read its number. */
+function spawnDeadPid(): Promise<number> {
+  return new Promise<number>((resolvePid, rejectPid) => {
+    const child = spawn(process.execPath, ['-e', ''], { stdio: 'ignore', windowsHide: true });
+    child.on('close', () => {
+      if (typeof child.pid === 'number') resolvePid(child.pid);
+      else rejectPid(new Error('child had no pid'));
+    });
+  });
+}
+
+
 afterEach(async () => {
   await Promise.all(
     scratchDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })),
@@ -84,14 +96,7 @@ describe('write lock', () => {
   it('recovers a lock left behind by a process that is gone', async () => {
     const directory = await scratch();
 
-    // A real dead pid: this child exits before we read its number.
-    const deadPid = await new Promise<number>((resolvePid, rejectPid) => {
-      const child = spawn(process.execPath, ['-e', ''], { stdio: 'ignore', windowsHide: true });
-      child.on('close', () => {
-        if (typeof child.pid === 'number') resolvePid(child.pid);
-        else rejectPid(new Error('child had no pid'));
-      });
-    });
+    const deadPid = await spawnDeadPid();
 
     await writeFile(
       join(directory, WRITE_LOCK_FILE_NAME),
@@ -146,4 +151,61 @@ describe('write lock', () => {
     expect(result).toBe('nested');
     expect(await readdir(directory)).not.toContain(WRITE_LOCK_FILE_NAME);
   });
+
+  it('serialises INDEPENDENT callers in one process instead of treating them as nested', async () => {
+    const directory = await scratch();
+    let inside = 0;
+    let peak = 0;
+    let signalInside: () => void = () => undefined;
+    let openGate: () => void = () => undefined;
+    const firstIsInside = new Promise<void>((resolveInside) => {
+      signalInside = resolveInside;
+    });
+    const gate = new Promise<void>((resolveGate) => {
+      openGate = resolveGate;
+    });
+    const holder = withWriteLock(directory, async () => {
+      inside += 1;
+      peak = Math.max(peak, inside);
+      signalInside();
+      await gate;
+      inside -= 1;
+    });
+    await firstIsInside;
+
+    // The depth counter let this unrelated caller in: the rule is that it waits.
+    const contender = withWriteLock(directory, async () => {
+      inside += 1;
+      peak = Math.max(peak, inside);
+      inside -= 1;
+    });
+    await new Promise((resolveSleep) => setTimeout(resolveSleep, 50));
+    expect(peak).toBe(1);
+
+    openGate();
+    await Promise.all([holder, contender]);
+    expect(peak).toBe(1);
+  });
+
+  it('does not delete a lock while another reclaimer holds the recovery marker', async () => {
+    const directory = await scratch();
+    const deadPid = await spawnDeadPid();
+    const lockPath = join(directory, WRITE_LOCK_FILE_NAME);
+    await writeFile(lockPath, `${JSON.stringify({ pid: deadPid, startedAt: Date.now() })}\n`, 'utf8');
+    // A reclaimer mid-decision. Two of them deleting the same corpse is how the
+    // second ends up deleting the first one's REPLACEMENT lock.
+    await writeFile(`${lockPath}.recovery`, `${JSON.stringify({ pid: process.pid, startedAt: Date.now() })}\n`, 'utf8');
+
+    await expect(withWriteLock(directory, async () => 'never', { waitMs: 300 })).rejects.toThrow(
+      /Refusing to write without the lock/,
+    );
+
+    // The abandoned lock must still be there: nobody else was allowed to judge it.
+    expect(await readdir(directory)).toContain(WRITE_LOCK_FILE_NAME);
+
+    await rm(`${lockPath}.recovery`, { force: true });
+    await expect(withWriteLock(directory, async () => 'recovered', { waitMs: 1_000 })).resolves.toBe(
+      'recovered',
+    );
+  }, 60_000);
 });
