@@ -4,7 +4,8 @@
 
 @layer base {
   :root {
-    color-scheme: light;
+    /* Dark only: native controls (selects, date inputs, scrollbars) follow. */
+    color-scheme: dark;
 
     /*
      * One accent, used for exactly one thing: the primary action.
@@ -13,12 +14,33 @@
      * heading, a chip and a link all share the accent, nothing is primary any
      * more and the user has to read the whole card to find the verb.
      */
-    --accent: 79 70 229; /* indigo-600 - 6.3:1 on white, AA for body text */
+    --accent: 79 70 229; /* indigo-600 */
     --accent-strong: 67 56 202; /* indigo-700 */
+    /* Grid-paper lines: slate-400 at low opacity so text never competes with them. */
+    --grid-minor: 148 163 184 / 0.07;
+    --grid-major: 148 163 184 / 0.13;
   }
 
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
+    /*
+     * Grid paper: a fine 24px grid with a stronger line every 120px (5 cells).
+     * It scrolls with the page: a fixed background repaints on every scroll
+     * frame. Cards, tables and inputs are opaque surfaces, so body text never
+     * sits directly on the lines.
+     */
+    background-image:
+      linear-gradient(rgb(var(--grid-major)) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--grid-major)) 1px, transparent 1px),
+      linear-gradient(rgb(var(--grid-minor)) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--grid-minor)) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  }
+
+  @media print {
+    body {
+      background-image: none;
+    }
   }
 
   /*
@@ -26,12 +48,12 @@
    *
    * Keyboard users must always be able to see where they are; removing the
    * outline without replacing it is the single most common accessibility bug in
-   * dashboards like this one. Two rings - dark over white - so the indicator
-   * survives on white cards, on the slate page background AND on the indigo
-   * Apply button, where a single dark ring would disappear.
+   * dashboards like this one. Two rings - a light ring over a page-coloured
+   * offset - so the indicator survives on the dark cards, on the page AND on the
+   * indigo Apply button. (Class names are remapped: see tailwind.config.ts.)
    */
   :focus-visible {
-    @apply outline-none ring-2 ring-slate-900 ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-slate-900 ring-offset-2 ring-offset-slate-50;
   }
 
   /* Readable measure for long-form explanatory prose. */
