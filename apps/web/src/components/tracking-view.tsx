@@ -1,17 +1,28 @@
 import Link from 'next/link';
 import type { ApplicationOutcome, TrackedApplication } from '@job-queue/core';
-import { APPLICATION_OUTCOMES, isResponse } from '@job-queue/core';
-import { StatusChip } from '@/components/chips';
+import { APPLICATION_OUTCOMES } from '@job-queue/core';
+import { isResponse } from '@job-queue/core';
 import { describeDocuments, type DocumentRefsView } from '@/components/documents-format';
 import { formatTrackingDate, trackingSourceLabels } from '@/components/tracking-format';
+import { estadoCellStyle, replyCellStyle } from '@/components/tracking-status';
 import { ES } from '@/copy/es';
 import { EMPTY_CATALOG, type ModelCatalog } from '@/server/model-catalog';
-import type { EstadoFilter, TrackingWarning } from '@/server/tracking';
+import type { EstadoFilter, PaginatedRows, TrackingWarning } from '@/server/tracking';
 
 const BASE_PATH = '/seguimiento';
 
 function filterHref(filter: EstadoFilter): string {
   return filter === 'all' ? BASE_PATH : `${BASE_PATH}?estado=${filter}`;
+}
+
+/** Pagination links keep the active filter; a filter link never carries `pagina`. */
+function paginationHref(page: number, filter: EstadoFilter): string {
+  const params = new URLSearchParams();
+  if (filter !== 'all') {
+    params.set('estado', filter);
+  }
+  params.set('pagina', String(page));
+  return `${BASE_PATH}?${params.toString()}`;
 }
 
 function FilterLinks({
@@ -50,23 +61,91 @@ function FilterLinks({
   );
 }
 
+/** One pagination step: a real link when available, an inert mark when not. */
+function PaginationEdge({
+  available,
+  href,
+  label,
+}: {
+  available: boolean;
+  href: string;
+  label: string;
+}) {
+  if (!available) {
+    return (
+      <span aria-disabled="true" className="rounded-md px-2 py-1 text-slate-500">
+        {label}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      className="rounded-md px-2 py-1 font-medium text-slate-700 underline hover:bg-slate-100"
+    >
+      {label}
+    </Link>
+  );
+}
+
+/** Hidden entirely on a single page: there is nothing to paginate through. */
+function PaginationNav({
+  page,
+  totalPages,
+  filter,
+}: {
+  page: number;
+  totalPages: number;
+  filter: EstadoFilter;
+}) {
+  if (totalPages <= 1) {
+    return null;
+  }
+  return (
+    <nav
+      aria-label={ES.tracking.pagination.label}
+      className="mt-4 flex flex-wrap items-center justify-center gap-1 text-sm"
+    >
+      <PaginationEdge available={page > 1} href={paginationHref(1, filter)} label={ES.tracking.pagination.first} />
+      <PaginationEdge available={page > 1} href={paginationHref(page - 1, filter)} label={ES.tracking.pagination.prev} />
+      <span className="px-2 font-medium text-slate-700">
+        {ES.tracking.pagination.page(page, totalPages)}
+      </span>
+      <PaginationEdge
+        available={page < totalPages}
+        href={paginationHref(page + 1, filter)}
+        label={ES.tracking.pagination.next}
+      />
+      <PaginationEdge
+        available={page < totalPages}
+        href={paginationHref(totalPages, filter)}
+        label={ES.tracking.pagination.last}
+      />
+    </nav>
+  );
+}
+
 function Row({
   row,
+  zebra,
   documents,
   catalog,
 }: {
   row: TrackedApplication;
+  zebra: boolean;
   documents: DocumentRefsView | undefined;
   catalog: ModelCatalog;
 }) {
   const sources = trackingSourceLabels(row);
   const lines = describeDocuments(documents, catalog);
+  const estado = estadoCellStyle(row.outcome);
+  const reply = replyCellStyle(row.outcome);
   return (
-    <tr className="align-top">
-      <th scope="row" className="px-3 py-3 text-left font-medium text-slate-900">
+    <tr className={`align-top${zebra ? ' bg-slate-100' : ''}`}>
+      <th scope="row" className="px-3 py-1.5 text-left font-medium text-slate-900">
         {row.company.length > 0 ? row.company : ES.tracking.noCompany}
       </th>
-      <td className="px-3 py-3">
+      <td className="max-w-sm px-3 py-1.5">
         <p>{row.title}</p>
         {row.url !== undefined && (
           <a
@@ -103,15 +182,15 @@ function Row({
           </details>
         )}
       </td>
-      <td className="px-3 py-3">{sources.join(' · ')}</td>
-      <td className="px-3 py-3">{row.city ?? ES.tracking.noCity}</td>
-      <td className="whitespace-nowrap px-3 py-3">
+      <td className="whitespace-nowrap px-3 py-1.5">{sources.join(' · ')}</td>
+      <td className="px-3 py-1.5">{row.city ?? ES.tracking.noCity}</td>
+      <td className="whitespace-nowrap px-3 py-1.5">
         <time dateTime={row.appliedAt.toISOString()}>{formatTrackingDate(row.appliedAt)}</time>
       </td>
-      <td className="px-3 py-3">
-        <StatusChip status={row.outcome} />
-      </td>
-      <td className="whitespace-nowrap px-3 py-3">
+      {/* Spreadsheet cell: the word stays, the colour only reinforces it. */}
+      <td className={`whitespace-nowrap px-3 py-1.5 ${estado.className}`}>{estado.label}</td>
+      <td className={`whitespace-nowrap px-3 py-1.5 ${reply.className}`}>{reply.label}</td>
+      <td className="whitespace-nowrap px-3 py-1.5">
         {isResponse(row.outcome) ? (
           <time dateTime={row.outcomeUpdatedAt.toISOString()}>
             {formatTrackingDate(row.outcomeUpdatedAt)}
@@ -123,7 +202,7 @@ function Row({
           </>
         )}
       </td>
-      <td className="px-3 py-3 text-slate-700">
+      <td className="px-3 py-1.5 text-slate-700">
         {lines.length === 0 ? (
           <>
             <span aria-hidden="true">—</span>
@@ -150,7 +229,7 @@ function Row({
           </ul>
         )}
       </td>
-      <td className="max-w-xs px-3 py-3 text-slate-700">
+      <td className="max-w-xs px-3 py-1.5 text-slate-700">
         {row.notes ?? (
           <>
             <span aria-hidden="true">—</span>
@@ -158,7 +237,7 @@ function Row({
           </>
         )}
       </td>
-      <td className="whitespace-nowrap px-3 py-3">
+      <td className="whitespace-nowrap px-3 py-1.5">
         <Link
           href={`${BASE_PATH}/${encodeURIComponent(row.jobId)}/editar`}
           aria-label={ES.tracking.editHint(row.company, row.title)}
@@ -171,10 +250,10 @@ function Row({
   );
 }
 
-/** Read-only table of every application, with a server-side outcome filter. */
+/** Read-only table of every application, filtered and paginated server-side. */
 export function TrackingView({
   rows,
-  visibleRows,
+  pagination,
   counts,
   filter,
   warnings,
@@ -182,7 +261,7 @@ export function TrackingView({
   catalog = EMPTY_CATALOG,
 }: {
   rows: readonly TrackedApplication[];
-  visibleRows: readonly TrackedApplication[];
+  pagination: PaginatedRows;
   counts: Readonly<Record<ApplicationOutcome, number>>;
   filter: EstadoFilter;
   warnings: readonly TrackingWarning[];
@@ -220,10 +299,10 @@ export function TrackingView({
         <>
           <FilterLinks active={filter} counts={counts} total={rows.length} />
           <p className="mb-3 text-sm text-slate-600" aria-live="polite">
-            {ES.tracking.showing(visibleRows.length, rows.length)}
+            {ES.tracking.showingRange(pagination.from, pagination.to, pagination.total)}
           </p>
 
-          {visibleRows.length === 0 ? (
+          {pagination.rows.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 sm:p-8">
               <h2 className="text-base font-semibold text-slate-900">
                 {ES.tracking.emptyFilterTitle(filter === 'all' ? '' : ES.status[filter])}
@@ -238,32 +317,53 @@ export function TrackingView({
               role="region"
               aria-label={ES.tracking.scrollRegion}
               tabIndex={0}
-              className="overflow-x-auto rounded-xl border border-slate-200 bg-white"
+              className="max-h-[80vh] overflow-auto rounded-xl border border-slate-200 bg-white"
             >
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <caption className="sr-only">{ES.tracking.caption}</caption>
                 <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
                   <tr>
-                    <th scope="col" className="px-3 py-2">{columns.company}</th>
-                    <th scope="col" className="px-3 py-2">{columns.title}</th>
-                    <th scope="col" className="px-3 py-2">{columns.source}</th>
-                    <th scope="col" className="px-3 py-2">{columns.city}</th>
-                    <th scope="col" className="px-3 py-2">{columns.appliedAt}</th>
-                    <th scope="col" className="px-3 py-2">{columns.status}</th>
-                    <th scope="col" className="px-3 py-2">{columns.respondedAt}</th>
-                    <th scope="col" className="px-3 py-2">{columns.documents}</th>
-                    <th scope="col" className="px-3 py-2">{columns.notes}</th>
-                    <th scope="col" className="px-3 py-2">{columns.actions}</th>
+                    {(
+                      [
+                        columns.company,
+                        columns.title,
+                        columns.source,
+                        columns.city,
+                        columns.appliedAt,
+                        columns.status,
+                        columns.responded,
+                        columns.respondedAt,
+                        columns.documents,
+                        columns.notes,
+                        columns.actions,
+                      ] as const
+                    ).map((column) => (
+                      <th
+                        key={column}
+                        scope="col"
+                        className="sticky top-0 z-10 bg-slate-50 px-3 py-1.5"
+                      >
+                        {column}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {visibleRows.map((row) => (
-                    <Row key={row.jobId} row={row} documents={documents?.get(row.jobId)} catalog={catalog} />
+                  {pagination.rows.map((row, index) => (
+                    <Row
+                      key={row.jobId}
+                      row={row}
+                      zebra={index % 2 === 1}
+                      documents={documents?.get(row.jobId)}
+                      catalog={catalog}
+                    />
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+
+          <PaginationNav page={pagination.page} totalPages={pagination.totalPages} filter={filter} />
         </>
       )}
     </>

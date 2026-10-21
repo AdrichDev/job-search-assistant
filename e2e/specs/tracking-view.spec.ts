@@ -110,6 +110,9 @@ test.describe('tracking view', () => {
     await expect(bodyRows.nth(2)).toContainText('Cañas y Tapas Tech');
     await expect(bodyRows.nth(3)).toContainText('beta soluciones');
     await expect(bodyRows.nth(4)).toContainText('Wizbii Iberia');
+
+    // UI-2: with fewer rows than one page there is no pagination nav at all.
+    await expect(page.getByRole('navigation', { name: 'Paginación' })).toHaveCount(0);
   });
 
   test('each row shows company, title, source, city and state', async ({ page }) => {
@@ -180,14 +183,16 @@ test.describe('tracking view', () => {
     await summary.click();
     await expect(detail.getByText('10 ene 2026')).toBeVisible();
     expect(await detail.locator('p').count()).toBe(1);
-    await expect(page.locator('thead th[scope="col"]')).toHaveCount(10);
+    // UI-2 added the ¿Contestó? column: 11 columns since then, on purpose.
+    await expect(page.locator('thead th[scope="col"]')).toHaveCount(11);
   });
 
   test('address, phone and contact stay out of the table and the column count is unchanged', async ({
     page,
   }) => {
     await page.goto('/seguimiento');
-    await expect(page.locator('thead th[scope="col"]')).toHaveCount(10);
+    // UI-2 added the ¿Contestó? column: 11 columns since then, on purpose.
+    await expect(page.locator('thead th[scope="col"]')).toHaveCount(11);
     await expect(page.locator('main table')).not.toContainText('Calle Imaginaria');
     await expect(page.locator('main table')).not.toContainText('600123456');
     await expect(page.locator('main table')).not.toContainText('Marta Pérez');
@@ -228,6 +233,57 @@ test.describe('tracking view', () => {
     ).toHaveAttribute('href', 'https://empleo.example.test/oferta/1');
   });
 
+  test('Estado and ¿Contestó? cells use the spreadsheet colours and keep their words', async ({ page }) => {
+    await page.goto('/seguimiento');
+
+    const estadoCell = (title: string) => rowFor(page, title).locator('td').nth(4);
+    const replyCell = (title: string) => rowFor(page, title).locator('td').nth(5);
+    const computed = (locator: ReturnType<typeof rowFor>, property: string) =>
+      locator.evaluate((node, prop) => getComputedStyle(node).getPropertyValue(prop), property);
+
+    // Rechazada: red cell, and ¿Contestó? is a green Sí.
+    const rejected = estadoCell('Programador Júnior');
+    await expect(rejected).toHaveText('Rechazada');
+    expect(await computed(rejected, 'background-color')).toBe('rgb(254, 226, 226)');
+    expect(await computed(rejected, 'color')).toBe('rgb(153, 27, 27)');
+    const si = replyCell('Programador Júnior');
+    await expect(si).toHaveText('Sí');
+    expect(await computed(si, 'background-color')).toBe('rgb(220, 252, 231)');
+    expect(await computed(si, 'color')).toBe('rgb(22, 101, 52)');
+
+    // Preselección: blue bold cell, Sí.
+    const screening = estadoCell('qa júnior');
+    await expect(screening).toHaveText('Preselección');
+    expect(await computed(screening, 'background-color')).toBe('rgb(219, 234, 254)');
+    expect(await computed(screening, 'color')).toBe('rgb(29, 78, 216)');
+    expect(Number(await computed(screening, 'font-weight'))).toBeGreaterThanOrEqual(700);
+    await expect(replyCell('qa júnior')).toHaveText('Sí');
+
+    // Oferta: green bold cell, Sí.
+    const offer = estadoCell(QUEUED_JOB.title);
+    await expect(offer).toHaveText('Oferta');
+    expect(await computed(offer, 'background-color')).toBe('rgb(220, 252, 231)');
+    expect(await computed(offer, 'color')).toBe('rgb(22, 101, 52)');
+    expect(Number(await computed(offer, 'font-weight'))).toBeGreaterThanOrEqual(700);
+    await expect(replyCell(QUEUED_JOB.title)).toHaveText('Sí');
+
+    // Aplicada: blue cell, and ¿Contestó? is a red No.
+    const applied = estadoCell('Desarrollador Júnior Frontend');
+    await expect(applied).toHaveText('Aplicada');
+    expect(await computed(applied, 'background-color')).toBe('rgb(219, 234, 254)');
+    const no = replyCell('Desarrollador Júnior Frontend');
+    await expect(no).toHaveText('No');
+    expect(await computed(no, 'background-color')).toBe('rgb(254, 226, 226)');
+    expect(await computed(no, 'color')).toBe('rgb(153, 27, 27)');
+
+    // Sin respuesta: the neutral style (no Excel equivalent).
+    const noReply = estadoCell('Analista Júnior');
+    await expect(noReply).toHaveText('Sin respuesta');
+    expect(await computed(noReply, 'background-color')).toBe('rgb(226, 232, 240)');
+    expect(await computed(noReply, 'color')).toBe('rgb(51, 65, 85)');
+    await expect(replyCell('Analista Júnior')).toHaveText('No');
+  });
+
   test('the outcome filter works through the query string with counts', async ({ page }) => {
     await page.goto('/seguimiento');
 
@@ -251,7 +307,7 @@ test.describe('tracking view', () => {
     await expect(page.locator('tbody tr')).toContainText('Cañas y Tapas Tech');
     await expect(filter.getByRole('link', { name: 'Rechazada (1)' })).toHaveAttribute('aria-current', 'true');
     await expect(filter.getByRole('link', { name: 'Todas (5)' })).not.toHaveAttribute('aria-current', 'true');
-    await expect(page.getByText('Mostrando 1 de 5 postulaciones')).toBeVisible();
+    await expect(page.getByText('Mostrando 1–1 de 1 postulación')).toBeVisible();
 
     // A filter with no match is explained, with a way back.
     await filter.getByRole('link', { name: 'Entrevista (0)' }).click();
@@ -317,6 +373,92 @@ test.describe('tracking view', () => {
   });
 });
 
+const PAGE_APPLICATIONS: readonly SeedApplication[] = [
+  ...APPLICATIONS,
+  // Ten more applied rows, all older than the base seed, so the ordering of
+  // the first page stays exactly the five rows the other tests know. 15 rows
+  // in total (2 pages), 11 of them applied (2 pages inside the filter too).
+  ...Array.from({ length: 10 }, (_unused, index) => ({
+    jobId: `import-paginada-${index + 1}`,
+    appliedAt: `2026-01-${String(14 - index).padStart(2, '0')}T00:00:00.000Z`,
+    sourceIds: ['infojobs'],
+    outcome: 'applied',
+    listing: {
+      company: `Paginada Empresa ${index + 1}`,
+      title: `Puesto paginado ${index + 1}`,
+    },
+  })),
+];
+
+const paginationNav = (page: Page) => page.getByRole('navigation', { name: 'Paginación' });
+
+test.describe('tracking view pagination', () => {
+  test.beforeEach(async ({ seed }) => {
+    await seed(HEALTHY_QUEUE);
+    await seedApplications(PAGE_APPLICATIONS);
+  });
+
+  test('shows 10 rows per page with a working nav and aria-disabled edges', async ({ page }) => {
+    await page.goto('/seguimiento');
+
+    await expect(page.locator('tbody tr')).toHaveCount(10);
+    await expect(page.getByText('Mostrando 1–10 de 15 postulaciones')).toBeVisible();
+
+    const nav = paginationNav(page);
+    await expect(nav).toBeVisible();
+    await expect(nav.getByText('Página 1 de 2')).toBeVisible();
+    // Unavailable edges are not links and say so.
+    await expect(nav.getByText('Primera')).toHaveAttribute('aria-disabled', 'true');
+    await expect(nav.getByText('Anterior')).toHaveAttribute('aria-disabled', 'true');
+    await expect(nav.getByRole('link', { name: 'Primera' })).toHaveCount(0);
+
+    await nav.getByRole('link', { name: 'Siguiente' }).click();
+    await expect(page).toHaveURL(/pagina=2/);
+    await expect(page.locator('tbody tr')).toHaveCount(5);
+    await expect(page.getByText('Mostrando 11–15 de 15 postulaciones')).toBeVisible();
+    await expect(nav.getByText('Página 2 de 2')).toBeVisible();
+    await expect(nav.getByText('Siguiente')).toHaveAttribute('aria-disabled', 'true');
+    await expect(nav.getByText('Última')).toHaveAttribute('aria-disabled', 'true');
+
+    await nav.getByRole('link', { name: 'Primera' }).click();
+    await expect(page).toHaveURL(/pagina=1/);
+    await expect(page.locator('tbody tr')).toHaveCount(10);
+    // Última jumps straight to the last page.
+    await paginationNav(page).getByRole('link', { name: 'Última' }).click();
+    await expect(page.locator('tbody tr')).toHaveCount(5);
+    // Anterior steps back one page.
+    await paginationNav(page).getByRole('link', { name: 'Anterior' }).click();
+    await expect(page).toHaveURL(/pagina=1/);
+  });
+
+  test('an out-of-range page clamps to the last one and garbage shows page 1', async ({ page }) => {
+    await page.goto('/seguimiento?pagina=999');
+    await expect(page.locator('tbody tr')).toHaveCount(5);
+    await expect(page.getByText('Página 2 de 2')).toBeVisible();
+
+    await page.goto('/seguimiento?pagina=abc');
+    await expect(page.locator('tbody tr')).toHaveCount(10);
+    await expect(page.getByText('Página 1 de 2')).toBeVisible();
+  });
+
+  test('the nav preserves estado, and choosing a filter resets to page 1', async ({ page }) => {
+    // 11 of the 13 applications are applied: two pages inside the filter too.
+    await page.goto('/seguimiento?estado=applied&pagina=1');
+    await expect(page.locator('tbody tr')).toHaveCount(10);
+
+    await paginationNav(page).getByRole('link', { name: 'Siguiente' }).click();
+    await expect(page).toHaveURL(/estado=applied&pagina=2/);
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+
+    // Going back through the filter drops pagina: page 1 again.
+    await page.goto('/seguimiento?pagina=2');
+    await filterNav(page).getByRole('link', { name: 'Aplicada (11)' }).click();
+    await expect(page).toHaveURL(/\/seguimiento\?estado=applied$/);
+    await expect(page.locator('tbody tr')).toHaveCount(10);
+    await expect(page.getByText('Página 1 de 2')).toBeVisible();
+  });
+});
+
 test.describe('tracking view accessibility', () => {
   test.beforeEach(async ({ seed }) => {
     await seed(HEALTHY_QUEUE);
@@ -329,7 +471,8 @@ test.describe('tracking view accessibility', () => {
     await expect(page.getByRole('main')).toHaveCount(1);
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.getByRole('table', { name: /Postulaciones con su empresa/ })).toBeVisible();
-    await expect(page.locator('thead th[scope="col"]')).toHaveCount(10);
+    // UI-2 added the ¿Contestó? column: 11 columns since then, on purpose.
+    await expect(page.locator('thead th[scope="col"]')).toHaveCount(11);
     await expect(page.locator('tbody th[scope="row"]')).toHaveCount(5);
     // Layout tables are forbidden: the only table is the data table.
     await expect(page.locator('table')).toHaveCount(1);

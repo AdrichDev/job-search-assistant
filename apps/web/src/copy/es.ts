@@ -536,8 +536,18 @@ export const ES = {
     intro:
       'Todas las ofertas a las que te has postulado, tanto desde esta herramienta como las importadas de tu histórico. De la más reciente a la más antigua.',
     total: (count: number) => `${count} ${count === 1 ? 'postulación' : 'postulaciones'}`,
-    showing: (visible: number, total: number) =>
-      `Mostrando ${visible} de ${total} ${total === 1 ? 'postulación' : 'postulaciones'}`,
+    showingRange: (from: number, to: number, total: number) =>
+      total === 1
+        ? 'Mostrando 1–1 de 1 postulación'
+        : `Mostrando ${from}–${to} de ${total} postulaciones`,
+    pagination: {
+      label: 'Paginación',
+      first: 'Primera',
+      prev: 'Anterior',
+      page: (page: number, total: number) => `Página ${page} de ${total}`,
+      next: 'Siguiente',
+      last: 'Última',
+    },
     filter: {
       label: 'Filtrar por estado',
       all: 'Todas',
@@ -552,6 +562,7 @@ export const ES = {
       city: 'Ciudad',
       appliedAt: 'Fecha de solicitud',
       status: 'Estado',
+      responded: '¿Contestó?',
       respondedAt: 'Fecha de respuesta',
       documents: 'Documentos',
       notes: 'Notas',

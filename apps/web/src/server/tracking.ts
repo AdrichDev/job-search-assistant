@@ -69,6 +69,57 @@ export function filterTrackedRows(
   return filter === 'all' ? rows : rows.filter((row) => row.outcome === filter);
 }
 
+/** UI-2: the user asked for exactly 10 rows per page. */
+export const TRACKING_PAGE_SIZE = 10;
+
+/**
+ * `?pagina=` is user-controlled: anything that is not a finite positive integer
+ * means page 1. Arrays count as absent (the page only ever sends a scalar),
+ * and a value beyond the double range (`1e999`) is not a finite integer. A
+ * merely huge but finite value (say `1e21`) survives and is clamped later by
+ * `paginateRows`, which is where range correctness lives.
+ */
+export function parsePagina(raw: string | readonly string[] | undefined): number {
+  if (typeof raw !== 'string') {
+    return 1;
+  }
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
+}
+
+export interface PaginatedRows {
+  /** Only the rows of the current page, in the given order. */
+  readonly rows: readonly TrackedApplication[];
+  readonly page: number;
+  /** Always >= 1, even for an empty list. */
+  readonly totalPages: number;
+  readonly total: number;
+  /** 1-based inclusive range of the rows shown; 0–0 when the list is empty. */
+  readonly from: number;
+  readonly to: number;
+}
+
+/** Slices the ALREADY-FILTERED rows; the caller filters first, paginates second. */
+export function paginateRows(
+  rows: readonly TrackedApplication[],
+  page: number,
+): PaginatedRows {
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / TRACKING_PAGE_SIZE));
+  const current = Math.min(Math.max(Math.trunc(page) || 1, 1), totalPages);
+  const start = (current - 1) * TRACKING_PAGE_SIZE;
+  const visible = rows.slice(start, start + TRACKING_PAGE_SIZE);
+
+  return {
+    rows: visible,
+    page: current,
+    totalPages,
+    total,
+    from: total === 0 ? 0 : start + 1,
+    to: start + visible.length,
+  };
+}
+
 export interface EditableApplication {
   readonly application: Application;
   /** What the tracking table shows for it: company/title even without a listing. */

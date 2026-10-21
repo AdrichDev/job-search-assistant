@@ -268,6 +268,30 @@ describe('source provenance copy', () => {
   });
 });
 
+describe('tracking pagination and spreadsheet-cell copy', () => {
+  it('names the new ¿Contestó? column', () => {
+    expect(ES.tracking.columns.responded).toBe('¿Contestó?');
+  });
+
+  it('shows a range instead of a bare count, agreeing in number', () => {
+    expect(ES.tracking.showingRange(11, 20, 260)).toBe('Mostrando 11–20 de 260 postulaciones');
+    expect(ES.tracking.showingRange(1, 1, 1)).toBe('Mostrando 1–1 de 1 postulación');
+    expect(ES.tracking.showingRange(0, 0, 0)).toBe('Mostrando 0–0 de 0 postulaciones');
+  });
+
+  it('has Spanish pagination controls for every edge', () => {
+    const pagination = ES.tracking.pagination;
+
+    expect(pagination.label).toBe('Paginación');
+    expect(pagination.first).toBe('Primera');
+    expect(pagination.prev).toBe('Anterior');
+    expect(pagination.next).toBe('Siguiente');
+    expect(pagination.last).toBe('Última');
+    expect(pagination.page(1, 3)).toBe('Página 1 de 3');
+    expect(pagination.page(12, 26)).toBe('Página 12 de 26');
+  });
+});
+
 describe('mail copy', () => {
   const groups = Object.entries(ES.mail) as [string, Record<string, string>][];
   const ENGLISH = /\b(the|and|please|error|failed|try again|token|expired|accepted|not found)\b/i;

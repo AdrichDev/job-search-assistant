@@ -3,14 +3,19 @@ import {
   APPLICATION_OUTCOMES,
   createApplication,
   type Application,
+  type ApplicationOutcome,
   type ApplicationRepository,
   type JobQueue,
   type QueueReader,
 } from '@job-queue/core';
+import type { TrackedApplication } from '@job-queue/core';
 import {
   filterTrackedRows,
   loadTracking,
+  paginateRows,
   parseEstadoFilter,
+  parsePagina,
+  TRACKING_PAGE_SIZE,
   type TrackingDeps,
 } from '@/server/tracking';
 import { trackingSourceLabels, formatTrackingDate } from '@/components/tracking-format';
@@ -125,6 +130,132 @@ describe('filterTrackedRows', () => {
   });
 });
 
+describe('parsePagina', () => {
+  it.each([
+    [undefined, 1],
+    [['2'], 1],
+    ['', 1],
+    ['   ', 1],
+    ['abc', 1],
+    ['0', 1],
+    ['-3', 1],
+    ['1.5', 1],
+    // Beyond the double range Number yields Infinity, which is not an integer.
+    ['1e999', 1],
+    ['NaN', 1],
+    ['Infinity', 1],
+    ['1', 1],
+    ['7', 7],
+    ['  3  ', 3],
+    // Finite though huge: kept, and clamped to the last page by paginateRows.
+    ['1e21', 1e21],
+  ] as readonly (readonly [string | string[] | undefined, number])[])('parses %j to %j', (raw, expected) => {
+    expect(parsePagina(raw)).toBe(expected);
+  });
+});
+
+function trackedRow(jobId: string, outcome: ApplicationOutcome = 'applied'): TrackedApplication {
+  return {
+    jobId,
+    company: `Empresa ${jobId}`,
+    title: `Puesto ${jobId}`,
+    sourceIds: [],
+    appliedAt: new Date(0),
+    outcome,
+    outcomeUpdatedAt: new Date(0),
+    origin: 'imported',
+  };
+}
+
+function rows(count: number): TrackedApplication[] {
+  return Array.from({ length: count }, (_unused, index) => trackedRow(`r${String(index + 1).padStart(2, '0')}`));
+}
+
+describe('paginateRows', () => {
+  it('pages 10 rows at a time', () => {
+    expect(TRACKING_PAGE_SIZE).toBe(10);
+  });
+
+  it('stays on page 1 with zero rows, and still reports one page', () => {
+    expect(paginateRows([], 1)).toEqual({
+      rows: [],
+      page: 1,
+      totalPages: 1,
+      total: 0,
+      from: 0,
+      to: 0,
+    });
+  });
+
+  it('shows one row on one page', () => {
+    const result = paginateRows(rows(1), 1);
+    expect(result.rows).toHaveLength(1);
+    expect(result.totalPages).toBe(1);
+    expect(result.from).toBe(1);
+    expect(result.to).toBe(1);
+  });
+
+  it('fits exactly 10 rows on the only page', () => {
+    const result = paginateRows(rows(10), 1);
+    expect(result.rows).toHaveLength(10);
+    expect(result.totalPages).toBe(1);
+    expect(result.from).toBe(1);
+    expect(result.to).toBe(10);
+  });
+
+  it('splits 11 rows into two pages with one row on the second', () => {
+    const all = rows(11);
+    const first = paginateRows(all, 1);
+    expect(first.rows).toHaveLength(10);
+    expect(first.totalPages).toBe(2);
+    expect(first.from).toBe(1);
+    expect(first.to).toBe(10);
+
+    const second = paginateRows(all, 2);
+    expect(second.rows.map((r) => r.jobId)).toEqual(['r11']);
+    expect(second.page).toBe(2);
+    expect(second.from).toBe(11);
+    expect(second.to).toBe(11);
+  });
+
+  it('splits 25 rows into three pages of 10, 10 and 5', () => {
+    const all = rows(25);
+    expect(paginateRows(all, 1).rows).toHaveLength(10);
+    expect(paginateRows(all, 2).rows).toHaveLength(10);
+    const last = paginateRows(all, 3);
+    expect(last.rows).toHaveLength(5);
+    expect(last.from).toBe(21);
+    expect(last.to).toBe(25);
+  });
+
+  it('clamps an out-of-range page into [1, totalPages]', () => {
+    expect(paginateRows(rows(25), 99).page).toBe(3);
+    expect(paginateRows(rows(25), 99).rows).toHaveLength(5);
+    expect(paginateRows(rows(25), 0).page).toBe(1);
+    expect(paginateRows(rows(25), -7).page).toBe(1);
+  });
+
+  it('clamps an absurdly large but finite page to the last one', () => {
+    expect(paginateRows(rows(25), 1e21).page).toBe(3);
+  });
+});
+
+describe('filter before pagination', () => {
+  it('paginates the filtered subset, not the whole log', () => {
+    const mixed: TrackedApplication[] = [
+      ...rows(11),
+      trackedRow('r-rechazada', 'rejected'),
+      trackedRow('r-oferta', 'offer'),
+    ];
+    const filtered = filterTrackedRows(mixed, 'rejected');
+
+    const paginated = paginateRows(filtered, 1);
+    expect(paginated.total).toBe(1);
+    expect(paginated.totalPages).toBe(1);
+    expect(paginated.rows.map((r) => r.jobId)).toEqual(['r-rechazada']);
+  });
+});
+
 describe('tracking presentation helpers', () => {
   it('labels imported portal slugs in Spanish instead of "unknown source"', () => {
     for (const id of [
@@ -160,6 +291,7 @@ describe('tracking copy', () => {
   it('agrees in number', () => {
     expect(ES.tracking.total(1)).toBe('1 postulación');
     expect(ES.tracking.total(258)).toBe('258 postulaciones');
+    expect(ES.tracking.showingRange(11, 20, 260)).toBe('Mostrando 11–20 de 260 postulaciones');
   });
 
   it('has Spanish sentences for every warning kind and every column', () => {

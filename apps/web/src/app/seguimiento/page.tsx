@@ -3,7 +3,7 @@ import { TrackingView } from '@/components/tracking-view';
 import { ES } from '@/copy/es';
 import { applicationRepository, cvModelRepository, queueReader } from '@/server/container';
 import { revertNoticeFor } from '@/server/history';
-import { filterTrackedRows, loadTracking, parseEstadoFilter } from '@/server/tracking';
+import { filterTrackedRows, loadTracking, paginateRows, parseEstadoFilter, parsePagina } from '@/server/tracking';
 
 /** The application log changes on every click elsewhere; never serve a cached copy. */
 export const dynamic = 'force-dynamic';
@@ -20,6 +20,7 @@ export default async function TrackingPage({
 }) {
   const query = await searchParams;
   const filter = parseEstadoFilter(query.estado);
+  const page = parsePagina(query.pagina);
   const notice: { readonly text: string; readonly warning: boolean } | null =
     query.edicion === 'guardada'
       ? { text: ES.tracking.notice.saved, warning: false }
@@ -71,7 +72,7 @@ export default async function TrackingPage({
 
       <TrackingView
         rows={rows}
-        visibleRows={filterTrackedRows(rows, filter)}
+        pagination={paginateRows(filterTrackedRows(rows, filter), page)}
         counts={counts}
         filter={filter}
         warnings={warnings}
