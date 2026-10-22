@@ -18,7 +18,7 @@ import { createGmailReader } from '../src/adapters/gmail/gmail-reader.js';
  */
 
 const DAYS = 7;
-const MAX_RESULTS = 100;
+const MAX_RESULTS = 5000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const UNAVAILABLE_HINTS: Record<string, string> = {

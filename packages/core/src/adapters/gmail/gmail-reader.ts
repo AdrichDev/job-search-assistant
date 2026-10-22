@@ -26,6 +26,11 @@ import type {
 } from '../../ports/gmail-reader.js';
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+const GMAIL_PAGE_SIZE = 500;
+
+/** How many metadata fetches run at once: polite, and still far quicker than one by one. */
+const FETCH_CONCURRENCY = 8;
+
 const MESSAGES_URL = 'https://gmail.googleapis.com/gmail/v1/users/me/messages';
 
 /**
@@ -129,10 +134,13 @@ async function refreshAccessToken(
 }
 
 /**
- * `messages.list` filtered to mail received after `query.since` (Gmail search
- * syntax accepts Unix epoch seconds in `after:`). A mailbox with no matches
- * answers WITHOUT a `messages` key at all - absence is an empty result, not a
- * shape mismatch.
+ * Every id in the window, following `nextPageToken` to the end.
+ *
+ * Gmail caps one page at 500 ids, so a caller asking for more than that needs
+ * pagination or it silently receives a truncated week. `query.maxResults` stays
+ * the caller's ceiling: this stops at whichever comes first, the cap or the last
+ * page. A mailbox with no matches answers WITHOUT a `messages` key at all -
+ * absence is an empty result, not a shape mismatch.
  */
 async function listMessageIds(
   doFetch: typeof fetch,
@@ -140,47 +148,61 @@ async function listMessageIds(
   query: GmailQuery,
 ): Promise<{ readonly ids: readonly string[] } | Failure> {
   const epochSeconds = Math.floor(query.since.getTime() / 1000);
-  const params = new URLSearchParams({
-    q: `after:${epochSeconds}`,
-    maxResults: String(query.maxResults),
-  });
-
-  let response: Response;
-  try {
-    response = await doFetch(`${MESSAGES_URL}?${params}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-  } catch {
-    return { status: 'unavailable', reason: 'network' };
-  }
-
-  if (!response.ok) {
-    return { status: 'unavailable', reason: reasonForHttp(response.status) };
-  }
-
-  const payload = asRecord(parseJson(await readBody(response)));
-  if (payload === undefined) {
-    return { status: 'unavailable', reason: 'bad_response' };
-  }
-
-  const entries = payload['messages'];
-  if (entries === undefined) {
-    return { ids: [] };
-  }
-  if (!Array.isArray(entries)) {
-    return { status: 'unavailable', reason: 'bad_response' };
-  }
-
   const ids: string[] = [];
-  for (const entry of entries) {
-    const id = asString(asRecord(entry)?.['id']);
-    if (id === undefined || id.length === 0) {
+  let pageToken: string | undefined;
+
+  for (;;) {
+    const remaining = query.maxResults - ids.length;
+    if (remaining <= 0) {
+      return { ids };
+    }
+
+    const params = new URLSearchParams({
+      q: `after:${epochSeconds}`,
+      maxResults: String(Math.min(GMAIL_PAGE_SIZE, remaining)),
+    });
+    if (pageToken !== undefined) {
+      params.set('pageToken', pageToken);
+    }
+
+    let response: Response;
+    try {
+      response = await doFetch(`${MESSAGES_URL}?${params}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch {
+      return { status: 'unavailable', reason: 'network' };
+    }
+
+    if (!response.ok) {
+      return { status: 'unavailable', reason: reasonForHttp(response.status) };
+    }
+
+    const payload = asRecord(parseJson(await readBody(response)));
+    if (payload === undefined) {
       return { status: 'unavailable', reason: 'bad_response' };
     }
-    ids.push(id);
+
+    const entries = payload['messages'];
+    if (entries !== undefined && !Array.isArray(entries)) {
+      return { status: 'unavailable', reason: 'bad_response' };
+    }
+
+    for (const entry of entries ?? []) {
+      const id = asString(asRecord(entry)?.['id']);
+      if (id === undefined || id.length === 0) {
+        return { status: 'unavailable', reason: 'bad_response' };
+      }
+      ids.push(id);
+    }
+
+    const next = asString(payload['nextPageToken']);
+    if (next === undefined || next.length === 0) {
+      return { ids };
+    }
+    pageToken = next;
   }
-  return { ids };
 }
 
 function headerValue(headers: unknown, name: string): string | undefined {
@@ -310,12 +332,15 @@ export function createGmailReader(config: CreateGmailReaderConfig): GmailReader 
       }
 
       const messages: MailMessage[] = [];
-      for (const id of listed.ids) {
-        const fetched = await fetchMessage(doFetch, refreshed.token, id);
-        if (!('message' in fetched)) {
-          return fetched;
+      for (let index = 0; index < listed.ids.length; index += FETCH_CONCURRENCY) {
+        const chunk = listed.ids.slice(index, index + FETCH_CONCURRENCY);
+        const settled = await Promise.all(chunk.map((id) => fetchMessage(doFetch, refreshed.token, id)));
+        for (const fetched of settled) {
+          if (!('message' in fetched)) {
+            return fetched;
+          }
+          messages.push(fetched.message);
         }
-        messages.push(fetched.message);
       }
 
       return { status: 'ok', messages };
