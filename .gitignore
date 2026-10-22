@@ -85,3 +85,7 @@ AGENTS.md
 e2e/.tmp/
 e2e/playwright-report/
 e2e/test-results/
+
+# A `npx playwright test` run started from the repository root (instead of through
+# `npm run test:e2e`) writes its artifacts here, outside the configured outputDir.
+/test-results/
