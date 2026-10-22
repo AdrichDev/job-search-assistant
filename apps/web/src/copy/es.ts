@@ -629,7 +629,7 @@ export const ES = {
     meta: { title: 'Editar postulación' },
     heading: 'Editar postulación',
     intro:
-      'Corrige a mano cualquier dato. Un campo de texto vacío se borra; los datos que no toques se quedan como están. Las fechas que cambies se guardan como ese día.',
+      'Corrige a mano cualquier dato. Un campo vacío se borra; lo que no toques queda igual. Las fechas se guardan como ese día.',
     back: 'Volver al seguimiento',
     cancel: 'Cancelar',
     submit: 'Guardar cambios',
@@ -683,7 +683,7 @@ export const ES = {
   history: {
     heading: 'Historial de cambios',
     intro:
-      'Cada cambio que se guarda queda anotado aquí, del más reciente al más antiguo. El historial nunca se borra: deshacer un cambio añade una anotación nueva.',
+      'Cada cambio guardado queda anotado aquí, del más reciente al más antiguo. El historial nunca se borra: deshacer añade una anotación nueva.',
     caption: 'Cambios de esta postulación, del más reciente al más antiguo',
     columns: { date: 'Fecha', source: 'Origen', changes: 'Cambios', action: 'Acción' },
     sources: { manual: 'Manual', import: 'Importación', revert: 'Deshacer', email: 'Correo' },
