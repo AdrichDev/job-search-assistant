@@ -24,6 +24,10 @@ import colors from 'tailwindcss/colors';
  * Explicit values (arbitrary classes such as `bg-[#DCFCE7]`, used for the
  * spreadsheet-style state cells) are not part of any scale and bypass the remap
  * on purpose.
+ *
+ * The one exception is the middle of the slate scale, overridden below with an
+ * explicit ramp because the mirror leaves it mid-grey and mid-grey text on a
+ * near-black canvas fails WCAG AA.
  */
 
 const SHADES = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'] as const;
@@ -46,7 +50,23 @@ export default {
       colors: {
         // A surface one step ABOVE the page (slate-50), so cards read as raised.
         white: '#111b30',
-        slate: mirror(colors.slate as unknown as Scale),
+        /*
+         * The mirror is exact for the extremes (50 is the page, 900 is body
+         * text) but WRONG in the middle, because a mid grey is a mid grey: the
+         * old slate-500 on a near-black canvas measures 3.61:1, under the 4.5
+         * WCAG AA floor. The middle shades are used exclusively as TEXT in this
+         * app (33 text-slate-500, 50 text-slate-600, 10 text-slate-400, and zero
+         * backgrounds), so they get an explicit ascending ramp instead. The
+         * e2e contrast spec (e2e/specs/contrast.spec.ts) holds every page to AA,
+         * so this ramp is measured, not eyeballed.
+         */
+        slate: {
+          ...mirror(colors.slate as unknown as Scale),
+          '300': '#cbd5e1',
+          '400': '#a8b6c8',
+          '500': '#94a3b8',
+          '600': '#7d8ca3',
+        },
         amber: mirror(colors.amber as unknown as Scale),
         emerald: mirror(colors.emerald as unknown as Scale),
         indigo: mirror(colors.indigo as unknown as Scale),
