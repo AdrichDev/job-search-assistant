@@ -183,7 +183,7 @@ export const ES = {
     ordering: 'De la más reciente a la más antigua.',
     offlineFallbackTitle: 'Datos de ejemplo, no ofertas reales',
     offlineFallback:
-      'Todavía no hay ninguna ejecución guardada, así que esto es el catálogo de ejemplo sin conexión. Los enlaces no llevan a ofertas reales. Ejecuta «npm start -- --source=boards» para obtener ofertas de verdad.',
+      'No hay ninguna ejecución guardada: esto es el catálogo de ejemplo sin conexión. Los enlaces no llevan a ofertas reales. Ejecuta «npm start -- --source=boards» para tener ofertas de verdad.',
     /*
      * El caso que faltaba: una ejecución REAL guardada que, aun así, contiene
      * ofertas inventadas. El aviso anterior solo aparecía cuando no había
@@ -352,9 +352,15 @@ export const ES = {
 
   /* How the list is built ---------------------------------------------- */
   method: {
+    /*
+     * UI-5: this note was 338 characters. The rule of the slice is that a
+     * shorter text says the SAME thing, not less: the ordering, the scope of
+     * the list and the fact that the score decides nothing are all still here.
+     */
     footerNote:
-      'La lista no está ordenada por puntuación ni recortada por ella: aparecen todas las ofertas de desarrollo de software que no indican explícitamente un perfil sénior, de la más reciente a la más antigua. La puntuación se sigue calculando y se guarda para poder comparar después qué ofertas responden, pero no decide qué ves ni en qué orden.',
+      'Ordenada por fecha, no por puntuación: están todas las ofertas de desarrollo que no piden explícitamente un perfil sénior. La puntuación se guarda para comparar después qué ofertas responden; no decide qué ves ni el orden.',
   },
+
 
   /* Apply -------------------------------------------------------------- */
   apply: {
@@ -491,7 +497,7 @@ export const ES = {
   score: {
     summary: (total: string) => `Ver puntuación estimada (${total} sobre 100)`,
     intro:
-      'Dato secundario: esta puntuación no ordena la lista ni descarta ofertas. Se calcula y se guarda para poder comprobar más adelante si las ofertas mejor puntuadas responden más. Es la suma de cinco dimensiones ponderadas.',
+      'Dato secundario: no ordena la lista ni descarta ofertas. Se calcula y se guarda para comprobar más adelante si las mejor puntuadas responden más. Es la suma de cinco dimensiones ponderadas.',
     tableCaption:
       'Desglose de la puntuación por dimensión, con la aportación ponderada y su motivo',
     columnDimension: 'Dimensión',
