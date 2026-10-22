@@ -83,6 +83,39 @@ describe('gmailReader', () => {
     expect(await r.fetchRecent(QUERY)).toEqual({ status: 'ok', messages: [] });
   });
 
+  it('fake proposal mode returns ONE message naming the configured company', async () => {
+    const r = await gmailReader({
+      JOB_QUEUE_WEB_MAIL: 'fake',
+      JOB_QUEUE_WEB_MAIL_FAKE: 'proposal',
+      JOB_QUEUE_WEB_MAIL_FAKE_COMPANY: 'Acme Sistemas',
+    }).fetchRecent(QUERY);
+
+    expect(r.status).toBe('ok');
+    const messages = r.status === 'ok' ? r.messages : [];
+    expect(messages).toHaveLength(1);
+    // The round trip the e2e needs: a message the reply classifier reads as a
+    // rejection AND that names a company the matcher can bind to one open
+    // application. Deterministic id, so a second check cannot duplicate it.
+    expect(messages[0]?.snippet).toContain('Acme Sistemas');
+    expect(messages[0]?.snippet).toMatch(/no seguimos adelante/);
+    expect(messages[0]?.id).toBe('fake-proposal-message');
+    expect(messages[0]?.from).toMatch(/@/);
+  });
+
+  it('fake proposal mode sends nothing without a company to name', async () => {
+    for (const company of [undefined, '', '   ']) {
+      const env =
+        company === undefined
+          ? { JOB_QUEUE_WEB_MAIL: 'fake', JOB_QUEUE_WEB_MAIL_FAKE: 'proposal' }
+          : {
+              JOB_QUEUE_WEB_MAIL: 'fake',
+              JOB_QUEUE_WEB_MAIL_FAKE: 'proposal',
+              JOB_QUEUE_WEB_MAIL_FAKE_COMPANY: company,
+            };
+      expect(await gmailReader(env).fetchRecent(QUERY)).toEqual({ status: 'ok', messages: [] });
+    }
+  });
+
   it('is a singleton for the process environment', () => {
     expect(gmailReader()).toBe(gmailReader());
   });

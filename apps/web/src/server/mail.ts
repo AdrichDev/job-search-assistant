@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { createGmailReader } from '@job-queue/core';
-import type { GmailFetchResult, GmailReader, MailUnavailableReason } from '@job-queue/core';
+import type { GmailFetchResult, GmailReader, MailMessage, MailUnavailableReason } from '@job-queue/core';
 
 /**
  * Composition point for Gmail. This is the ONLY module allowed to read the
@@ -48,8 +48,28 @@ const FAKE_UNAVAILABLE: readonly MailUnavailableReason[] = [
   'bad_response',
 ];
 
-/** Deterministic fake used by tests and e2e. Never reaches the network. */
-function createFakeReader(mode: string | undefined): GmailReader {
+/** The one message the `proposal` mode answers with: a rejection that names a company. */
+function fakeProposalMessage(company: string): MailMessage {
+  return {
+    id: 'fake-proposal-message',
+    threadId: 'fake-proposal-thread',
+    receivedAt: new Date('2026-03-05T08:00:00.000Z'),
+    from: 'rrhh@example.test',
+    subject: `Sobre tu candidatura en ${company}`,
+    snippet: `Hola: lamentamos informarte que no seguimos adelante con tu candidatura en ${company}.`,
+  };
+}
+
+/**
+ * Deterministic fake used by tests and e2e. Never reaches the network.
+ *
+ * `proposal` exists so the whole round trip -check, classifier, matcher, pending
+ * proposal, modal- can be exercised without Gmail. It needs a company to name,
+ * because the matcher binds a message to an application by company; without one
+ * it answers cleanly empty instead of inventing a name.
+ */
+function createFakeReader(env: Env): GmailReader {
+  const mode = readEnv(env, 'JOB_QUEUE_WEB_MAIL_FAKE');
   return {
     fetchRecent: async () => {
       if (mode === 'auth_expired') {
@@ -57,6 +77,13 @@ function createFakeReader(mode: string | undefined): GmailReader {
       }
       if (mode === 'throw') {
         throw new Error('Fake mail reader failure');
+      }
+      if (mode === 'proposal') {
+        const company = readEnv(env, 'JOB_QUEUE_WEB_MAIL_FAKE_COMPANY')?.trim();
+        return {
+          status: 'ok',
+          messages: company === undefined || company.length === 0 ? [] : [fakeProposalMessage(company)],
+        };
       }
       const reason = FAKE_UNAVAILABLE.find((candidate) => candidate === mode);
       if (reason !== undefined) {
@@ -69,7 +96,7 @@ function createFakeReader(mode: string | undefined): GmailReader {
 
 function createReader(env: Env): GmailReader {
   if (isFake(env)) {
-    return createFakeReader(readEnv(env, 'JOB_QUEUE_WEB_MAIL_FAKE'));
+    return createFakeReader(env);
   }
   if (hasGoogleCredentials(env)) {
     // U6: this branch is now the REAL raw-fetch Gmail adapter, built from the
