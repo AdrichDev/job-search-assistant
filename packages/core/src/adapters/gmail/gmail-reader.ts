@@ -62,6 +62,18 @@ function reasonForHttp(status: number): MailUnavailableReason {
   return 'bad_response';
 }
 
+/**
+ * A non-ok answer from either Gmail endpoint. A 401 is the access token being
+ * rejected, which is the one reason the human can act on (re-run consent), so
+ * it maps to `auth_expired` instead of the generic `bad_response` it used to
+ * become.
+ */
+function failureFor(status: number): Failure {
+  return status === 401
+    ? { status: 'auth_expired' }
+    : { status: 'unavailable', reason: reasonForHttp(status) };
+}
+
 function parseJson(text: string): unknown {
   try {
     return JSON.parse(text) as unknown;
@@ -122,7 +134,7 @@ async function refreshAccessToken(
         return { status: 'auth_expired' };
       }
     }
-    return { status: 'unavailable', reason: reasonForHttp(response.status) };
+    return failureFor(response.status);
   }
 
   const payload = asRecord(parseJson(await readBody(response)));
@@ -150,6 +162,13 @@ async function listMessageIds(
   const epochSeconds = Math.floor(query.since.getTime() / 1000);
   const ids: string[] = [];
   let pageToken: string | undefined;
+  /*
+   * A token we already followed means Google repeated itself. Without this
+   * guard a page with no new ids and a repeated token never advances
+   * `remaining`, so the loop would ask for the same page forever: an
+   * unbounded request loop inside the daily check.
+   */
+  const followedTokens = new Set<string>();
 
   for (;;) {
     const remaining = query.maxResults - ids.length;
@@ -176,7 +195,7 @@ async function listMessageIds(
     }
 
     if (!response.ok) {
-      return { status: 'unavailable', reason: reasonForHttp(response.status) };
+      return failureFor(response.status);
     }
 
     const payload = asRecord(parseJson(await readBody(response)));
@@ -190,6 +209,14 @@ async function listMessageIds(
     }
 
     for (const entry of entries ?? []) {
+      /*
+       * The caller's ceiling is enforced HERE and not only in the request: a
+       * server that answers with more than it was asked for must not be able
+       * to hand the caller more than it asked for.
+       */
+      if (ids.length >= query.maxResults) {
+        return { ids };
+      }
       const id = asString(asRecord(entry)?.['id']);
       if (id === undefined || id.length === 0) {
         return { status: 'unavailable', reason: 'bad_response' };
@@ -201,6 +228,10 @@ async function listMessageIds(
     if (next === undefined || next.length === 0) {
       return { ids };
     }
+    if (followedTokens.has(next)) {
+      return { status: 'unavailable', reason: 'bad_response' };
+    }
+    followedTokens.add(next);
     pageToken = next;
   }
 }
@@ -301,7 +332,7 @@ async function fetchMessage(
   }
 
   if (!response.ok) {
-    return { status: 'unavailable', reason: reasonForHttp(response.status) };
+    return failureFor(response.status);
   }
 
   const message = parseMessage(parseJson(await readBody(response)));
