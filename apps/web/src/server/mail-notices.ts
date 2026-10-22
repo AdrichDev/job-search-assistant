@@ -1,7 +1,7 @@
 import type {
   AcceptMailProposalResult,
   DismissMailProposalResult,
-  RunMailCheckResult,
+  MailCheckOutcome,
 } from '@job-queue/core';
 import { ES } from '@/copy/es';
 
@@ -148,14 +148,11 @@ export function runNoticeFor(raw: string | readonly string[] | undefined): MailN
 }
 
 /**
- * Everything a mail run can end as: the core result plus the three outcomes the
- * web layer decides itself (mail off, corrupt state file, retry cooldown).
+ * Everything a mail run can end as. Derived from the core type rather than
+ * re-listed here, so a new outcome fails this file's exhaustive switch at the
+ * typecheck instead of silently rendering nothing.
  */
-export type MailRunOutcome =
-  | RunMailCheckResult
-  | { readonly status: 'not_configured' }
-  | { readonly status: 'state_corrupt' }
-  | { readonly status: 'cooldown' };
+export type MailRunOutcome = MailCheckOutcome;
 
 export function runSlugFor(outcome: MailRunOutcome): RunNoticeCode {
   switch (outcome.status) {

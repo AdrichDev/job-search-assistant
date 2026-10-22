@@ -204,6 +204,13 @@ export {
   type RunMailCheckResult,
 } from './app/run-mail-check.js';
 export {
+  checkMailWithProposals,
+  type CheckMailOptions,
+  type MailCheckDeps,
+  type MailCheckOutcome,
+  type MailCheckResult,
+} from './app/check-mail-with-proposals.js';
+export {
   MAIL_RETRY_COOLDOWN_MS,
   MAIL_RUN_HOUR,
   MAIL_TIME_ZONE,
