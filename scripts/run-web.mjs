@@ -5,7 +5,10 @@
  * The web app reads only `process.env` (Next does not load the root `.env`), so
  * machine-specific paths such as the CV library folder used to have to be exported
  * in every new terminal. This script reads an OPTIONAL, git-ignored file,
- * `data/dev-env.json`, and passes its entries to the web process:
+ * two OPTIONAL, git-ignored files and passes their entries to the web process,
+ * in this order of precedence: the shell, `data/dev-env.json` for machine paths,
+ * and the repository-root `.env`, where `npm run google:consent` writes the
+ * Google credentials for the CLI - so a credential never has to exist twice:
  *
  *   { "JOB_QUEUE_CV_LIBRARY_DIR": "D:/Mis documentos/CVs",
  *     "JOB_QUEUE_CV_MODELS_PATH": "<repo>/data/cv-models.json" }
@@ -26,13 +29,41 @@ import { fileURLToPath } from 'node:url';
 
 const ALLOWED_NAME = /^(JOB_QUEUE|GOOGLE)_[A-Z0-9_]+$/;
 
-/** Pure: merges the accepted entries of `parsed` under `baseEnv`. Never throws. */
-export function mergeLocalEnv(baseEnv, parsed) {
+/** Pure: the accepted `NAME=value` lines of a .env, quotes stripped, empties dropped. */
+/** Pure: the accepted NAME=value lines of a .env, quotes stripped, empties dropped. */
+export function parseDotEnv(text) {
+  const found = {};
+  if (typeof text !== 'string') {
+    return found;
+  }
+  for (const line of text.split(/\r?\n/)) {
+    const match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+    if (match === null) {
+      continue;
+    }
+    const name = match[1];
+    const raw = match[2].trim();
+    const value = raw.replace(/^(['"])(.*)\1$/, '$2');
+    if (!ALLOWED_NAME.test(name) || value === '') {
+      continue;
+    }
+    found[name] = value;
+  }
+  return found;
+}
+
+/**
+ * Pure: merges the accepted entries of every source under `baseEnv`, in order.
+ * An earlier source always wins, so callers pass the most specific first.
+ */
+export function mergeLocalEnv(baseEnv, ...sources) {
   const merged = { ...baseEnv };
   const applied = [];
   const ignored = [];
+  for (const parsed of sources) {
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return { env: merged, applied, ignored: ['<root>'] };
+    ignored.push('<root>');
+    continue;
   }
   for (const [name, value] of Object.entries(parsed)) {
     const usable = ALLOWED_NAME.test(name) && typeof value === 'string' && value.trim() !== '';
@@ -46,6 +77,7 @@ export function mergeLocalEnv(baseEnv, parsed) {
     }
     merged[name] = value;
     applied.push(name);
+  }
   }
   return { env: merged, applied, ignored };
 }
@@ -72,10 +104,20 @@ function main() {
     }
   }
 
-  const { env, applied, ignored } = mergeLocalEnv(process.env, parsed);
+  // The root .env is where `npm run google:consent` puts the Google
+  // credentials. Reading it here is what stops the credentials having to exist
+  // twice: before, a token in .env made the CLI work while the web app saw no
+  // mail configuration at all.
+  const dotEnvFile = resolve(root, '.env');
+  const dotEnv = existsSync(dotEnvFile) ? parseDotEnv(readFileSync(dotEnvFile, 'utf8')) : {};
+
+  // Precedence: the shell, then data/dev-env.json, then .env.
+  const { env, applied, ignored } = mergeLocalEnv(process.env, parsed, dotEnv);
   if (applied.length > 0) {
     // Names only: values can be personal paths or credentials.
-    console.log(`[web] local settings from data/dev-env.json: ${applied.join(', ')}`);
+    console.log(
+      `[web] local settings applied (shell > data/dev-env.json > .env): ${applied.join(', ')}`,
+    );
   }
   if (ignored.length > 0) {
     console.warn(`[web] ignored entries in data/dev-env.json: ${ignored.join(', ')}`);

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { mergeLocalEnv } from './run-web.mjs';
+import { mergeLocalEnv, parseDotEnv } from './run-web.mjs';
 
 test('adds an accepted entry that the shell did not set', () => {
   const { env, applied } = mergeLocalEnv({}, { JOB_QUEUE_CV_LIBRARY_DIR: 'D:/cv' });
@@ -42,4 +42,42 @@ test('does not mutate the base environment', () => {
   const base = {};
   mergeLocalEnv(base, { JOB_QUEUE_X: 'y' });
   assert.deepEqual(base, {});
+});
+
+test('parses the root .env: comments, blanks, quotes, and only accepted names', () => {
+  const text = [
+    '# Gmail read-only OAuth client (Google Cloud, type: desktop app). Never commit real values.',
+    '',
+    'GOOGLE_CLIENT_ID=abc-123',
+    'GOOGLE_CLIENT_SECRET="s3cr3t"',
+    "GOOGLE_REFRESH_TOKEN='1//token'",
+    'GOOGLE_EMPTY=',
+    'PATH=/evil',
+    'not a line at all',
+  ].join('\n');
+
+  assert.deepEqual(parseDotEnv(text), {
+    GOOGLE_CLIENT_ID: 'abc-123',
+    GOOGLE_CLIENT_SECRET: 's3cr3t',
+    GOOGLE_REFRESH_TOKEN: '1//token',
+  });
+});
+
+test('a later source never overrides an earlier one, and the shell wins over both', () => {
+  const { env, applied } = mergeLocalEnv(
+    {},
+    { JOB_QUEUE_CV_LIBRARY_DIR: 'D:/json' },
+    { JOB_QUEUE_CV_LIBRARY_DIR: 'D:/dotenv', GOOGLE_CLIENT_ID: 'from-dotenv' },
+  );
+  assert.equal(env.JOB_QUEUE_CV_LIBRARY_DIR, 'D:/json');
+  assert.equal(env.GOOGLE_CLIENT_ID, 'from-dotenv');
+  assert.deepEqual(applied, ['JOB_QUEUE_CV_LIBRARY_DIR', 'GOOGLE_CLIENT_ID']);
+
+  const shell = mergeLocalEnv(
+    { GOOGLE_CLIENT_ID: 'from-shell' },
+    {},
+    { GOOGLE_CLIENT_ID: 'from-dotenv' },
+  );
+  assert.equal(shell.env.GOOGLE_CLIENT_ID, 'from-shell');
+  assert.deepEqual(shell.applied, []);
 });
