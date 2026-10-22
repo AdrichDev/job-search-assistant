@@ -10,6 +10,8 @@ import {
 } from '@/server/container';
 import { loadDashboard } from '@/server/dashboard';
 import { loadModelCatalog } from '@/server/model-catalog';
+import { parseQueueFilters } from '@/lib/queue-filters';
+import { sourceOptions } from '@/lib/source-labels';
 import { readMailStatusNow } from '@/server/mail-status';
 import { DismissedSection } from '@/components/dismissed-section';
 import { FetchPanel } from '@/components/fetch-panel';
@@ -39,7 +41,16 @@ function Notice({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  /*
+   * The list's filters live in the address bar (UI-4), so the server parses them
+   * once and hands the component its initial state: a reload or a shared link
+   * lands on the same view instead of resetting to "everything".
+   */
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const dashboard = await loadDashboard({
     queueReader: queueReader(),
     applicationRepository: applicationRepository(),
@@ -65,6 +76,10 @@ export default async function DashboardPage() {
   const mail = await readMailStatusNow();
 
   const { queue, stats, origin, sampleDataCount, dismissed, warnings } = dashboard;
+  const initialFilters = parseQueueFilters(
+    await searchParams,
+    sourceOptions(queue.jobs).map((option) => option.id),
+  );
   // Read once, and only when some application names a model: the stats table needs names.
   const modelCatalog = await loadModelCatalog(stats.byModel.length > 0 ? cvModelRepository() : undefined);
   const now = new Date(queue.generatedAt).getTime();
@@ -160,7 +175,7 @@ export default async function DashboardPage() {
 
       <StatsPanel stats={stats} models={modelCatalog} />
 
-      <QueueView entries={queue.jobs} now={now} degraded={degraded} />
+      <QueueView entries={queue.jobs} now={now} degraded={degraded} initialFilters={initialFilters} />
 
       {/*
         Deliberately last and collapsed. These are decisions the human already

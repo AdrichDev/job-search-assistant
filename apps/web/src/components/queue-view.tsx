@@ -1,11 +1,12 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { QueueEntry } from '@job-queue/core/domain';
 import { EmptyQueue } from '@/components/empty-queue';
 import { JobCard } from '@/components/job-card';
 import { ES } from '@/copy/es';
 import { matchesSource, sourceOptions } from '@/lib/source-labels';
+import { queueFiltersToQuery, type AppliedFilter, type QueueFilters } from '@/lib/queue-filters';
 
 /**
  * Filtering happens in the browser over data the server already sent.
@@ -14,8 +15,6 @@ import { matchesSource, sourceOptions } from '@/lib/source-labels';
  * be pure latency for no benefit. Nothing sensitive is involved: the client
  * only ever holds the same public posting data the page already renders.
  */
-
-type AppliedFilter = 'all' | 'applied' | 'not_applied';
 
 const CV_OPTIONS = [
   { value: 'all', label: ES.queue.cvOptionAll },
@@ -49,15 +48,38 @@ export function QueueView({
   entries,
   now,
   degraded,
+  initialFilters,
 }: {
   entries: readonly QueueEntry[];
   now: number;
   degraded: boolean;
+  initialFilters: QueueFilters;
 }) {
-  const [cvVariant, setCvVariant] = useState<string>('all');
-  const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>('all');
-  const [source, setSource] = useState<string>('all');
-  const [search, setSearch] = useState('');
+  const [cvVariant, setCvVariant] = useState<string>(initialFilters.cv);
+  const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>(initialFilters.estado);
+  const [source, setSource] = useState<string>(initialFilters.fuente);
+  const [search, setSearch] = useState(initialFilters.q);
+
+  /*
+   * The state is the source of truth and the URL follows it, with
+   * `history.replaceState` rather than a router navigation: filtering is local,
+   * so the server has nothing to re-render and a navigation per keystroke would
+   * be pure latency. `replace` (not `push`) keeps the back button about pages,
+   * not about every character typed into the search box.
+   */
+  useEffect(() => {
+    const query = queueFiltersToQuery({
+      cv: cvVariant,
+      fuente: source,
+      estado: appliedFilter,
+      q: search,
+    });
+    const next = `${window.location.pathname}${query}`;
+    if (`${window.location.pathname}${window.location.search}` === next) {
+      return;
+    }
+    window.history.replaceState(null, '', next);
+  }, [cvVariant, source, appliedFilter, search]);
 
   const searchId = useId();
   const cvId = useId();
@@ -109,7 +131,7 @@ export function QueueView({
         <EmptyQueue degraded={degraded} />
       ) : (
         <>
-          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="sticky top-0 z-20 mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex min-w-56 flex-1 flex-col gap-1.5">
               <label htmlFor={searchId} className="text-xs font-medium text-slate-600">
                 {ES.queue.searchLabel}
