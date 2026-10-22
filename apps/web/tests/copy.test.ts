@@ -138,11 +138,6 @@ describe('Spanish grammar in generated strings', () => {
     expect(ES.card.postedAgo(4)).toBe('Publicada hace 4 días');
   });
 
-  it('agrees in number when counting offers', () => {
-    expect(ES.header.subtitle(1, 'Adrian')).toContain('1 oferta');
-    expect(ES.header.subtitle(13, 'Adrian')).toContain('13 ofertas');
-  });
-
   it('agrees in number in the prominent total', () => {
     expect(ES.queue.total(1)).toBe('1 oferta');
     expect(ES.queue.total(13)).toBe('13 ofertas');

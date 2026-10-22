@@ -35,15 +35,15 @@ test.describe('Spanish copy', () => {
     ).toBeVisible();
   });
 
-  test('the boundary promise is stated on the page, not only in the README', async ({ page }) => {
-    // This product does not log into any job board on the user's behalf. That
-    // is a legal and product boundary, and the person using it deserves to read
-    // it on the screen where they click, not in a document they never open.
-    await expect(
-      page.getByText(
-        'Te postulas tú en el portal de empleo. Esta herramienta no inicia sesión en ningún sitio ni envía nada por ti.',
-      ),
-    ).toBeVisible();
+  test('the offer list does not greet the candidate or stamp itself', async ({ page }) => {
+    // The header used to carry four editorial lines: the count addressed to a
+    // person by name, a sentence about what the run filtered, a consent note
+    // and a generated-at timestamp. They were removed by request, so the header
+    // is only the title now. This guards against any of them coming back.
+    const header = page.locator('header').first();
+    await expect(header).not.toContainText('Generada el');
+    await expect(header).not.toContainText('Te postulas tú');
+    await expect(header).not.toContainText('Solo ofertas de desarrollo de software');
   });
 
   test('the document language and title are Spanish', async ({ page }) => {

@@ -13,7 +13,7 @@ import { DismissedSection } from '@/components/dismissed-section';
 import { FetchPanel } from '@/components/fetch-panel';
 import { QueueView } from '@/components/queue-view';
 import { StatsPanel } from '@/components/stats-panel';
-import { ES, LOCALE } from '@/copy/es';
+import { ES } from '@/copy/es';
 
 /**
  * Server component. Every read happens here, on the server; the browser
@@ -76,20 +76,6 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {ES.header.title}
         </h1>
-        {/*
-          The count is of what actually passed the two filters, not of what was
-          fetched. `totalUnique` counts postings the user will never see, which
-          made the headline number a claim the page could not back up.
-        */}
-        <p className="prose-measure mt-2 text-sm leading-relaxed text-slate-600">
-          {ES.header.subtitle(queue.totalJuniorEligible, queue.candidate)}
-        </p>
-        <p className="prose-measure mt-1 text-sm leading-relaxed text-slate-500">
-          {ES.header.manualNotice}
-        </p>
-        <p className="mt-2 text-xs text-slate-500">
-          {ES.header.generatedAt(new Date(queue.generatedAt).toLocaleString(LOCALE))}
-        </p>
       </header>
 
       {/*

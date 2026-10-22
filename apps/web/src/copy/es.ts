@@ -180,12 +180,7 @@ export const ES = {
   /* Header ------------------------------------------------------------ */
   header: {
     title: 'Ofertas para ti',
-    subtitle: (count: number, candidate: string) =>
-      `${count} ${count === 1 ? 'oferta' : 'ofertas'} para ${candidate}. Solo ofertas de desarrollo de software y sin señales de que pidan un perfil sénior. Decides tú cuáles te interesan.`,
     ordering: 'De la más reciente a la más antigua.',
-    manualNotice:
-      'Te postulas tú en el portal de empleo. Esta herramienta no inicia sesión en ningún sitio ni envía nada por ti.',
-    generatedAt: (date: string) => `Generada el ${date}`,
     offlineFallbackTitle: 'Datos de ejemplo, no ofertas reales',
     offlineFallback:
       'Todavía no hay ninguna ejecución guardada, así que esto es el catálogo de ejemplo sin conexión. Los enlaces no llevan a ofertas reales. Ejecuta «npm start -- --source=boards» para obtener ofertas de verdad.',
