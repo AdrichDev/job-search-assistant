@@ -132,12 +132,13 @@ async function main(): Promise<number> {
 
   const state = randomBytes(16).toString('hex');
 
-  // The loopback port is assigned by the OS (port 0) so nothing can already be
-  // sitting on a well-known number; the redirect_uri is built from the address
-  // actually bound. Google accepts any loopback port for desktop-type clients.
+  // Port 0 lets the OS pick. Google accepts ANY loopback port for a Desktop-type
+  // OAuth client, but a Web-application client only accepts the exact URIs that
+  // were registered, so GOOGLE_CONSENT_PORT pins one for that case.
+  const requestedPort = Number(process.env.GOOGLE_CONSENT_PORT ?? '0');
   const server = createServer();
   await new Promise<void>((resolveListen) => {
-    server.listen(0, '127.0.0.1', resolveListen);
+    server.listen(Number.isInteger(requestedPort) && requestedPort >= 0 ? requestedPort : 0, '127.0.0.1', resolveListen);
   });
   const address = server.address();
   if (address === null || typeof address === 'string') {
@@ -165,9 +166,18 @@ async function main(): Promise<number> {
 
       const googleError = query.get('error');
       if (googleError !== null) {
+        const description = query.get('error_description');
         writeResponse(response, 200, '<html><body><p>Consent was denied. You can close this tab.</p></body></html>');
         server.close();
-        resolve({ error: `consent was denied by Google (${googleError})` });
+        const detail = description === null ? '' : `: ${description}`;
+        const hint =
+          googleError === 'redirect_uri_mismatch'
+            ? ` The redirect URI used was ${redirectUri} and it is not registered on this client. ` +
+              'Either switch the OAuth client to type "Desktop", or register that exact URI and pin the port with GOOGLE_CONSENT_PORT.'
+            : googleError === 'access_denied'
+              ? ' If the page said the app is not verified, add your Google account as a Test user on the OAuth consent screen (External, testing).'
+              : '';
+        resolve({ error: `consent was denied by Google (${googleError}${detail}).${hint}` });
         return;
       }
 
