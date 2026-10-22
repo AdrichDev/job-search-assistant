@@ -99,7 +99,7 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
       }`}
       aria-labelledby={`job-title-${entry.id}`}
     >
-      <div className="p-4 sm:p-5">
+      <div className="p-3 sm:p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             {/*
@@ -120,15 +120,17 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
               <span className="font-normal text-slate-600">{entry.location}</span>
             </p>
 
-            <p className="mt-1 text-xs text-slate-500">
+            {/*
+              One metadata line, not two: age, salary, contract and the sources
+              the offer came from. The sources used to have their own line with
+              a "Fuentes:" label, which cost a full line of height on every card
+              for a label the reader learns once.
+            */}
+            <p className="mt-1 text-xs text-slate-500" data-testid="job-sources">
               {ageLabel(entry.postedAt, now)}
               {salary !== null && ` · ${salary}`}
               {entry.contractType !== null && ` · ${entry.contractType}`}
-            </p>
-
-            <p className="mt-1 text-xs text-slate-600" data-testid="job-sources">
-              <span className="font-medium">{ES.source.cardLabel(sourceLabels.length)}:</span>{' '}
-              {sourceLabels.length === 0 ? ES.source.noSources : sourceLabels.join(' · ')}
+              {` · ${sourceLabels.length === 0 ? ES.source.noSources : sourceLabels.join(' · ')}`}
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -167,10 +169,17 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
                 aria-labelledby={`cv-category-${entry.id}`}
                 className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
               >
+                {/*
+                  Heading and category on ONE line: the category name used to
+                  have its own paragraph right under a heading that says the
+                  same thing, which is a line of height per card for nothing.
+                  The heading keeps its h4 semantics and its id, because
+                  aria-labelledby points at it.
+                */}
                 <h4 id={`cv-category-${entry.id}`} className="font-semibold text-slate-800">
-                  {categoryView.heading}
+                  {categoryView.heading}:{' '}
+                  <span className="font-semibold text-slate-900">{categoryView.categoryName}</span>
                 </h4>
-                <p className="mt-0.5 text-sm font-medium text-slate-900">{categoryView.categoryName}</p>
                 <p className="mt-0.5">{categoryView.explanation}</p>
                 <p className="mt-0.5 text-slate-500">{categoryView.disclaimer}</p>
               </section>
