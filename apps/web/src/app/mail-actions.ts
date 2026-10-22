@@ -11,6 +11,7 @@ import {
 } from '@/server/container';
 import { gmailReader, mailConfigured } from '@/server/mail';
 import {
+  acceptAllFromForm,
   acceptFromForm,
   catchUp,
   checkNow,
@@ -49,6 +50,24 @@ export async function acceptMailProposalAction(formData: FormData): Promise<void
   let to = '/seguimiento?correo=rechazada#correo';
   try {
     to = await acceptFromForm(formData, {
+      proposals: mailProposalRepository(),
+      applications: applicationRepository(),
+      history: applicationHistoryRepository(),
+      now: () => new Date(),
+      logger: consoleLogger,
+    });
+    refresh();
+  } catch {
+    // keep the generic target
+  }
+  redirect(to);
+}
+
+/** The modal's Aceptar: applies EVERY pending proposal, one redirect with the tally. */
+export async function acceptAllMailProposalsAction(): Promise<void> {
+  let to = '/seguimiento?correo=rechazada#correo';
+  try {
+    to = await acceptAllFromForm({
       proposals: mailProposalRepository(),
       applications: applicationRepository(),
       history: applicationHistoryRepository(),

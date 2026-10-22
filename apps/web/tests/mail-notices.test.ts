@@ -6,12 +6,15 @@ import type {
 } from '@job-queue/core';
 import {
   ACCEPT_NOTICE_CODES,
+  BULK_ACCEPT_NOTICE_CODES,
   DISMISS_NOTICE_CODES,
   RUN_NOTICE_CODES,
   acceptNoticeFor,
   acceptSlugFor,
+  bulkAcceptNoticeFor,
   dismissNoticeFor,
   dismissSlugFor,
+  mailNoticeFor,
   runNoticeFor,
   runSlugFor,
   type MailRunOutcome,
@@ -146,5 +149,59 @@ describe('mail notices', () => {
   it('uses the copy module texts', () => {
     expect(acceptNoticeFor('ya-aplicada')?.text).toContain('No se tocó nada');
     expect(runNoticeFor('estado-danado')?.text).toContain('Mueve el archivo');
+  });
+});
+
+describe('bulk accept notices (U5d)', () => {
+  it('has one closed slug, like the other families', () => {
+    expect([...BULK_ACCEPT_NOTICE_CODES]).toEqual(['aplicadas']);
+  });
+
+  it('returns null for unknown or missing codes and never echoes them', () => {
+    const hostile = '<script>alert(1)</script>';
+    expect(bulkAcceptNoticeFor(undefined, {})).toBeNull();
+    expect(bulkAcceptNoticeFor('', {})).toBeNull();
+    expect(bulkAcceptNoticeFor(hostile, {})).toBeNull();
+    expect(bulkAcceptNoticeFor(['aplicadas'], {})).toBeNull();
+    expect(bulkAcceptNoticeFor('constructor', {})).toBeNull();
+    expect(bulkAcceptNoticeFor('aceptada', {})).toBeNull();
+  });
+
+  it('composes the notice from the query counts with the tone of the outcome', () => {
+    const all = bulkAcceptNoticeFor('aplicadas', { aplicados: '2' });
+    expect(all?.tone).toBe('ok');
+    expect(all?.text).toContain('2 estados actualizados');
+
+    const mixed = bulkAcceptNoticeFor('aplicadas', { aplicados: '1', conflicto: '1' });
+    expect(mixed?.tone).toBe('info');
+    expect(mixed?.text).toContain('Estado actualizado');
+    expect(mixed?.text).toContain('No se tocó nada');
+
+    const nothing = bulkAcceptNoticeFor('aplicadas', { conflicto: '2', rechazadas: '1' });
+    expect(nothing?.tone).toBe('warning');
+    expect(nothing?.text).toContain('No se pudo aplicar el cambio');
+
+    const empty = bulkAcceptNoticeFor('aplicadas', {});
+    expect(empty?.tone).toBe('info');
+    expect(empty?.text).toContain('No había propuestas pendientes');
+  });
+
+  it('ignores garbage, negative and absurd counts instead of echoing them', () => {
+    const text = bulkAcceptNoticeFor('aplicadas', {
+      aplicados: 'abc',
+      conflicto: '-3',
+      rechazadas: '9'.repeat(30),
+    })?.text;
+    expect(text).not.toContain('9'.repeat(30));
+    expect(text).not.toContain('-3');
+  });
+
+  it('mailNoticeFor resolves every family from one place', () => {
+    expect(mailNoticeFor('aplicadas', { aplicados: '1' })?.text).toContain('Estado actualizado');
+    expect(mailNoticeFor('aceptada', {})?.text).toContain('Estado actualizado. Puedes deshacerlo');
+    expect(mailNoticeFor('descartada', {})).not.toBeNull();
+    expect(mailNoticeFor('ok', {})).not.toBeNull();
+    expect(mailNoticeFor('otra', {})).toBeNull();
+    expect(mailNoticeFor(undefined, {})).toBeNull();
   });
 });

@@ -855,7 +855,8 @@ export const ES = {
     },
     run: {
       not_configured: 'El correo no está configurado.',
-      auth_expired: 'Google rechazó el permiso (caduca cada 7 días). Renuévalo.',
+      auth_expired:
+        'Google rechazó el permiso. Vuelve a autorizar el correo con «npm run google:consent».',
       network: 'Sin conexión con Gmail.',
       rate_limited: 'Gmail pide esperar; reinténtalo más tarde.',
       server: 'Gmail no responde.',
@@ -875,6 +876,47 @@ export const ES = {
     status: {
       heading: 'Propuestas del correo',
       empty: 'No hay propuestas pendientes del correo.',
+      pending: (n: number) =>
+        n === 1 ? '1 propuesta pendiente del correo' : `${n} propuestas pendientes del correo`,
+      lastCheck: (date: string) => `Última revisión del correo: ${date}`,
+      neverRan: 'El correo todavía no se ha revisado.',
+      unknownApplication: 'Postulación no encontrada',
+    },
+    modal: {
+      heading: 'Cambios propuestos desde tu correo',
+      intro: (n: number) =>
+        n === 1
+          ? 'Tu correo propone 1 cambio de estado. Acéptalo para aplicarlo o cancélalo para decidirlo más tarde.'
+          : `Tu correo propone ${n} cambios de estado. Acéptalos para aplicarlos o cancélalos para decidirlo más tarde.`,
+      currentState: 'Estado actual',
+      proposedState: 'Estado propuesto',
+      evidence: 'Evidencia',
+      cancel: 'Cancelar',
+    },
+    bulk: {
+      applied: (n: number) =>
+        n === 1
+          ? 'Estado actualizado. Puedes deshacerlo en el historial.'
+          : `${n} estados actualizados. Puedes deshacerlos en el historial.`,
+      untracked: (n: number) =>
+        n === 1
+          ? 'Estado actualizado, pero la propuesta no se pudo marcar como aceptada.'
+          : `${n} estados actualizados, pero sus propuestas no se pudieron marcar como aceptadas.`,
+      conflict: (n: number) =>
+        n === 1
+          ? 'Ya estaba aplicado o lo cambiaste tú después. No se tocó nada.'
+          : `${n} propuestas ya estaban aplicadas o las cambiaste tú después. No se tocó nada.`,
+      decided: (n: number) =>
+        n === 1 ? 'Esta propuesta ya estaba resuelta.' : `${n} propuestas ya estaban resueltas.`,
+      gone: (n: number) =>
+        n === 1
+          ? 'La postulación de esa propuesta ya no existe.'
+          : `La postulación de ${n} propuestas ya no existe.`,
+      refused: (n: number) =>
+        n === 1 ? 'No se pudo aplicar el cambio.' : `${n} cambios no se pudieron aplicar.`,
+      missing: (n: number) =>
+        n === 1 ? 'Esa propuesta no existe.' : `${n} propuestas ya no existen.`,
+      empty: 'No había propuestas pendientes por aplicar.',
     },
     labels: {
       accept: 'Aceptar',

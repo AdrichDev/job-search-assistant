@@ -110,6 +110,83 @@ export function dismissSlugFor(result: Pick<DismissMailProposalResult, 'status'>
   }
 }
 
+/*
+ * Bulk accept (U5d). One slug, like the other families; the counts travel as
+ * separate query keys and are composed into the notice here.
+ */
+export const BULK_ACCEPT_NOTICE_CODES = ['aplicadas'] as const;
+export type BulkAcceptNoticeCode = (typeof BULK_ACCEPT_NOTICE_CODES)[number];
+
+const BULK_ACCEPT_CODES: Readonly<Record<BulkAcceptNoticeCode, true>> = { aplicadas: true };
+
+type RawCount = string | readonly string[] | undefined;
+
+/** A count is ours or it is nothing: at most 4 digits, so garbage, negatives and absurd values are dropped. */
+function parseCount(raw: RawCount): number {
+  if (typeof raw !== 'string' || !/^\d{1,4}$/.test(raw)) {
+    return 0;
+  }
+  return Number.parseInt(raw, 10);
+}
+
+/** Bucket query key → copy, in the fixed order the lines appear in. */
+const BULK_LINES: readonly (readonly [string, (n: number) => string])[] = [
+  ['aplicados', ES.mail.bulk.applied],
+  ['sin-registro', ES.mail.bulk.untracked],
+  ['conflicto', ES.mail.bulk.conflict],
+  ['ya-decididas', ES.mail.bulk.decided],
+  ['sin-postulacion', ES.mail.bulk.gone],
+  ['rechazadas', ES.mail.bulk.refused],
+  ['no-encontradas', ES.mail.bulk.missing],
+];
+
+export function bulkAcceptNoticeFor(
+  raw: RawCount,
+  counts: Readonly<Record<string, RawCount>>,
+): MailNotice | null {
+  if (typeof raw !== 'string' || !Object.hasOwn(BULK_ACCEPT_CODES, raw)) {
+    return null;
+  }
+  const lines: string[] = [];
+  let applied = 0;
+  let untracked = 0;
+  for (const [key, line] of BULK_LINES) {
+    const n = parseCount(counts[key]);
+    if (n > 0) {
+      lines.push(line(n));
+    }
+    if (key === 'aplicados') {
+      applied = n;
+    }
+    if (key === 'sin-registro') {
+      untracked = n;
+    }
+  }
+  if (lines.length === 0) {
+    return { tone: 'info', text: ES.mail.bulk.empty };
+  }
+  const nonPositive = lines.length - (applied > 0 ? 1 : 0) - (untracked > 0 ? 1 : 0);
+  const tone: MailNotice['tone'] =
+    applied > 0 ? (nonPositive === 0 && untracked === 0 ? 'ok' : 'info') : 'warning';
+  return { tone, text: lines.join(' ') };
+}
+
+/**
+ * One lookup for the page: every mail slug family resolves here, bulk counts
+ * included. Anything unknown stays null and is never echoed.
+ */
+export function mailNoticeFor(
+  raw: RawCount,
+  counts: Readonly<Record<string, RawCount>> = {},
+): MailNotice | null {
+  return (
+    bulkAcceptNoticeFor(raw, counts) ??
+    acceptNoticeFor(raw) ??
+    dismissNoticeFor(raw) ??
+    runNoticeFor(raw)
+  );
+}
+
 /* Run --------------------------------------------------------------------- */
 
 export const RUN_NOTICE_CODES = [

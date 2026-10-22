@@ -288,22 +288,28 @@ describe('tracking pagination and spreadsheet-cell copy', () => {
 });
 
 describe('mail copy', () => {
-  const groups = Object.entries(ES.mail) as [string, Record<string, string>][];
+  const groups = Object.entries(ES.mail) as [string, Record<string, unknown>][];
   const ENGLISH = /\b(the|and|please|error|failed|try again|token|expired|accepted|not found)\b/i;
 
   it('has every group the mail screens use', () => {
     expect(groups.map(([name]) => name).sort()).toEqual(
-      ['accept', 'dismiss', 'labels', 'run', 'status', 'token'].sort(),
+      ['accept', 'bulk', 'dismiss', 'labels', 'modal', 'run', 'status', 'token'].sort(),
     );
   });
 
   it('is Spanish, with no placeholders, enum keys or English', () => {
     for (const [group, entries] of groups) {
-      for (const [key, text] of Object.entries(entries)) {
+      for (const [key, value] of Object.entries(entries)) {
+        // Counted lines (modal.intro, bulk.applied…) are pinned by number in
+        // their own describe block; here every STRING entry is checked.
+        if (typeof value !== 'string') {
+          expect(value, `${group}.${key}`).toBeTypeOf('function');
+          continue;
+        }
         const label = `${group}.${key}`;
-        expect(isSpanishSentence(text), label).toBe(true);
-        expect(text, label).not.toMatch(/\{|\}|\$\{|undefined|TODO|lorem/i);
-        expect(text, label).not.toMatch(ENGLISH);
+        expect(isSpanishSentence(value), label).toBe(true);
+        expect(value, label).not.toMatch(/\{|\}|\$\{|undefined|TODO|lorem/i);
+        expect(value, label).not.toMatch(ENGLISH);
       }
     }
   });
@@ -313,5 +319,53 @@ describe('mail copy', () => {
     expect(ES.mail.run.state_corrupt).toContain('Mueve el archivo');
     expect(ES.mail.labels.checkNow).toBe('Revisar correo ahora');
     expect(Object.keys(ES.mail)).not.toContain('outcomeOption');
+  });
+});
+
+describe('mail confirmation modal copy (U5d)', () => {
+  it('holds Spanish copy for every part of the modal', () => {
+    expect(ES.mail.modal.heading).toBe('Cambios propuestos desde tu correo');
+    expect(isSpanishSentence(ES.mail.modal.currentState)).toBe(true);
+    expect(isSpanishSentence(ES.mail.modal.proposedState)).toBe(true);
+    expect(isSpanishSentence(ES.mail.modal.evidence)).toBe(true);
+    expect(ES.mail.modal.cancel).toBe('Cancelar');
+    expect(ES.mail.modal.intro(1)).toContain('1');
+    expect(ES.mail.modal.intro(3)).toContain('3');
+  });
+
+  it('agrees in number and spells the cancel command correctly', () => {
+    // The inherited draft said "cancéntalo", which is not a Spanish word.
+    expect(ES.mail.modal.intro(1)).toContain('Acéptalo para aplicarlo o cancélalo');
+    expect(ES.mail.modal.intro(3)).toContain('Acéptalos para aplicarlos o cancélalos');
+    expect(ES.mail.modal.intro(1)).not.toContain('cancéntal');
+    expect(ES.mail.modal.intro(3)).not.toContain('cancéntal');
+  });
+
+  it('reuses the existing accept wording for a single bulk result', () => {
+    expect(ES.mail.bulk.applied(1)).toBe(ES.mail.accept.accepted);
+    expect(ES.mail.bulk.untracked(1)).toBe(ES.mail.accept.accepted_untracked);
+    expect(ES.mail.bulk.conflict(1)).toBe(ES.mail.accept.conflict);
+    expect(ES.mail.bulk.decided(1)).toBe(ES.mail.accept.already_decided);
+    expect(ES.mail.bulk.gone(1)).toBe(ES.mail.accept.application_not_found);
+    expect(ES.mail.bulk.refused(1)).toBe(ES.mail.accept.refused);
+    expect(ES.mail.bulk.missing(1)).toBe(ES.mail.accept.not_found);
+  });
+
+  it('pluralises the bulk lines and holds the empty case', () => {
+    expect(ES.mail.bulk.applied(2)).toContain('2');
+    expect(ES.mail.bulk.conflict(2)).toContain('2');
+    expect(ES.mail.bulk.decided(2)).toContain('2');
+    expect(ES.mail.bulk.gone(2)).toContain('2');
+    expect(ES.mail.bulk.refused(2)).toContain('2');
+    expect(ES.mail.bulk.missing(2)).toContain('2');
+    expect(isSpanishSentence(ES.mail.bulk.empty)).toBe(true);
+  });
+
+  it('holds the pending-count and status-line copy', () => {
+    expect(ES.mail.status.pending(1)).toContain('1');
+    expect(ES.mail.status.pending(4)).toContain('4');
+    expect(isSpanishSentence(ES.mail.status.lastCheck('5 de marzo'))).toBe(true);
+    expect(isSpanishSentence(ES.mail.status.neverRan)).toBe(true);
+    expect(isSpanishSentence(ES.mail.status.unknownApplication)).toBe(true);
   });
 });

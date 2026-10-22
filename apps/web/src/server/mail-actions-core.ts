@@ -1,10 +1,12 @@
 import {
   acceptMail,
+  acceptAllMail,
   checkMail,
   dismissMail,
   readMailStatus,
   acceptSlugForResult,
   dismissSlugForResult,
+  type AcceptAllMailResult,
   type AcceptMailResult,
   type DismissMailResult,
   type MailCheckDeps,
@@ -37,6 +39,32 @@ export function checkRedirect(outcome: MailRunOutcome): string {
   return target(runSlugFor(outcome));
 }
 
+/**
+ * Query keys of the bulk-accept count buckets, in the fixed order the notice
+ * composes them from. The only place these names exist besides `mail-notices`.
+ */
+const BULK_COUNT_KEYS = [
+  ['accepted', 'aplicados'],
+  ['acceptedUntracked', 'sin-registro'],
+  ['conflict', 'conflicto'],
+  ['alreadyDecided', 'ya-decididas'],
+  ['applicationNotFound', 'sin-postulacion'],
+  ['refused', 'rechazadas'],
+  ['notFound', 'no-encontradas'],
+] as const satisfies readonly (readonly [keyof AcceptAllCounts, string])[];
+
+type AcceptAllCounts = NonNullable<Exclude<AcceptAllMailResult, { status: 'failed' }>>;
+
+export function bulkAcceptRedirect(result: AcceptAllMailResult): string {
+  if ('status' in result) {
+    // The generic refusal slug: the same one a single refused accept uses.
+    return target('rechazada');
+  }
+  const params = BULK_COUNT_KEYS.filter(([key]) => result[key] > 0)
+    .map(([key, name]) => `${name}=${result[key]}`);
+  return ['/seguimiento?correo=aplicadas', ...params].join('&') + '#correo';
+}
+
 /** A non-empty string of at most 200 characters, or null. */
 export function parseProposalId(formData: FormData): string | null {
   const value = formData.get('proposalId');
@@ -61,6 +89,22 @@ export async function acceptFromForm(
     return acceptRedirect(await acceptMail(proposalId, deps, run));
   } catch {
     return acceptRedirect({ status: 'failed' });
+  }
+}
+
+/**
+ * The modal's Aceptar: no form fields to parse, every pending proposal is
+ * applied. An unexpected failure lands on the generic refusal slug, which
+ * carries no message and no path.
+ */
+export async function acceptAllFromForm(
+  deps: AcceptMailProposalDeps,
+  run?: AcceptRun,
+): Promise<string> {
+  try {
+    return bulkAcceptRedirect(await acceptAllMail(deps, run));
+  } catch {
+    return target('rechazada');
   }
 }
 
