@@ -176,7 +176,12 @@ async function main(): Promise<number> {
               'Either switch the OAuth client to type "Desktop", or register that exact URI and pin the port with GOOGLE_CONSENT_PORT.'
             : googleError === 'access_denied'
               ? ' If the page said the app is not verified, add your Google account as a Test user on the OAuth consent screen (External, testing).'
-              : '';
+              : googleError === 'invalid_client' || googleError === 'deleted_client'
+                ? ` The client id in .env (${clientId}) no longer exists in the project, or its secret is wrong. ` +
+                  'Create an OAuth client of type "Desktop app" and put its id and secret in .env.'
+                : googleError === 'unauthorized_client'
+                  ? ' This client type cannot use the loopback flow. Create a "Desktop app" client.'
+                  : '';
         resolve({ error: `consent was denied by Google (${googleError}${detail}).${hint}` });
         return;
       }
