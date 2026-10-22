@@ -12,6 +12,7 @@ import {
   resetApplications,
   resetDismissals,
   resetHistory,
+  resetMailData,
   resetRunState,
   resetScratch,
   seedQueue,
@@ -111,6 +112,7 @@ async function globalSetup(): Promise<void> {
   await resetDismissals();
   await resetHistory();
   await resetRunState();
+  await resetMailData();
   await resetCvModels();
 
   for (const entry of baseline) {

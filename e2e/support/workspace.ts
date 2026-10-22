@@ -321,8 +321,20 @@ export async function resetRunState(): Promise<void> {
   await rm(`${SCRATCH_RUN_STATE_PATH}.lock`, { force: true });
 }
 
-/** Wipes the whole scratch tree. Called once before the suite starts. */
-export async function resetScratch(): Promise<void> {
+/**
+ * Clears the pending mail proposals and the mail run state.
+ *
+ * Required between specs, and the reason is the confirmation modal: a leftover
+ * pending proposal makes `/seguimiento` open a native modal dialog on load,
+ * and a modal dialog makes the rest of the page inert. Every later spec would
+ * then fail on clicks it never reached.
+ */
+export async function resetMailData(): Promise<void> {
+  await rm(SCRATCH_MAIL_PROPOSALS_PATH, { force: true });
+  await rm(SCRATCH_MAIL_RUN_STATE_PATH, { force: true });
+}
+
+/** Wipes the whole scratch tree. Called once before the suite starts. */export async function resetScratch(): Promise<void> {
   await rm(SCRATCH_ROOT, { recursive: true, force: true });
   await mkdir(SCRATCH_ROOT, { recursive: true });
 }

@@ -5,6 +5,7 @@ import {
   resetApplications,
   resetDismissals,
   resetHistory,
+  resetMailData,
   resetRunState,
   seedQueue,
 } from './workspace.js';
@@ -88,6 +89,11 @@ export const test = base.extend<Fixtures>({
     // The change history too: a spec asserting "two entries" measures its own run.
     await resetHistory();
     await resetRunState();
+    // The mail stores too, and for a sharper reason than the others: a pending
+    // mail proposal makes `/seguimiento` open the confirmation modal on load,
+    // and a modal dialog makes the rest of the page inert, so every later spec
+    // would fail on clicks it never reached.
+    await resetMailData();
     // The CV model registry and its scratch library (two synthetic PDFs plus noise).
     await resetCvModels();
 
