@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, sep } from 'node:path';
-import { SCRATCH_MAIL_PROPOSALS_PATH, SCRATCH_ROOT } from './workspace.js';
+import { SCRATCH_MAIL_PROPOSALS_PATH, SCRATCH_MAIL_RUN_STATE_PATH, SCRATCH_ROOT } from './workspace.js';
 
 /**
  * Mail-proposal seeding and readback for the U5d specs.
@@ -78,4 +78,38 @@ export async function readMailProposals(): Promise<readonly StoredProposal[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Writes the ISOLATED mail run state, in the adapter's own shape.
+ *
+ * Needed to make the check deterministic: with a recent `lastSuccessAt` the
+ * on-open catch-up is not due, so the only thing that can run the check is the
+ * button the spec presses. Without this a catch-up racing the click would make
+ * the assertion pass for the wrong reason.
+ */
+export async function seedMailRunState(state: {
+  readonly lastSuccessAt: string | null;
+  readonly lastAttemptAt: string | null;
+}): Promise<void> {
+  if (!SCRATCH_MAIL_RUN_STATE_PATH.startsWith(`${SCRATCH_ROOT}${sep}`)) {
+    throw new Error(`Refusing to seed outside the scratch tree: ${SCRATCH_MAIL_RUN_STATE_PATH}`);
+  }
+  await mkdir(dirname(SCRATCH_MAIL_RUN_STATE_PATH), { recursive: true });
+  await writeFile(
+    SCRATCH_MAIL_RUN_STATE_PATH,
+    `${JSON.stringify(
+      {
+        version: 1,
+        lastSuccessAt: state.lastSuccessAt,
+        lastAttemptAt: state.lastAttemptAt,
+        lastError: null,
+        tokenIssuedAt: null,
+        authFailedAt: null,
+      },
+      null,
+      2,
+    )}\n`,
+    'utf8',
+  );
 }

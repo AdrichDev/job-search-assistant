@@ -35,6 +35,7 @@
     "web": "npm run build:core && node scripts/run-web.mjs start",
     "pretest:e2e": "npm run build:core",
     "test:e2e": "npm run test:e2e --workspace @job-queue/e2e",
+    "test:e2e:mail": "npm run test:e2e:mail --workspace @job-queue/e2e",
     "test:e2e:ui": "npm run test:e2e --workspace @job-queue/e2e -- --ui"
   }
 }

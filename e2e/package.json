@@ -6,6 +6,7 @@
   "description": "End-to-end browser tests driving the real web app against isolated fixture data.",
   "scripts": {
     "test:e2e": "playwright test",
+    "test:e2e:mail": "playwright test --config playwright.mail.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
