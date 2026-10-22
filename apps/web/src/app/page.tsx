@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import {
   applicationRepository,
   buildFallbackQueue,
@@ -9,6 +10,7 @@ import {
 } from '@/server/container';
 import { loadDashboard } from '@/server/dashboard';
 import { loadModelCatalog } from '@/server/model-catalog';
+import { readMailStatusNow } from '@/server/mail-status';
 import { DismissedSection } from '@/components/dismissed-section';
 import { FetchPanel } from '@/components/fetch-panel';
 import { QueueView } from '@/components/queue-view';
@@ -55,6 +57,12 @@ export default async function DashboardPage() {
    * invites a second click the server will have to refuse.
    */
   const fetchState = await runStateStore().read();
+  /*
+   * The confirmation modal lives on /seguimiento, so the home page has to say
+   * that something is waiting there; a user who never opens the tracking page
+   * would otherwise never learn a reply was detected. A read, never a write.
+   */
+  const mail = await readMailStatusNow();
 
   const { queue, stats, origin, sampleDataCount, dismissed, warnings } = dashboard;
   // Read once, and only when some application names a model: the stats table needs names.
@@ -76,6 +84,15 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {ES.header.title}
         </h1>
+        {mail.pendingCount > 0 && (
+          <p className="mt-2 text-sm text-slate-600">
+            {ES.mail.status.homePending(mail.pendingCount)}
+            {' · '}
+            <Link className="font-medium text-indigo-700 underline" href="/seguimiento#correo">
+              {ES.mail.status.homeLink}
+            </Link>
+          </p>
+        )}
       </header>
 
       {/*

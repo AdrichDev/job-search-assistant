@@ -219,4 +219,37 @@ test.describe('mail confirmation modal', () => {
 
     await context.close();
   });
+
+  test('the home page offers the pending count as a link to the confirmation', async ({
+    seed,
+    page,
+  }) => {
+    /*
+     * The modal lives on /seguimiento, so the home page has to say that
+     * something is waiting there. Without this line a user who never opens the
+     * tracking page never learns that a reply was detected.
+     */
+    await seed(HEALTHY_QUEUE);
+    await seedStandardApplications();
+    await seedMailProposals([
+      pendingProposal('p1', ACME, 'rejected', 'applied'),
+      pendingProposal('p2', BETA, 'screening', 'applied'),
+    ]);
+
+    await page.goto('/');
+
+    await expect(page.getByText('2 cambios propuestos desde tu correo')).toBeVisible();
+    const link = page.getByRole('link', { name: 'Ver propuestas' });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', '/seguimiento#correo');
+  });
+
+  test('the home page stays quiet when nothing is pending', async ({ seed, page }) => {
+    await seed(HEALTHY_QUEUE);
+    await seedStandardApplications();
+
+    await page.goto('/');
+
+    await expect(page.getByRole('link', { name: 'Ver propuestas' })).toHaveCount(0);
+  });
 });

@@ -9,11 +9,10 @@ import {
   checkMailNowAction,
   dismissMailProposalAction,
 } from '@/app/mail-actions';
-import { applicationRepository, cvModelRepository, mailProposalRepository, mailRunStateStore, queueReader } from '@/server/container';
+import { applicationRepository, cvModelRepository, mailProposalRepository, queueReader } from '@/server/container';
 import { revertNoticeFor } from '@/server/history';
-import { mailConfigured } from '@/server/mail';
 import { mailNoticeFor } from '@/server/mail-notices';
-import { readMailStatus } from '@/server/mail-use-cases';
+import { readMailStatusNow } from '@/server/mail-status';
 import { filterTrackedRows, loadTracking, paginateRows, parseEstadoFilter, parsePagina } from '@/server/tracking';
 
 /** The application log changes on every click elsewhere; never serve a cached copy. */
@@ -63,13 +62,7 @@ export default async function TrackingPage({
     'no-encontradas': query['no-encontradas'],
   });
 
-  const mailStatus = await readMailStatus({
-    configured: () => mailConfigured(),
-    store: mailRunStateStore(),
-    proposals: mailProposalRepository(),
-    now: () => new Date(),
-    logger: consoleLogger,
-  });
+  const mailStatus = await readMailStatusNow();
 
   let pending: readonly MailProposal[] = [];
   try {

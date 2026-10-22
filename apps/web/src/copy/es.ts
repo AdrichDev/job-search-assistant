@@ -881,6 +881,11 @@ export const ES = {
       lastCheck: (date: string) => `Última revisión del correo: ${date}`,
       neverRan: 'El correo todavía no se ha revisado.',
       unknownApplication: 'Postulación no encontrada',
+      homePending: (n: number) =>
+        n === 1
+          ? '1 cambio propuesto desde tu correo'
+          : `${n} cambios propuestos desde tu correo`,
+      homeLink: 'Ver propuestas',
     },
     modal: {
       heading: 'Cambios propuestos desde tu correo',
