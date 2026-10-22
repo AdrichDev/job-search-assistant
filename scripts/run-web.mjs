@@ -7,8 +7,8 @@
  * in every new terminal. This script reads an OPTIONAL, git-ignored file,
  * `data/dev-env.json`, and passes its entries to the web process:
  *
- *   { "JOB_QUEUE_CV_LIBRARY_DIR": "D:/Adrian/3. Curriculum",
- *     "JOB_QUEUE_CV_MODELS_PATH": "D:/Adrian/22. Proyectos/job-search-assistant/data/cv-models.json" }
+ *   { "JOB_QUEUE_CV_LIBRARY_DIR": "D:/Mis documentos/CVs",
+ *     "JOB_QUEUE_CV_MODELS_PATH": "<repo>/data/cv-models.json" }
  *
  * Rules:
  * - a missing file is fine: nothing is added;

@@ -78,7 +78,7 @@ this repository creates, modifies or deletes a scheduled task.
      `C:\Program Files\nodejs\npm.cmd`; check with `where npm`).
    - *Arguments*: `run mail:check` (or use `cmd.exe` as the program with
      `/c npm run mail:check` as arguments).
-   - *Start in*: `D:\Adrian\22. Proyectos\job-search-assistant` — required:
+   - *Start in*: `<ruta donde clonaste el repositorio>` — required:
      npm workspace scripts resolve from there.
 4. **General** → *"Run whether user is logged on or not"* caveat: the refresh
    token and the rest of the local configuration live in `.env` /

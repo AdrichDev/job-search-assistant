@@ -262,14 +262,14 @@ The edit page (`/seguimiento/<jobId>/editar`) shows the section **Historial de c
 
 The **Modelos** page (`/modelos`) is a library of the CVs and cover letters you start from. It reads PDFs from a folder of yours and keeps a registry of which of them are models; it **never writes, moves, renames or deletes anything in that folder**.
 
-- **Where the PDFs are.** `JOB_QUEUE_CV_LIBRARY_DIR` is the library root (default `data/cv-library`, git-ignored). Point it at your own folder, e.g. `JOB_QUEUE_CV_LIBRARY_DIR=D:\Adrian\3. Curriculum`. Models are registered **where they are**; nothing is copied.
+- **Where the PDFs are.** `JOB_QUEUE_CV_LIBRARY_DIR` is the library root (default `data/cv-library`, git-ignored). Point it at your own folder, e.g. `JOB_QUEUE_CV_LIBRARY_DIR=D:\Mis documentos\CVs`. Models are registered **where they are**; nothing is copied.
 - **The registry.** `JOB_QUEUE_CV_MODELS_PATH` (default `data/cv-models.json`, git-ignored: it quotes your file names). It lives outside the library on purpose. A missing file is an empty registry; a corrupt one is refused and never overwritten (the page shows a Spanish warning and the technical detail goes only to the server log).
-- **How the variables reach the web app.** Only `process.env` of the server process counts. The root `.env` is read by the **CLI** (`loadDotEnv` in `packages/core/src/cli/main.ts`) and **not** by the web app. Next loads `.env*` files from `apps/web/` only (checked with Next's own loader: the root `.env` is not read for `apps/web`, `apps/web/.env.local` is; it is git-ignored). The simplest way is the local settings file below, which `npm run dev` and `npm run web` load for you; you can still export the variable in the shell that starts the app (PowerShell: `$env:JOB_QUEUE_CV_LIBRARY_DIR = 'D:\Adrian\3. Curriculum'; npm run web`) or use `apps/web/.env.local`, then restart the server.
+- **How the variables reach the web app.** Only `process.env` of the server process counts. The root `.env` is read by the **CLI** (`loadDotEnv` in `packages/core/src/cli/main.ts`) and **not** by the web app. Next loads `.env*` files from `apps/web/` only (checked with Next's own loader: the root `.env` is not read for `apps/web`, `apps/web/.env.local` is; it is git-ignored). The simplest way is the local settings file below, which `npm run dev` and `npm run web` load for you; you can still export the variable in the shell that starts the app (PowerShell: `$env:JOB_QUEUE_CV_LIBRARY_DIR = 'D:\Mis documentos\CVs'; npm run web`) or use `apps/web/.env.local`, then restart the server.
 - **Local settings file (so `npm run dev` is enough).** Create `data/dev-env.json` (git-ignored) with the paths of this machine, using forward slashes:
   ```json
   {
-    "JOB_QUEUE_CV_LIBRARY_DIR": "D:/Adrian/3. Curriculum",
-    "JOB_QUEUE_CV_MODELS_PATH": "D:/Adrian/22. Proyectos/job-search-assistant/data/cv-models.json"
+    "JOB_QUEUE_CV_LIBRARY_DIR": "D:/Mis documentos/CVs",
+    "JOB_QUEUE_CV_MODELS_PATH": "<ruta del repositorio>/data/cv-models.json"
   }
   ```
   `scripts/run-web.mjs` reads it and passes the entries to the web process. A missing file is fine; a variable already set in the shell wins over the file; only `JOB_QUEUE_*` and `GOOGLE_*` names with text values are accepted; the start log prints the names it applied, never the values; a file that is not valid JSON stops the start with a message instead of running without the settings. The same file is where the Google token will go for the mail feature.
