@@ -35,6 +35,7 @@
     "import:history": "tsx scripts/import-history.ts",
     "verify:boards": "tsx scripts/verify-boards.ts",
     "google:consent": "tsx scripts/google-consent.ts",
+    "mail:check": "tsx src/cli/mail-check.ts",
     "mail:live": "tsx scripts/mail-live-check.ts"
   },
   "dependencies": {

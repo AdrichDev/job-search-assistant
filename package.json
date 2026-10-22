@@ -29,6 +29,7 @@
     "import:history": "npm run import:history --workspace @job-queue/core --",
     "verify:boards": "npm run verify:boards --workspace @job-queue/core --",
     "google:consent": "npm run google:consent --workspace @job-queue/core",
+    "mail:check": "npm run mail:check --workspace @job-queue/core --",
     "mail:live": "npm run mail:live --workspace @job-queue/core",
     "dev": "npm run build:core && node scripts/run-web.mjs dev",
     "web": "npm run build:core && node scripts/run-web.mjs start",
