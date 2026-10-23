@@ -29,6 +29,14 @@ export interface MailModalRow {
   readonly snippet: string;
 }
 
+/*
+ * The dialog uses EXPLICIT colours, not theme classes, on purpose: the mirror in
+ * tailwind.config.ts turns `bg-slate-900` into a near-white surface and
+ * `[&::backdrop]:bg-slate-950/70` into a near-white veil, so the modal was
+ * almost invisible over the page (the user's report). A modal is a surface the
+ * theme should not remap: it is #0f172a with a #334155 hairline over a dimmed,
+ * BLURRED black backdrop, and it stays that way whatever the palette does.
+ */
 export function MailProposalsModal({ rows }: { readonly rows: readonly MailModalRow[] }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const autoOpened = useRef(false);
@@ -69,24 +77,24 @@ export function MailProposalsModal({ rows }: { readonly rows: readonly MailModal
       ref={dialogRef}
       aria-labelledby="mail-proposals-heading"
       data-testid="mail-proposals-modal"
-      className="max-w-2xl rounded-xl border border-slate-700 bg-slate-900 p-6 text-slate-100 shadow-2xl [&::backdrop]:bg-slate-950/70"
+      className="max-w-2xl rounded-xl border border-[#334155] bg-[#0f172a] p-6 text-[#e2e8f0] shadow-2xl [&::backdrop]:bg-black/70 [&::backdrop]:backdrop-blur-sm"
     >
       <div className="space-y-4">
-        <h2 id="mail-proposals-heading" className="text-lg font-semibold">
+        <h2 id="mail-proposals-heading" className="text-lg font-semibold text-[#f8fafc]">
           {ES.mail.modal.heading}
         </h2>
-        <p className="text-sm text-slate-300">{ES.mail.modal.intro(rows.length)}</p>
+        <p className="text-sm text-[#94a3b8]">{ES.mail.modal.intro(rows.length)}</p>
         <ul className="space-y-3">
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-slate-700 bg-slate-800 p-3 text-sm"
+              className="rounded-lg border border-[#334155] bg-[#172033] p-3 text-sm"
             >
-              <p className="font-medium">
+              <p className="font-medium text-[#f8fafc]">
                 {row.company}
                 {row.title.length > 0 ? ` — ${row.title}` : ''}
               </p>
-              <dl className="mt-2 space-y-1 text-slate-300">
+              <dl className="mt-2 space-y-1 text-[#cbd5e1]">
                 {row.currentState !== null && (
                   <div className="flex gap-2">
                     <dt className="shrink-0">{ES.mail.modal.currentState}:</dt>
@@ -95,7 +103,7 @@ export function MailProposalsModal({ rows }: { readonly rows: readonly MailModal
                 )}
                 <div className="flex gap-2">
                   <dt className="shrink-0">{ES.mail.modal.proposedState}:</dt>
-                  <dd className="font-medium text-slate-100">{row.proposedState}</dd>
+                  <dd className="font-medium text-[#f8fafc]">{row.proposedState}</dd>
                 </div>
                 <div className="flex gap-2">
                   <dt className="shrink-0">{ES.mail.modal.evidence}:</dt>
@@ -110,7 +118,7 @@ export function MailProposalsModal({ rows }: { readonly rows: readonly MailModal
             <button
               type="submit"
               onClick={cancel}
-              className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
+              className="rounded-lg border border-[#475569] px-4 py-2 text-sm font-medium text-[#e2e8f0] hover:bg-[#1e293b]"
             >
               {ES.mail.modal.cancel}
             </button>

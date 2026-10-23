@@ -220,6 +220,50 @@ test.describe('mail confirmation modal', () => {
     await context.close();
   });
 
+  test('the modal is legible against the page and blurs what is behind it', async ({
+    seed,
+    page,
+  }) => {
+    /*
+     * The user's report: "el modal ... visualmente prácticamente no se ve por los
+     * colores usados". The cause is the theme mirror: `bg-slate-900` maps to a
+     * NEAR-WHITE surface, on a backdrop that also mapped to near-white. This
+     * pins a modal that is a dark surface distinct from the page, with a blurred
+     * backdrop behind it.
+     */
+    await seed(HEALTHY_QUEUE);
+    await seedStandardApplications();
+    await seedMailProposals([pendingProposal('p1', ACME, 'rejected', 'applied')]);
+
+    await page.goto('/seguimiento');
+    const modal = dialog(page);
+    await expect(modal).toBeVisible();
+
+    const style = await modal.evaluate((element) => {
+      const body = getComputedStyle(document.body);
+      const own = getComputedStyle(element);
+      const backdrop = getComputedStyle(element, '::backdrop') as CSSStyleDeclaration & {
+        webkitBackdropFilter?: string;
+      };
+      return {
+        page: body.backgroundColor,
+        dialog: own.backgroundColor,
+        color: own.color,
+        backdrop: backdrop.backgroundColor,
+        blur: backdrop.backdropFilter || backdrop.webkitBackdropFilter,
+      };
+    });
+
+    // Distinct from the page, and dark: a modal that is the page colour is invisible.
+    expect(style.dialog).not.toBe(style.page);
+    expect(style.dialog).toBe('rgb(15, 23, 42)');
+    // The backdrop is dimmed AND blurred.
+    expect(style.backdrop).not.toBe('rgba(0, 0, 0, 0)');
+    expect(style.blur).toContain('blur');
+    // Body text on the modal must clear AA on its own surface.
+    expect(style.color).toBe('rgb(226, 232, 240)');
+  });
+
   test('the home page offers the pending count as a link to the confirmation', async ({
     seed,
     page,
