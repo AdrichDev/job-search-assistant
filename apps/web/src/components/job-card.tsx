@@ -1,30 +1,33 @@
 import { hasSampleDataSource, type QueueEntry } from '@job-queue/core/domain';
 
 import { ApplyLink } from '@/components/apply-link';
-import { Chip, RequirementChips, StatusChip } from '@/components/chips';
+import { Chip, StatusChip } from '@/components/chips';
 import { describeCvCategorySuggestion } from '@/components/cv-category-copy';
 import { DismissButton } from '@/components/dismiss-button';
 import { OfferDetail, type OfferDetailRow } from '@/components/offer-detail';
 import { OutcomeForm } from '@/components/outcome-form';
-import { ScoreBreakdown } from '@/components/score-breakdown';
 import { ES, cvVariantLabel } from '@/copy/es';
-import { entrySourceLabels } from '@/lib/source-labels';
+import { formatPostedAge } from '@/lib/posted-age';
+import { offerSnippet } from '@/lib/offer-snippet';
+import { entrySourceLabels, sourceLabel } from '@/lib/source-labels';
 
 /**
- * One vacancy.
+ * One vacancy, as a job-board results row.
  *
- * Reading order is the decision order, and it changed with the product: the
- * TITLE and the EMPLOYER come first, then how old the posting is, then what
- * would disqualify it (chips), then the action.
+ * The user was explicit twice: the list is the SIMPLIFIED list ("quiero que la
+ * lista sea la lista simplificada") and it shows exactly what a results row
+ * shows, in this order: title, company, locality, contract type, when it was
+ * published, a short description snippet, salary, requested years of
+ * experience, and where the offer came from. Then the actions.
  *
- * What is deliberately no longer here:
+ * Ver is not aplicar: the title is a plain link to the posting that records
+ * nothing, and `Aplicar` stays the deliberate action that writes to the log.
  *
- *  - the `#3` position marker. Position is now just "how far down the page this
- *    sits", and printing it invited the reader to treat it as a verdict.
- *  - the 3xl score. The candidate said he would judge the offers himself, and a
- *    number set larger than the job title is the interface arguing with him.
- *    The score is still there, one click away inside the breakdown, which is
- *    where an inspectable secondary detail belongs.
+ * What deliberately does NOT live here anymore, and only inside the `Abrir`
+ * dialog: the full description, the complete requirements list, the score
+ * breakdown and the per-source links. The score is still computed and still
+ * matters - it is one click away, where an inspectable secondary detail
+ * belongs.
  *
  * The Apply button sits in its own column on desktop and drops to full width on
  * mobile, where thumb reach matters more than alignment.
@@ -32,11 +35,6 @@ import { entrySourceLabels } from '@/lib/source-labels';
  * An applied card is tinted and gets a left accent rail rather than being
  * greyed out - "done" is progress worth seeing, not information to hide.
  */
-
-function ageLabel(postedAt: string, now: number): string {
-  const days = Math.round((now - new Date(postedAt).getTime()) / 86_400_000);
-  return days <= 0 ? ES.card.postedToday : ES.card.postedAgo(days);
-}
 
 function salaryLabel(entry: QueueEntry): string | null {
   if (entry.salaryMin === null && entry.salaryMax === null) {
@@ -50,9 +48,32 @@ function salaryLabel(entry: QueueEntry): string | null {
   return single === null ? null : ES.card.salaryFrom(format(single));
 }
 
+/** The card's snippet: the first line or two, never the whole description. */
+function snippetOf(entry: QueueEntry): string | null {
+  return entry.description === undefined || entry.description.length === 0
+    ? null
+    : offerSnippet(entry.description);
+}
+
+/** One label per source the vacancy actually came from, first url wins. */
+function sourceLinksOf(entry: QueueEntry): { label: string; url: string }[] {
+  const seen = new Set<string>();
+  const links: { label: string; url: string }[] = [];
+  for (const ref of entry.sources) {
+    if (seen.has(ref.sourceId)) {
+      continue;
+    }
+    seen.add(ref.sourceId);
+    links.push({ label: sourceLabel(ref.sourceId), url: ref.url });
+  }
+  return links;
+}
+
 export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
   const applied = entry.applicationStatus !== 'not_applied';
   const salary = salaryLabel(entry);
+  const snippet = snippetOf(entry);
+  const sourceLinks = sourceLinksOf(entry);
   /*
    * Is this offer invented?
    *
@@ -76,7 +97,6 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
    * badge on every card of an offline run, which says nothing and costs the
    * badge all of its meaning for the cases where it does.
    */
-  const sourceLabels = entrySourceLabels(entry);
   const isUnverified = entry.liveness?.verdict === 'unverified';
   /*
    * Absent on a queue written before the suggestion existed: those cards show
@@ -88,8 +108,7 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
       ? null
       : describeCvCategorySuggestion(entry.cvCategorySuggestion);
 
-
-  /* The facts the card compresses, in full, for the detail modal (point 8). */
+  /* The facts the dialog repeats in full, including the ones the card dropped. */
   const detailRows: readonly OfferDetailRow[] = [
     { label: ES.detail.rows.company, value: entry.company },
     { label: ES.detail.rows.location, value: entry.location },
@@ -97,11 +116,7 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
     ...(entry.contractType === null
       ? []
       : [{ label: ES.detail.rows.contract, value: entry.contractType }]),
-    { label: ES.detail.rows.posted, value: ageLabel(entry.postedAt, now) },
-    {
-      label: ES.detail.rows.sources,
-      value: sourceLabels.length === 0 ? ES.source.noSources : sourceLabels.join(' · '),
-    },
+    { label: ES.detail.rows.posted, value: formatPostedAge(new Date(entry.postedAt), now) },
   ];
   return (
     <article
@@ -119,15 +134,30 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             {/*
-              The title is the first thing in the card now. The chips that used
-              to sit above it moved below the employer line: they are context
-              for a decision, not a headline.
+              The title is the first thing in the card, and it is the way to
+              LOOK at the offer: a plain external link that records nothing.
+              Applying stays on `Aplicar`, which is the control that writes.
             */}
             <h3
               id={`job-title-${entry.id}`}
               className="text-base font-semibold leading-snug text-slate-900 sm:text-lg"
             >
-              {entry.title}
+              <a
+                href={entry.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="job-title-link"
+                /*
+                  The new-tab warning lives in the accessible name, NOT in an
+                  sr-only span inside the heading: the heading's text stays
+                  exactly the job title, which is what the link-provenance
+                  rules read off the card.
+                */
+                aria-label={`${entry.title} ${ES.viewOffer.titleSuffix}`}
+                className="hover:underline motion-reduce:hover:no-underline"
+              >
+                {entry.title}
+              </a>
             </h3>
 
             <p className="mt-1 text-sm font-medium text-slate-700">
@@ -137,17 +167,50 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
             </p>
 
             {/*
-              One metadata line, not two: age, salary, contract and the sources
-              the offer came from. The sources used to have their own line with
-              a "Fuentes:" label, which cost a full line of height on every card
-              for a label the reader learns once.
+              First metadata line: the kind of work and how fresh the posting
+              is, in the words a job board uses ("hace 3 horas", "ayer").
             */}
-            <p className="mt-1 text-xs text-slate-500" data-testid="job-sources">
-              {ageLabel(entry.postedAt, now)}
-              {salary !== null && ` · ${salary}`}
-              {entry.contractType !== null && ` · ${entry.contractType}`}
-              {` · ${sourceLabels.length === 0 ? ES.source.noSources : sourceLabels.join(' · ')}`}
+            <p className="mt-1 text-xs text-slate-500" data-testid="job-posted">
+              {entry.contractType !== null && `${entry.contractType} · `}
+              {formatPostedAge(new Date(entry.postedAt), now)}
             </p>
+
+            {/*
+              The short description: one or two lines, cut, ellipsis. The FULL
+              text is one click away in the dialog and never rendered here.
+            */}
+            {snippet !== null && (
+              <p data-testid="job-snippet" className="mt-1.5 max-w-prose text-sm text-slate-600">
+                {snippet}
+              </p>
+            )}
+
+            {/*
+              Second metadata line: salary when it exists, requested experience
+              when the posting states it, and where the offer came from - the
+              sources we actually hold, never portals we do not fetch.
+            */}
+            <p className="mt-1 text-xs text-slate-500" data-testid="job-facts">
+              {salary !== null && `${salary} · `}
+              {entry.requirements.yearsRequired !== null &&
+                `${ES.card.yearsRequired(entry.requirements.yearsRequired)} · `}
+              {`${ES.source.cardLabel(sourceLinks.length)}: ${entrySourceLabels(entry).join(' · ')}`}
+            </p>
+
+            {/*
+              A secondary, explicit way to look without applying, for anyone
+              who does not guess that the title is clickable.
+            */}
+            <a
+              href={entry.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="job-view-link"
+              className="mt-2 inline-block text-xs font-medium text-indigo-700 underline"
+            >
+              {ES.viewOffer.action}
+              <span className="sr-only"> {ES.viewOffer.screenReader(entry.title, entry.company)}</span>
+            </a>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               {/*
@@ -220,23 +283,23 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
           */}
           <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
             <OfferDetail
+              detailId={entry.id}
               title={entry.title}
               company={entry.company}
               rows={detailRows}
-              requirements={entry.requirements.matchedStack}
-              applyHref={entry.url}
-              applyLabel={ES.apply.action}
+              {...(entry.description === undefined ? {} : { description: entry.description })}
+              requirements={entry.requirements}
+              breakdown={entry.breakdown}
+              score={entry.score}
+              sources={sourceLinks}
+              jobId={entry.id}
+              url={entry.url}
+              applied={applied}
             />
             <ApplyLink jobId={entry.id} url={entry.url} applied={applied} title={entry.title} />
             <DismissButton jobId={entry.id} title={entry.title} applied={applied} />
           </div>
         </div>
-
-        <div className="mt-4">
-          <RequirementChips requirements={entry.requirements} />
-        </div>
-
-        <ScoreBreakdown breakdown={entry.breakdown} total={entry.score} />
 
         <OutcomeForm jobId={entry.id} status={entry.applicationStatus} notes={entry.notes} />
       </div>

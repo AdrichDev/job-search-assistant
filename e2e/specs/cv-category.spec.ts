@@ -62,10 +62,13 @@ test.describe('CV category suggestion', () => {
     await expect(page.getByTestId('cv-category-suggestion')).toHaveCount(3);
   });
 
-  test('sits between the chip row and the requirement chips', async ({ page }) => {
+  test('sits after the chip row, and the requirement chips now live in the dialog', async ({ page }) => {
+    /*
+     * The requirement chips left the card when the list became the simplified
+     * row: they open inside `Abrir` now, with the rest of the analysis.
+     */
     const order = await card(page, 'Desarrollador Java Spring').evaluate((article) => {
       const chips = article.querySelector('[data-testid="cv-category-suggestion"]');
-      const requirements = article.querySelector('[aria-label="Requisitos detectados"]');
       const status = Array.from(article.querySelectorAll('span')).find((node) =>
         node.textContent?.includes('CV Frontend'),
       );
@@ -73,11 +76,12 @@ test.describe('CV category suggestion', () => {
         a !== null && a !== undefined && b !== null && b !== undefined
           ? Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
           : null;
-      return { chipsBeforeBlock: follows(status, chips), blockBeforeRequirements: follows(chips, requirements) };
+      return { chipsBeforeBlock: follows(status, chips) };
     });
 
     expect(order.chipsBeforeBlock).toBe(true);
-    expect(order.blockBeforeRequirements).toBe(true);
+    // The requirement chips are nowhere on the card anymore.
+    await expect(card(page, 'Desarrollador Java Spring').locator('[aria-label="Requisitos detectados"]')).toHaveCount(0);
   });
 
   test('the legacy CV version chip and its three filters are unchanged', async ({ page }) => {

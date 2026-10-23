@@ -114,19 +114,33 @@ export function applyLinks(page: Page): Locator {
   return page.getByRole('link').filter({ hasText: /Aplicar|Aplicada/ });
 }
 
+/**
+ * The card's heading, matched as a substring.
+ *
+ * Since ver/aplicar were split, the card's title is a link whose accessible
+ * name carries the "opens in a new tab" suffix inside the heading, so an
+ * exact match would no longer find any card. Substring matching keeps the
+ * helpers working for both plain and suffixed headings.
+ */
+function headingFor(page: Page, title: string): Locator {
+  return page.getByRole('heading', { name: title });
+}
+
 /** The apply control on the card for one job title. */
 export function applyLinkFor(page: Page, title: string): Locator {
+  // The card carries more links than the apply one since ver/aplicar were
+  // split (the title and "Ver oferta" are plain external links), so the apply
+  // control is matched by its own label, exactly like `applyLinks` above.
   return page
     .getByRole('article')
-    .filter({ has: page.getByRole('heading', { name: title, exact: true }) })
-    .getByRole('link');
+    .filter({ has: headingFor(page, title) })
+    .getByRole('link')
+    .filter({ hasText: /Aplicar|Aplicada/ });
 }
 
 /** The card for one job title. */
 export function cardFor(page: Page, title: string): Locator {
-  return page
-    .getByRole('article')
-    .filter({ has: page.getByRole('heading', { name: title, exact: true }) });
+  return page.getByRole('article').filter({ has: headingFor(page, title) });
 }
 
 /** The dismiss control on the card for one job title. */
