@@ -392,6 +392,39 @@ const PAGE_APPLICATIONS: readonly SeedApplication[] = [
 
 const paginationNav = (page: Page) => page.getByRole('navigation', { name: 'Paginación' });
 
+test('the Estado and ¿Contestó? headers use the spreadsheet colours too', async ({
+  seed,
+  page,
+}) => {
+  /*
+   * UI-2 gave the CELLS the colours of the user's Excel. The user then asked for
+   * the column headings to match ("también el de los títulos de las columnas"),
+   * because a coloured column with a grey heading reads as two different tables.
+   */
+  await seed(HEALTHY_QUEUE);
+  await seedApplications([
+    {
+      jobId: 'header-1',
+      appliedAt: '2026-03-01T00:00:00.000Z',
+      sourceIds: ['infojobs'],
+      outcome: 'applied',
+      listing: { company: 'Acme Sistemas', title: 'Desarrollador Backend Júnior' },
+    },
+  ]);
+  await page.goto('/seguimiento');
+
+  const header = (name: string) => page.locator('th', { hasText: name }).first();
+  const estado = await header('Estado').evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+  const contesto = await header('¿Contestó?').evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
+
+  expect(estado).toBe('rgb(219, 234, 254)');
+  expect(contesto).toBe('rgb(220, 252, 231)');
+});
+
 test.describe('tracking view pagination', () => {
   test.beforeEach(async ({ seed }) => {
     await seed(HEALTHY_QUEUE);

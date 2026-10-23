@@ -4,7 +4,12 @@ import { APPLICATION_OUTCOMES } from '@job-queue/core';
 import { isResponse } from '@job-queue/core';
 import { describeDocuments, type DocumentRefsView } from '@/components/documents-format';
 import { formatTrackingDate, trackingSourceLabels } from '@/components/tracking-format';
-import { estadoCellStyle, replyCellStyle } from '@/components/tracking-status';
+import {
+  ESTADO_HEADER_CLASS,
+  RESPONDED_HEADER_CLASS,
+  estadoCellStyle,
+  replyCellStyle,
+} from '@/components/tracking-status';
 import { ES } from '@/copy/es';
 import { EMPTY_CATALOG, type ModelCatalog } from '@/server/model-catalog';
 import type { EstadoFilter, PaginatedRows, TrackingWarning } from '@/server/tracking';
@@ -325,25 +330,26 @@ export function TrackingView({
                   <tr>
                     {(
                       [
-                        columns.company,
-                        columns.title,
-                        columns.source,
-                        columns.city,
-                        columns.appliedAt,
-                        columns.status,
-                        columns.responded,
-                        columns.respondedAt,
-                        columns.documents,
-                        columns.notes,
-                        columns.actions,
+                        { label: columns.company },
+                        { label: columns.title },
+                        { label: columns.source },
+                        { label: columns.city },
+                        { label: columns.appliedAt },
+                        // The two spreadsheet columns keep their colour in the heading.
+                        { label: columns.status, headerClass: ESTADO_HEADER_CLASS },
+                        { label: columns.responded, headerClass: RESPONDED_HEADER_CLASS },
+                        { label: columns.respondedAt },
+                        { label: columns.documents },
+                        { label: columns.notes },
+                        { label: columns.actions },
                       ] as const
                     ).map((column) => (
                       <th
-                        key={column}
+                        key={column.label}
                         scope="col"
-                        className="sticky top-0 z-10 bg-slate-50 px-3 py-1.5"
+                        className={`sticky top-0 z-10 px-3 py-1.5 ${'headerClass' in column ? column.headerClass : 'bg-slate-50'}`}
                       >
-                        {column}
+                        {column.label}
                       </th>
                     ))}
                   </tr>

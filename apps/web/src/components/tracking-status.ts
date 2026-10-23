@@ -47,3 +47,13 @@ export function replyCellStyle(outcome: ApplicationOutcome): CellStyle {
     ? { className: YES_CLASSES, label: 'Sí' }
     : { className: NO_CLASSES, label: 'No' };
 }
+
+/**
+ * The HEADINGS of those two columns, in the same spreadsheet palette.
+ *
+ * The cells were already coloured while the headings stayed grey, which reads as
+ * two different tables glued together. Estado takes the "En proceso" blue (the
+ * dominant state of that column) and ¿Contestó? the "Sí" green.
+ */
+export const ESTADO_HEADER_CLASS = 'bg-[#DBEAFE] text-[#1D4ED8]';
+export const RESPONDED_HEADER_CLASS = 'bg-[#DCFCE7] text-[#166534]';
