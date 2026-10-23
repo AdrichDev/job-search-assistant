@@ -425,6 +425,41 @@ test('the Estado and ¿Contestó? headers use the spreadsheet colours too', asyn
   expect(contesto).toBe('rgb(220, 252, 231)');
 });
 
+test('the table reads like the spreadsheet: a filled header band and gridlines', async ({
+  seed,
+  page,
+}) => {
+  /*
+   * Point 5 of the list: the applications table must look like the user's Excel,
+   * headings included. The two spreadsheet columns keep their own pastel fills;
+   * every other heading sits on the dark header band, and the cells are ruled so
+   * the table reads as a sheet instead of floating rows.
+   */
+  await seed(HEALTHY_QUEUE);
+  await seedApplications([
+    {
+      jobId: 'sheet-1',
+      appliedAt: '2026-03-01T00:00:00.000Z',
+      sourceIds: ['infojobs'],
+      outcome: 'applied',
+      listing: { company: 'Acme Sistemas', title: 'Desarrollador Backend Júnior' },
+    },
+  ]);
+  await page.goto('/seguimiento');
+
+  const header = (name: string) => page.locator('th', { hasText: name }).first();
+  expect(await header('Empresa').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+    'rgb(31, 56, 100)',
+  );
+  expect(await header('Estado').evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+    'rgb(219, 234, 254)',
+  );
+
+  const cell = page.locator('tbody td').first();
+  const border = await cell.evaluate((el) => getComputedStyle(el).borderRightWidth);
+  expect(border).not.toBe('0px');
+});
+
 test.describe('tracking view pagination', () => {
   test.beforeEach(async ({ seed }) => {
     await seed(HEALTHY_QUEUE);

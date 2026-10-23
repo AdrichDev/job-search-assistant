@@ -324,9 +324,9 @@ export function TrackingView({
               tabIndex={0}
               className="max-h-[80vh] overflow-auto rounded-xl border border-slate-200 bg-white"
             >
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <table className="min-w-full divide-y divide-slate-200 text-sm [&_td]:border-r [&_td]:border-slate-200/70 [&_th]:border-r [&_th]:border-slate-200/70 [&_tr>*:last-child]:border-r-0">
                 <caption className="sr-only">{ES.tracking.caption}</caption>
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                <thead className="text-left text-xs font-bold uppercase tracking-wide">
                   <tr>
                     {(
                       [
@@ -347,7 +347,9 @@ export function TrackingView({
                       <th
                         key={column.label}
                         scope="col"
-                        className={`sticky top-0 z-10 px-3 py-1.5 ${'headerClass' in column ? column.headerClass : 'bg-slate-50'}`}
+                        className={`sticky top-0 z-10 border-r border-white/10 px-3 py-1.5 ${
+                          'headerClass' in column ? column.headerClass : 'bg-[#1F3864] text-[#f8fafc]'
+                        }`}
                       >
                         {column.label}
                       </th>
