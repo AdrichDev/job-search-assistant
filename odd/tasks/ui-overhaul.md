@@ -48,12 +48,14 @@ specification; the UI work units land on the same feature branch, one commit eac
 - U2 (S14, S10) Verify the real job sources against a real run, and refute the ones that no longer
   work. Commit: docs only if it changes documentation.
 - U3 (S11) Register the Windows scheduled task and prove the command it runs works.
-- U4 (S2, S3, S4) Layout width, black canvas, larger grid, saturated palette. Commit: one theme
-  work unit.
-- U5 (S5) Spreadsheet colours on the applications table and its column headers.
-- U6 (S7) Modal legibility and a blurred backdrop for every modal.
-- U7 (S6) Dynamic navigation between the main views.
-- U8 (S8) Paginate the offer list, smaller chips, Abrir/Descartar, offer detail modal.
+- U4 (S2, S3, S4) Layout width, black canvas, larger grid, saturated palette. Commit:
+  `43ff504`.
+- U5 (S5) Spreadsheet colours on the applications table and its column headers. Commits:
+  `9a6f514`, `be1d550`.
+- U6 (S7) Modal legibility and a blurred backdrop for every modal. Commit: `c1bbf37`.
+- U7 (S6) Dynamic navigation between the main views. Commit: `5418957` (kept by `93a8440`).
+- U8 (S8) Paginate the offer list, smaller chips, Abrir/Descartar, offer detail modal. Commits:
+  `88061eb`, `bded3bf`.
 - U9 (S9) Move the stats to their own view with charts generated from the data.
 - U10 (S12) A refresh button on the offers view that runs the mail review and the offer fetch.
 - U11 (S1) Answer the Gmail question with evidence from the run state.
@@ -87,3 +89,45 @@ specification; the UI work units land on the same feature branch, one commit eac
 - L8 (reviews, 3 of 11 done; user chose TWO lenses for the rest). "Hazlo con 2 lentes, al ser ui/ux no es tan grave" - so the remaining UI commits run `lenses: ["reliability","readability"]`, which the provider accepted at tier medium and cost 2 model runs each instead of 3.
   - `43ff504` (black canvas, grid, shell width, nav hue) - tier **medium**, 2 lenses, **APPROVED**, burned (`review-48f13dd7a9cccb70`). Four SUGGESTIONs, all informational: a magic container width at `page.tsx:97`, the hue map being keyed by section type in `site-nav.tsx:39-43`, a redundant border class at `site-nav.tsx:38`, and unused neon tokens in `tailwind.config.ts:76-83`.
   - Remaining 8: 9a6f514, c1bbf37, 5418957, 93a8440, 5b2c007, be1d550, 88061eb, bded3bf. Recipe per commit: worktree at the sha, `inspect`, `start` with `baseRef` = the PARENT's full sha + `committedOnly: true` + the two lenses, `status`, `capture_group` (forecast then acknowledged), `acknowledge-approved` with that `workspaceRoot`, then remove the worktree.
+- L9 (native reviews, 11 of 11 done - EVERY commit on the branch is APPROVED and its authority
+  burned). Same recipe as L7/L8, one linked `.review/<sha>` worktree per candidate, removed after
+  the acknowledgement. Tiers were medium for all nine UI commits (no docs-only passive case left),
+  two lenses each (`reliability`, `readability`) as the user chose in L8, so 2 model runs per
+  commit except the last two, whose slots were walked one at a time (see L10):
+  - `9a6f514` column headings - **APPROVED**, burned `review-44fa01f96b25c681`. Two SUGGESTIONs
+    (`tracking-view.tsx:345` an `as const` that adds nothing; `:347-353` a header fallback style
+    applied per heading).
+  - `c1bbf37` mail modal - **APPROVED**, burned `review-37a1b874132c09f0`. Two SUGGESTIONs (an
+    e2e comment overstating what the assertion pins; the modal hex literals repeated at
+    `mail-proposals-modal.tsx:80` instead of read from one place).
+  - `5418957` shell redesign - **APPROVED**, burned `review-610f4f8d3710ee6f`. Nine findings, all
+    informational, two of them genuine later cleanups: `globals.css:27` still encodes the canvas
+    colour twice (hex plus token) and `page.tsx:99-103` keeps a duplicate pill/hero block. The rest
+    are a dead neon token set (`globals.css:28-31`), a duplicated nav underline (`site-nav.tsx:77-89`),
+    a magic header height (`globals.css:81`), a comment gap in `stats-panel.tsx:27-34`, a contrast
+    note at `globals.css:118-120`, the initial-animation guard in `view-in.tsx:30-31`, and a mobile
+    nav note at `site-nav.tsx:63`.
+  - `93a8440` revert - **APPROVED**, burned `review-ac6ca02b5ba11672`. Three findings: a contrast
+    comment at `site-nav.tsx:33-39` that no longer matches what the classes do, the duplicated
+    `background-color` at `globals.css:33` (dropped by the NEXT commit), and a heading sitting on
+    the dark canvas at `page.tsx:99`.
+  - `5b2c007` duplicate declaration - **APPROVED**, burned `review-9e6f0c93ce70b440`. Zero findings.
+  - `be1d550` spreadsheet table - **APPROVED**, burned `review-12d5d58bc5dc62db`. Three findings,
+    all about the table: the header band's text choice at `tracking-view.tsx:350-352`, a repeated
+    cell class at `:327-329`, and the spec asserting computed colours at
+    `tracking-view.spec.ts:428-462`.
+  - `88061eb` pagination - **APPROVED**, burned `review-34cb268fb1a939c6`. Five findings: two on
+    `queue-filters.ts:62`, the unused `from/to/total` surface of `offers-page.ts:16-18`, the four
+    repeated pagination buttons at `queue-view.tsx:254-288`, and the one worth a second look -
+    `queue-view.tsx:70-77`, where the reset-to-page-one effect runs twice under StrictMode.
+  - `bded3bf` Abrir + offer detail - **APPROVED**, burned `review-05a70ca1cc53d0bc`. Four findings:
+    `offer-detail.tsx:55` (WARNING, still non-blocking: the dialog's own palette rule), the
+    `:33-41` field list and the `:26-27` copy split, plus `offer-detail.spec.ts:21-24`.
+- L10 (relay defect found while closing L9, and its workaround). The GROUP capture of `88061eb`
+  was refused twice at admission with `binding_mismatch`: the reviewer's result echoed
+  `sha256:5b8599ef2f7475617fa18e881aadca9459812ea208275e8c50b48e8be237cfbcb` while the binding says
+  `...2f747567fa18...` - the model mistyped ONE character while transcribing the opaque subject
+  hash into its own artifact. The refused payload is preserved under
+  `.git/gentle-ai/rejected-results/<lineage>/`. The workaround that worked twice: bound STATUS
+  reoffers the slot, then a SINGLE-slot `gentle_review_capture` (forecast, then acknowledged)
+  admits it. Nothing was replayed and no authority was fabricated.
