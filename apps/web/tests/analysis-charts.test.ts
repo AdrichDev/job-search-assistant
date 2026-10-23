@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ApplicationStats } from '@job-queue/core/domain';
-import {
-  barLength,
-  chartAriaLabel,
-  funnelStages,
-  percentLabel,
-} from '@/lib/analysis-charts';
+import { barLength, funnelStages, percentLabel } from '@/lib/analysis-charts';
 
 /**
  * The geometry and wording of the analysis charts (U9).
@@ -108,16 +103,5 @@ describe('barLength', () => {
     expect(barLength(10, 0, TRACK)).toBe(0);
     expect(barLength(Number.NaN, 40, TRACK)).toBe(0);
     expect(barLength(10, 40, Number.NaN)).toBe(0);
-  });
-});
-
-describe('chartAriaLabel', () => {
-  it('names the chart and reads every row as text', () => {
-    expect(
-      chartAriaLabel('Por fuente', [
-        { key: 'greenhouse', label: 'Greenhouse', value: 12 },
-        { key: 'ashby', label: 'Ashby', value: 3 },
-      ]),
-    ).toBe('Por fuente: Greenhouse 12, Ashby 3');
   });
 });

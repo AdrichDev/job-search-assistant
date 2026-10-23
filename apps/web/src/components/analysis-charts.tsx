@@ -1,7 +1,6 @@
 import type { ApplicationOutcome, ApplicationStats } from '@job-queue/core/domain';
 import {
   barLength,
-  chartAriaLabel,
   funnelStages,
   percentLabel,
   type ChartRow,
@@ -70,8 +69,11 @@ function BarChart({
        * A caption, not a heading: every chart repeats a metric the panel above
        * already names, and two headings with the same text on one page make the
        * document outline lie to a screen reader (and make a role query ambiguous).
+       * The caption is also the figure's accessible name, which is why there is
+       * no second, hidden readout: the list below already exposes every row with
+       * its value, and restating them verbatim meant reading the chart twice.
        */}
-      <p className="mb-2 text-sm font-semibold text-slate-800">{title}</p>
+      <figcaption className="mb-2 text-sm font-semibold text-slate-800">{title}</figcaption>
       {rows.length === 0 ? (
         <p className="prose-measure rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm leading-relaxed text-slate-600">
           {emptyNote}
@@ -110,7 +112,6 @@ function BarChart({
           })}
         </ul>
       )}
-      <figcaption className="sr-only">{chartAriaLabel(`${title} (${ES.analysis.chartDescription})`, rows)}</figcaption>
     </figure>
   );
 }

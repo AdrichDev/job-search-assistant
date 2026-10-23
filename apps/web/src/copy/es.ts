@@ -281,7 +281,6 @@ export const ES = {
     chartsHeading: 'Diagramas',
     chartsIntro:
       'Generados a partir de los mismos datos que las tablas de arriba. Cada barra lleva su valor escrito al lado: nada se dice solo con el color.',
-    chartDescription: 'Diagrama de barras.',
     chartFallback: 'Estos datos también están en las tablas de arriba.',
     outcomesHeading: '¿Qué pasó después de postularte?',
     responseDetail: (rate: string) => `${rate} de respuesta`,

@@ -78,8 +78,3 @@ export function barLength(value: number, max: number, track: number): number {
   return Math.min(1, value / max) * track;
 }
 
-/** Accessible name of a chart: its title plus every row read out as text. */
-export function chartAriaLabel(title: string, rows: readonly ChartRow[]): string {
-  const described = rows.map((row) => `${row.label} ${row.value}`).join(', ');
-  return `${title}: ${described}`;
-}
