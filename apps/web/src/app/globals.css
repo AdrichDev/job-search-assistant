@@ -23,14 +23,6 @@
 
   body {
     @apply text-slate-900 antialiased;
-    /*
-     * Pure black canvas, by request, with a COARSER grid: 48px cells and a
-     * stronger line every 240px (5 cells). The old 24px grid read as a busy
-     * texture on black; 48px reads as paper. It scrolls with the page: a fixed
-     * background repaints on every scroll frame. Cards, tables and inputs are
-     * opaque surfaces, so body text never sits directly on the lines.
-     */
-    background-color: #030308;
     background-color: #030308;
     /*
      * Pure-black canvas with a coarser grid than before: 48px cells and a
