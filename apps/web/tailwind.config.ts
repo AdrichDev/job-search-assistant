@@ -67,6 +67,20 @@ export default {
           '500': '#94a3b8',
           '600': '#7d8ca3',
         },
+        /*
+         * Vivid accents, NOT mirrored: the palette was one grey with a single
+         * indigo accent, and the user asked for colour that differentiates. These
+         * are used for identity (each section, each state), never for body text,
+         * so they are chosen saturated and checked by the e2e contrast net.
+         */
+        neon: {
+          cyan: '#22d3ee',
+          mint: '#34d399',
+          fuchsia: '#e879f9',
+          lime: '#a3e635',
+          amber: '#fbbf24',
+          violet: '#a78bfa',
+        },
         amber: mirror(colors.amber as unknown as Scale),
         emerald: mirror(colors.emerald as unknown as Scale),
         indigo: mirror(colors.indigo as unknown as Scale),

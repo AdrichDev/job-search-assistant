@@ -29,8 +29,18 @@ export function SiteNav() {
       ? 'models'
       : 'offers';
 
+  /*
+   * Each section owns a hue, and only the current one is lit. That is the whole
+   * differentiation budget of the nav: colour says WHERE you are, so the eye
+   * finds it without reading, and nothing competes with the Apply button.
+   */
   const link =
-    'rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 aria-[current=page]:bg-slate-900 aria-[current=page]:text-white';
+    'rounded-md border-b-2 border-transparent px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 aria-[current=page]:border-b-2 aria-[current=page]:bg-slate-900 aria-[current=page]:text-white';
+  const hue: Record<Section, string> = {
+    offers: 'aria-[current=page]:border-neon-cyan',
+    tracking: 'aria-[current=page]:border-neon-fuchsia',
+    models: 'aria-[current=page]:border-neon-lime',
+  };
   const current = (which: Section) => (section === which ? { 'aria-current': 'page' as const } : {});
 
   const skip = {
@@ -48,19 +58,19 @@ export function SiteNav() {
         {skip.text}
       </a>
       <nav aria-label={ES.tracking.nav.label} className="border-b border-slate-200 bg-white">
-        <ul className="mx-auto flex max-w-7xl gap-1 px-4 py-2 sm:px-6">
+        <ul className="mx-auto flex w-full max-w-[1800px] gap-1 px-4 py-2 sm:px-6 lg:px-8">
           <li>
-            <Link href="/" className={link} {...current('offers')}>
+            <Link href="/" className={`${link} ${hue.offers}`} {...current('offers')}>
               {ES.tracking.nav.offers}
             </Link>
           </li>
           <li>
-            <Link href={TRACKING_PATH} className={link} {...current('tracking')}>
+            <Link href={TRACKING_PATH} className={`${link} ${hue.tracking}`} {...current('tracking')}>
               {ES.tracking.nav.tracking}
             </Link>
           </li>
           <li>
-            <Link href={MODELS_PATH} className={link} {...current('models')}>
+            <Link href={MODELS_PATH} className={`${link} ${hue.models}`} {...current('models')}>
               {ES.tracking.nav.models}
             </Link>
           </li>

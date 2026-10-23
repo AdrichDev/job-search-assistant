@@ -17,24 +17,25 @@
     --accent: 79 70 229; /* indigo-600 */
     --accent-strong: 67 56 202; /* indigo-700 */
     /* Grid-paper lines: slate-400 at low opacity so text never competes with them. */
-    --grid-minor: 148 163 184 / 0.07;
-    --grid-major: 148 163 184 / 0.13;
+    --grid-minor: 148 163 184 / 0.06;
+    --grid-major: 148 163 184 / 0.11;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply bg-black text-slate-900 antialiased;
     /*
-     * Grid paper: a fine 24px grid with a stronger line every 120px (5 cells).
-     * It scrolls with the page: a fixed background repaints on every scroll
-     * frame. Cards, tables and inputs are opaque surfaces, so body text never
-     * sits directly on the lines.
+     * Pure black canvas, by request, with a COARSER grid: 48px cells and a
+     * stronger line every 240px (5 cells). The old 24px grid read as a busy
+     * texture on black; 48px reads as paper. It scrolls with the page: a fixed
+     * background repaints on every scroll frame. Cards, tables and inputs are
+     * opaque surfaces, so body text never sits directly on the lines.
      */
     background-image:
       linear-gradient(rgb(var(--grid-major)) 1px, transparent 1px),
       linear-gradient(90deg, rgb(var(--grid-major)) 1px, transparent 1px),
       linear-gradient(rgb(var(--grid-minor)) 1px, transparent 1px),
       linear-gradient(90deg, rgb(var(--grid-minor)) 1px, transparent 1px);
-    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    background-size: 240px 240px, 240px 240px, 48px 48px, 48px 48px;
   }
 
   @media print {

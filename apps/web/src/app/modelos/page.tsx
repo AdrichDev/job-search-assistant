@@ -30,9 +30,9 @@ export default async function ModelsPage({
   const removing = page.models.find((entry) => entry.model.id === single(query.quitar))?.model;
 
   return (
-    <main id="modelos" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+    <main id="modelos" className="mx-auto w-full max-w-[1800px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+        <h1 className="border-l-4 border-neon-lime pl-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {ES.models.heading}
         </h1>
         <p className="prose-measure mt-2 text-sm leading-relaxed text-slate-600">{ES.models.intro}</p>

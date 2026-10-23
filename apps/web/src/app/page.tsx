@@ -94,9 +94,9 @@ export default async function DashboardPage({
   const degraded = failedSources.length > 0 || warnings.length > 0;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto w-full max-w-[1800px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+        <h1 className="border-l-4 border-neon-cyan pl-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {ES.header.title}
         </h1>
         {mail.pendingCount > 0 && (
