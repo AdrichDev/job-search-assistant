@@ -81,9 +81,11 @@ was not true before this run: `manfred` used to answer
 `request timed out after 15000ms` and the run reported "1 of 5 source queries
 failed". The endpoint itself was fine — the offers list is ~2.3 MB and answered in
 ~9.6 s, and the sitemap ~289 KB in ~8.1 s — so the shared 15 s board default was
-simply too tight for it. Manfred now has its own budget
-(`MANFRED_TIMEOUT_MS`), and the other four boards keep the shared default because
-they answer in well under a second.
+simply too tight for it. Manfred now has its own budget: the constant
+`MANFRED_TIMEOUT_MS` (45 s, in `packages/core/src/config/manfred.ts`) is passed to
+that one source only. It is a code constant, **not** an environment variable -
+nothing has to be set for it to apply. The other four boards keep the shared 15 s
+default because they answer in well under a second.
 
 ### Refuted, with the reason
 
