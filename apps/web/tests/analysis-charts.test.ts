@@ -5,7 +5,6 @@ import {
   chartAriaLabel,
   funnelStages,
   percentLabel,
-  truncateLabel,
 } from '@/lib/analysis-charts';
 
 /**
@@ -109,19 +108,6 @@ describe('barLength', () => {
     expect(barLength(10, 0, TRACK)).toBe(0);
     expect(barLength(Number.NaN, 40, TRACK)).toBe(0);
     expect(barLength(10, 40, Number.NaN)).toBe(0);
-  });
-});
-
-describe('truncateLabel', () => {
-  it('keeps a short label untouched', () => {
-    expect(truncateLabel('Greenhouse')).toBe('Greenhouse');
-  });
-
-  it('cuts a long model name to one line with an ellipsis', () => {
-    const truncated = truncateLabel('Carta de presentación base (Español)');
-    expect(truncated.endsWith('…')).toBe(true);
-    expect(truncated.length).toBeLessThanOrEqual(24);
-    expect(truncated.startsWith('Carta')).toBe(true);
   });
 });
 

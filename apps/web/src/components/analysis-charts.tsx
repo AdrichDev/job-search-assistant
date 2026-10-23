@@ -4,8 +4,8 @@ import {
   chartAriaLabel,
   funnelStages,
   percentLabel,
-  truncateLabel,
   type ChartRow,
+  type FunnelKey,
 } from '@/lib/analysis-charts';
 import { buildModelStatsRows } from '@/components/model-stats-format';
 import { ES, cvVariantLabel } from '@/copy/es';
@@ -26,8 +26,19 @@ import { EMPTY_CATALOG, type ModelCatalog } from '@/server/model-catalog';
  * mirror would otherwise turn Tailwind colour classes into surfaces.
  */
 
-/** One hue per funnel stage, in the panel's order: indigo, violet, fuchsia, orange, cyan, lime. */
-const FUNNEL_TONES = ['#6366f1', '#9d00ff', '#d946ef', '#ff9900', '#00f0ff', '#84cc16'] as const;
+/**
+ * One hue per funnel stage, keyed by the STAGE, not by its position: the panel's
+ * order can change without silently repainting the funnel, and a stage added in
+ * the middle does not steal its neighbour's colour.
+ */
+const FUNNEL_TONES: Record<FunnelKey, string> = {
+  surfaced: '#6366f1',
+  applied: '#9d00ff',
+  responses: '#d946ef',
+  advances: '#ff9900',
+  interviews: '#00f0ff',
+  offers: '#84cc16',
+};
 
 const DEFAULT_TONE = '#6366f1';
 
@@ -50,7 +61,7 @@ function BarChart({
   readonly title: string;
   readonly rows: readonly ChartRow[];
   readonly emptyNote?: string;
-  readonly tones?: readonly string[];
+  readonly tones?: Readonly<Record<string, string>>;
 }) {
   const max = Math.max(...rows.map((row) => row.value), 0);
   return (
@@ -67,7 +78,7 @@ function BarChart({
         </p>
       ) : (
         <ul role="list" aria-label={title} className="space-y-2.5">
-          {rows.map((row, index) => {
+          {rows.map((row) => {
             const width = `${barLength(row.value, max, 100)}%`;
             const valueText = row.value + (row.detail === undefined ? '' : ` · ${row.detail}`);
             return (
@@ -88,7 +99,7 @@ function BarChart({
                 >
                   <span
                     className="absolute inset-y-0 left-0 rounded"
-                    style={{ width, backgroundColor: tones?.[index] ?? DEFAULT_TONE }}
+                    style={{ width, backgroundColor: tones?.[row.key] ?? DEFAULT_TONE }}
                   />
                 </span>
                 <span className="hidden text-right text-xs tabular-nums text-slate-600 sm:col-start-3 sm:row-start-1 sm:block">
@@ -148,7 +159,9 @@ export function AnalysisCharts({
 
   const modelRows: readonly ChartRow[] = buildModelStatsRows(stats.byModel, models).map((row) => ({
     key: row.key,
-    label: truncateLabel(row.label),
+    // The full name stays in the DOM: CSS cuts it visually, so a screen reader
+    // and the sr-only summary read the whole thing instead of an ellipsis.
+    label: row.label,
     value: row.applied,
     detail: ES.analysis.responseDetail(percentLabel(row.responseRate)),
   }));

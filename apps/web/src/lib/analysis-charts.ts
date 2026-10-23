@@ -32,7 +32,6 @@ export type FunnelKey =
   | 'advances'
   | 'interviews'
   | 'offers';
-
 export interface FunnelStage {
   readonly key: FunnelKey;
   readonly count: number;
@@ -77,16 +76,6 @@ export function barLength(value: number, max: number, track: number): number {
     return 0;
   }
   return Math.min(1, value / max) * track;
-}
-
-const MAX_LABEL_CHARS = 24;
-
-/** Model and letter names are user text: one line in the chart, with an ellipsis when cut. */
-export function truncateLabel(label: string): string {
-  if (label.length <= MAX_LABEL_CHARS) {
-    return label;
-  }
-  return `${label.slice(0, MAX_LABEL_CHARS - 1).trimEnd()}…`;
 }
 
 /** Accessible name of a chart: its title plus every row read out as text. */
