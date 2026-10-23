@@ -117,6 +117,8 @@ test.describe('manual edit of an application', () => {
   }) => {
     await page.goto('/');
     const stats = page.getByRole('region', { name: 'Resultados de tus postulaciones' });
+    await expect(stats).toHaveCount(0);
+    await page.goto('/analisis');
     await expect(stats.getByText('2 de 3 respondieron')).toBeVisible();
 
     await page.goto(editUrl(IMPORTED_ID));
@@ -133,7 +135,7 @@ test.describe('manual edit of an application', () => {
       page.getByRole('navigation', { name: 'Filtrar por estado' }).getByRole('link', { name: 'Rechazada (2)' }),
     ).toBeVisible();
 
-    await page.goto('/');
+    await page.goto('/analisis');
     await expect(stats.getByText('3 de 3 respondieron')).toBeVisible();
 
     const stored = (await readApplications()).find((entry) => entry.jobId === IMPORTED_ID);

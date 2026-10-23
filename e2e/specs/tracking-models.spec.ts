@@ -138,7 +138,7 @@ test.describe('CV and letter models on applications', () => {
     // An imported row without any document shows a dash with an accessible text.
     await expect(trackingRow(page, 'Información Ñandú S.L.')).toContainText('Sin documentos registrados');
 
-    await page.goto('/');
+    await page.goto('/analisis');
     const table = modelStatsTable(page);
     await expect(table).toBeVisible();
     await expect(table.getByRole('row')).toHaveCount(2); // header + one model
@@ -156,7 +156,7 @@ test.describe('CV and letter models on applications', () => {
   });
 
   test('the stats table shows a Spanish empty state when no application has a model', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/analisis');
     await expect(page.getByRole('heading', { name: 'Por modelo de CV' })).toBeVisible();
     await expect(page.getByText('Todavía no has marcado ningún modelo de CV')).toBeVisible();
     await expect(modelStatsTable(page)).toHaveCount(0);
@@ -252,7 +252,7 @@ test.describe('CV and letter models on applications', () => {
     expect(await applicationOf(IMPORTED_ID)).toMatchObject({ cvModelId: CV_ES.id, letterModelId: LETTER_ES.id });
 
     // Stats keep the row with the fallback name.
-    await page.goto('/');
+    await page.goto('/analisis');
     await expect(modelStatsTable(page).getByRole('row', { name: /Modelo ya no registrado/ })).toBeVisible();
 
     // The history shows the fallback too, never the raw id.

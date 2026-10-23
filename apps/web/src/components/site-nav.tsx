@@ -5,29 +5,33 @@ import { usePathname } from 'next/navigation';
 import { ES } from '@/copy/es';
 
 const TRACKING_PATH = '/seguimiento';
+const ANALYSIS_PATH = '/analisis';
 const MODELS_PATH = '/modelos';
 
-type Section = 'offers' | 'tracking' | 'models';
+type Section = 'offers' | 'analysis' | 'tracking' | 'models';
 
 function isUnder(pathname: string, base: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
 /**
- * Skip link plus the three-view navigation, rendered on every page by the layout.
+ * Skip link plus the four-view navigation, rendered on every page by the layout.
  *
  * Client component only for `usePathname`, so `aria-current="page"` is correct
  * on every route without each page passing itself in. The skip link lives here
  * (still the first focusable element) because its target differs per page: the
- * offer list on `/`, the table on `/seguimiento`, the models on `/modelos`.
+ * offer list on `/`, the results on `/analisis`, the table on `/seguimiento`,
+ * the models on `/modelos`.
  */
 export function SiteNav() {
   const pathname = usePathname();
   const section: Section = isUnder(pathname, TRACKING_PATH)
     ? 'tracking'
-    : isUnder(pathname, MODELS_PATH)
-      ? 'models'
-      : 'offers';
+    : isUnder(pathname, ANALYSIS_PATH)
+      ? 'analysis'
+      : isUnder(pathname, MODELS_PATH)
+        ? 'models'
+        : 'offers';
 
   /*
    * Back to the original selection style, as the user asked: the current section
@@ -41,6 +45,7 @@ export function SiteNav() {
 
   const skip = {
     offers: { href: '#queue', text: ES.skipToContent },
+    analysis: { href: '#analisis', text: ES.analysis.skipToContent },
     tracking: { href: '#seguimiento', text: ES.tracking.skipToContent },
     models: { href: '#modelos', text: ES.models.skipToContent },
   }[section];
@@ -64,6 +69,11 @@ export function SiteNav() {
             <li>
               <Link href="/" className={link} {...current('offers')}>
                 {ES.tracking.nav.offers}
+              </Link>
+            </li>
+            <li>
+              <Link href={ANALYSIS_PATH} className={link} {...current('analysis')}>
+                {ES.tracking.nav.analysis}
               </Link>
             </li>
             <li>

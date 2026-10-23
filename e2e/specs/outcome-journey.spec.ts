@@ -68,14 +68,17 @@ test.describe('outcome journey', () => {
   });
 
   test('the stats panel starts empty and reacts to a real application', async ({ page }) => {
+    await page.goto('/analisis');
     await expect(
       page.getByText('Todavía no hay postulaciones registradas.', { exact: false }),
     ).toBeVisible();
 
+    await page.goto('/');
     await applyLinkFor(page, TITLE).click();
     await expect(applyLinkFor(page, TITLE)).toContainText('Aplicada', { timeout: 15_000 });
     await page.reload();
 
+    await page.goto('/analisis');
     const stats = page.getByRole('region', { name: 'Resultados de tus postulaciones' });
     await expect(stats.getByText('Postulaciones').first()).toBeVisible();
 

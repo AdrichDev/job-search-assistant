@@ -3,20 +3,17 @@ import Link from 'next/link';
 import {
   applicationRepository,
   buildFallbackQueue,
-  cvModelRepository,
   dismissalRepository,
   queueReader,
   runStateStore,
 } from '@/server/container';
 import { loadDashboard } from '@/server/dashboard';
-import { loadModelCatalog } from '@/server/model-catalog';
 import { parseQueueFilters } from '@/lib/queue-filters';
 import { sourceOptions } from '@/lib/source-labels';
 import { readMailStatusNow } from '@/server/mail-status';
 import { DismissedSection } from '@/components/dismissed-section';
 import { RefreshPanel } from '@/components/fetch-panel';
 import { QueueView } from '@/components/queue-view';
-import { StatsPanel } from '@/components/stats-panel';
 import { ES } from '@/copy/es';
 
 /**
@@ -75,13 +72,11 @@ export default async function DashboardPage({
    */
   const mail = await readMailStatusNow();
 
-  const { queue, stats, origin, sampleDataCount, dismissed, warnings } = dashboard;
+  const { queue, origin, sampleDataCount, dismissed, warnings } = dashboard;
   const initialFilters = parseQueueFilters(
     await searchParams,
     sourceOptions(queue.jobs).map((option) => option.id),
   );
-  // Read once, and only when some application names a model: the stats table needs names.
-  const modelCatalog = await loadModelCatalog(stats.byModel.length > 0 ? cvModelRepository() : undefined);
   const now = new Date(queue.generatedAt).getTime();
   const failedSources = queue.sourceReports.filter((report) => report.status === 'failed');
 
@@ -167,13 +162,11 @@ export default async function DashboardPage({
       )}
 
       {/*
-        Above the stats and the list, because it is the control that CHANGES
-        both of them. A "get new offers" button below the offers it would
-        replace is a button nobody finds on the morning the list is stale.
+        Above the list, because it is the control that CHANGES it. An
+        "update" button below the offers it would replace is a button nobody
+        finds on the morning the list is stale.
       */}
       <RefreshPanel initialState={fetchState} />
-
-      <StatsPanel stats={stats} models={modelCatalog} />
 
       <QueueView entries={queue.jobs} now={now} degraded={degraded} initialFilters={initialFilters} />
 

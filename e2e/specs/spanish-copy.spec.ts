@@ -26,7 +26,9 @@ test.describe('Spanish copy', () => {
     await expect(applyLinks(page).first()).toContainText('Aplicar');
     await expect(page.getByLabel('Versión del CV')).toBeVisible();
     await expect(page.getByLabel('Estado de la postulación')).toBeVisible();
-    await expect(page.getByText('Resultados de tus postulaciones')).toBeVisible();
+    // The stats moved to /analisis (S9); the offer view keeps the one refresh control (S12).
+    await expect(page.getByRole('heading', { name: 'Actualizar' })).toBeVisible();
+    await expect(page.getByText('Resultados de tus postulaciones')).toHaveCount(0);
 
     // The sentence that stops the user wondering whether the click also wrote
     // something. Its absence is a consent problem, not a copy problem.

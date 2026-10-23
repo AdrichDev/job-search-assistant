@@ -267,6 +267,39 @@ export const ES = {
       'Menos de 10 postulaciones registradas: trata estos porcentajes como anécdotas, no como evidencia.',
   },
 
+  /* Análisis ------------------------------------------------------------- */
+  analysis: {
+    skipToContent: 'Saltar a los resultados y diagramas',
+    meta: {
+      title: 'Análisis de tus postulaciones',
+      description:
+        'Resultados de tus postulaciones por versión del CV, por modelo y por fuente, con diagramas generados a partir de esos mismos datos.',
+    },
+    heading: 'Análisis de tus postulaciones',
+    intro:
+      'Los resultados de tus postulaciones: el embudo completo, la versión del CV, el modelo y la fuente. Los diagramas se generan a partir de estos mismos datos, y cada barra lleva su cifra al lado.',
+    chartsHeading: 'Diagramas',
+    chartsIntro:
+      'Generados a partir de los mismos datos que las tablas de arriba. Cada barra lleva su valor escrito al lado: nada se dice solo con el color.',
+    chartDescription: 'Diagrama de barras.',
+    chartFallback: 'Estos datos también están en las tablas de arriba.',
+    outcomesHeading: '¿Qué pasó después de postularte?',
+    outcomesCaption:
+      'Postulaciones por su estado actual, incluidas las que siguen sin respuesta',
+    appliedCount: (count: number) =>
+      `${count} ${count === 1 ? 'postulación' : 'postulaciones'}`,
+    responseDetail: (rate: string) => `${rate} de respuesta`,
+    stageDetail: (rate: string) => `${rate} desde la etapa anterior`,
+    noSources: 'Todavía no hay postulaciones con fuente registrada.',
+    /*
+     * The chart's own note. Short on purpose: the stats table above already
+     * prints the long explanation, and two identical sentences on one page are
+     * noise for the reader and an ambiguous match for the e2e specs.
+     */
+    noModelsYet: 'Sin datos: ningún modelo de CV marcado todavía.',
+    noVariants: 'Todavía no hay postulaciones con versión del CV registrada.',
+  },
+
   /* Queue and filters -------------------------------------------------- */
   queue: {
     heading: 'Ofertas',
@@ -558,6 +591,7 @@ export const ES = {
     nav: {
       label: 'Secciones',
       offers: 'Ofertas',
+      analysis: 'Análisis',
       tracking: 'Seguimiento',
       models: 'Modelos',
     },
