@@ -56,8 +56,10 @@ specification; the UI work units land on the same feature branch, one commit eac
 - U7 (S6) Dynamic navigation between the main views. Commit: `5418957` (kept by `93a8440`).
 - U8 (S8) Paginate the offer list, smaller chips, Abrir/Descartar, offer detail modal. Commits:
   `88061eb`, `bded3bf`.
-- U9 (S9) Move the stats to their own view with charts generated from the data.
+- U9 (S9) Move the stats to their own view with charts generated from the data. Commit:
+  `b6b6221`.
 - U10 (S12) A refresh button on the offers view that runs the mail review and the offer fetch.
+  Commit: `665a57c`.
 - U11 (S1) Answer the Gmail question with evidence from the run state.
 
 ## Log
@@ -131,3 +133,37 @@ specification; the UI work units land on the same feature branch, one commit eac
   `.git/gentle-ai/rejected-results/<lineage>/`. The workaround that worked twice: bound STATUS
   reoffers the slot, then a SINGLE-slot `gentle_review_capture` (forecast, then acknowledged)
   admits it. Nothing was replayed and no authority was fabricated.
+- L11 (U9 and U10 implemented, reviewed and delivered). Delegated to one `gentle-ai-worker` with
+  both tasks, then split here into two work units and reviewed one commit at a time.
+  - `665a57c` **U10/S12**: ONE primary "Actualizar" control that reviews the mail and then runs the
+    offer search, reporting each half. `startRefresh` keeps the halves independent (a broken mail
+    review is reported, never fatal to the search), `startRefreshAction` awaits the mail half and
+    backgrounds the fetch with the existing `inFlight` set, and `server/refresh.ts` becomes the one
+    mail-wiring place that `app/mail-actions.ts` now delegates to. Approved, burned
+    `review-837dce2a0b4e139d`, two advisory findings: the `refresh.ts:12-19` docblock placement and
+    `fetch-panel.tsx:279-284`.
+  - `b6b6221` **U9/S9**: `/analisis` renders the unchanged `StatsPanel` plus `AnalysisCharts`, with
+    the pure chart maths in `lib/analysis-charts.ts` and no new dependency. Approved, burned
+    `review-8fd888b1a760d5f3`, three advisory findings plus one WARNING at
+    `analysis-charts.tsx:149-152`. One of them (`copy/es.ts:287-290`, copy nothing renders) was taken
+    immediately in `6260f3e`.
+  - The first review of U10 as originally committed (`68af75e`) REFUSED the readability result at
+    admission (a severe finding without `evidence_class`/`causal_disposition`) but the preserved
+    payload contained a real defect: `startRefresh` counted pending proposals AFTER the review while
+    the panel words them as "propuestas anteriores", so a run creating 2 proposals next to 1 older
+    one claimed "3 anteriores". Fixed: the count is taken BEFORE the review, the panel guard is
+    `> 0`, and `refresh.test.ts` pins the 2-new-plus-1-older case. `68af75e` was superseded and never
+    burned; its frozen lineage is left unused.
+  - The e2e net caught what the unit tests could not: four assertions failed after the move. Three
+    were the chart `<h3>` titles repeating the panel headings (strict-mode duplicates, and a real
+    outline problem for a screen reader) - fixed in the PRODUCT by making chart titles captions.
+    One was a spec filtering `'Postulado'` while the copy says `'Aplicada'`. All six touched specs
+    then ran 52/52 green.
+  - Process lesson, recorded because it cost an hour: a `playwright` run started while `npm run
+    typecheck` and `vitest` were also running reported 14 timeouts of 30s that did not exist. The
+    clean re-run of the same two specs gave 4. Verification of UI is not run in parallel with
+    builds.
+  - Deliberate impurity: the four shared specs and `copy/es.ts` land inside `b6b6221`, because
+    `spanish-copy` asserts both the moved stats AND the renamed control. The intermediate commit
+    `665a57c` therefore typechecks and passes its own specs, but the shared spec file it precedes
+    is only green once `b6b6221` lands.
