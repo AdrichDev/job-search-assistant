@@ -284,10 +284,6 @@ export const ES = {
     chartDescription: 'Diagrama de barras.',
     chartFallback: 'Estos datos también están en las tablas de arriba.',
     outcomesHeading: '¿Qué pasó después de postularte?',
-    outcomesCaption:
-      'Postulaciones por su estado actual, incluidas las que siguen sin respuesta',
-    appliedCount: (count: number) =>
-      `${count} ${count === 1 ? 'postulación' : 'postulaciones'}`,
     responseDetail: (rate: string) => `${rate} de respuesta`,
     stageDetail: (rate: string) => `${rate} desde la etapa anterior`,
     noSources: 'Todavía no hay postulaciones con fuente registrada.',
