@@ -48,7 +48,7 @@ function Metric({
 }) {
   const hue = TONES[tone];
   return (
-    <div className="glass relative overflow-hidden rounded-xl p-4">
+    <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <span aria-hidden="true" className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${hue.rail}`} />
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
       <dd className={`mt-1 text-2xl font-bold tabular-nums ${hue.value}`}>{value}</dd>

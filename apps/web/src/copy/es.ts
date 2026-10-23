@@ -169,17 +169,6 @@ const ACTION_RESULT: Record<ActionMessage, string> = {
 };
 
 export const ES = {
-  /* The fixed header --------------------------------------------------- */
-  nav: {
-    brand: 'Búsqueda de empleo',
-    tagline: 'Seguimiento personal',
-    /* The small pill above each page title, as in the reference design. */
-    pill: {
-      offers: 'Ofertas de desarrollo · Madrid',
-      tracking: 'Tus candidaturas y sus respuestas',
-      models: 'Tus CV y cartas base',
-    },
-  },
 
   /* Document ---------------------------------------------------------- */
   meta: {

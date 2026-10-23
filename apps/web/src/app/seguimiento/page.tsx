@@ -111,11 +111,7 @@ export default async function TrackingPage({
   return (
     <main id="seguimiento" className="mx-auto w-full max-w-[1800px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <header className="mb-6">
-                <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
-          <span className="text-grad font-bold">✦</span>
-          {ES.nav.pill.tracking}
-        </p>
-<h1 className="text-4xl font-black tracking-tight text-[#f8fafc] sm:text-5xl">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           {ES.tracking.heading}
         </h1>
         <p className="prose-measure mt-2 text-sm leading-relaxed text-slate-600">

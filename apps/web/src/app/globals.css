@@ -19,16 +19,6 @@
     /* Grid-paper lines: slate-400 at low opacity so text never competes with them. */
     --grid-minor: 148 163 184 / 0.04;
     --grid-major: 148 163 184 / 0.08;
-    /*
-     * The accent gradient, taken from the reference the user pointed at
-     * (3aestudio.vercel.app): indigo -> violet -> fuchsia -> orange. It is used
-     * for identity and for the ONE primary action, never for body text.
-     */
-    --grad: linear-gradient(90deg, #6366f1 0%, #9d00ff 35%, #d946ef 65%, #ff9900 100%);
-    --neon-cyan: 0 240 255;
-    --neon-violet: 157 0 255;
-    --neon-fuchsia: 217 70 239;
-    --neon-orange: 255 153 0;
   }
 
   body {
@@ -41,20 +31,18 @@
      * opaque surfaces, so body text never sits directly on the lines.
      */
     background-color: #030308;
+    background-color: #030308;
     /*
-     * Three layers: two soft radial glows for depth, then the grid. The glows are
-     * fixed so the page reads as one lit surface instead of a scrolling texture,
-     * and they are faint enough that the AA contrast net still passes.
+     * Pure-black canvas with a coarser grid than before: 48px cells and a
+     * stronger line every 240px. It scrolls with the page: a fixed background
+     * repaints on every scroll frame.
      */
     background-image:
-      radial-gradient(1200px 600px at 15% -10%, rgb(99 102 241 / 0.16), transparent 60%),
-      radial-gradient(1000px 520px at 85% 0%, rgb(157 0 255 / 0.12), transparent 55%),
       linear-gradient(rgb(var(--grid-major)) 1px, transparent 1px),
       linear-gradient(90deg, rgb(var(--grid-major)) 1px, transparent 1px),
       linear-gradient(rgb(var(--grid-minor)) 1px, transparent 1px),
       linear-gradient(90deg, rgb(var(--grid-minor)) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 240px 240px, 240px 240px, 48px 48px, 48px 48px;
-    background-attachment: fixed, fixed, scroll, scroll, scroll, scroll;
+    background-size: 240px 240px, 240px 240px, 48px 48px, 48px 48px;
   }
 
   @media print {
@@ -93,37 +81,6 @@
 }
 
 @layer utilities {
-  /* Glass: the card surface of the reference. */
-  .glass {
-    background-color: rgb(255 255 255 / 0.045);
-    border: 1px solid rgb(255 255 255 / 0.1);
-    backdrop-filter: blur(10px);
-  }
-
-  .glass-strong {
-    background-color: rgb(11 11 18 / 0.85);
-    border: 1px solid rgb(255 255 255 / 0.1);
-    backdrop-filter: blur(14px);
-  }
-
-  /* The accent gradient as text, used sparingly: a heading word, never a paragraph. */
-  .text-grad {
-    background-image: var(--grad);
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-
-  /* The primary action: gradient fill plus a coloured glow, as in the reference. */
-  .btn-grad {
-    background-image: var(--grad);
-    color: #fff;
-    box-shadow: 0 10px 30px -10px rgb(99 102 241 / 0.65);
-  }
-  .btn-grad:hover {
-    filter: brightness(1.08);
-  }
-
   /*
    * The view slide: the main content enters from the right while the previous
    * one leaves, so switching sections reads as a slide rather than a reload. The

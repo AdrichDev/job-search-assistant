@@ -92,9 +92,10 @@ const BASE =
   'group inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold ' +
   'shadow-sm transition duration-150 sm:w-auto motion-reduce:transition-none';
 
-/* The one primary action: gradient fill and a coloured glow, as in the reference. */
 const NOT_APPLIED =
-  'btn-grad active:translate-y-px ' + 'motion-reduce:active:translate-y-0';
+  'bg-indigo-600 text-white ring-1 ring-inset ring-indigo-700/30 ' +
+  'hover:bg-indigo-700 hover:shadow-md active:translate-y-px active:bg-indigo-800 active:shadow-sm ' +
+  'motion-reduce:active:translate-y-0';
 
 const APPLIED =
   'bg-emerald-50 text-emerald-900 ring-1 ring-inset ring-emerald-400 ' +

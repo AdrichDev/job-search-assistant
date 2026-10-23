@@ -30,17 +30,13 @@ export function SiteNav() {
       : 'offers';
 
   /*
-   * Each section owns a hue, and only the current one is lit. That is the whole
-   * differentiation budget of the nav: colour says WHERE you are, so the eye
-   * finds it without reading, and nothing competes with the Apply button.
-   */
-  /*
-   * The reference the user pointed at: a FIXED, centred navigation over the
-   * content, glassy, with the current section marked in white and a gradient
-   * underline. Colour marks identity; it never competes with the primary action.
+   * Back to the original selection style, as the user asked: the current section
+   * is a solid WHITE pill with dark text. The white and the dark both come from
+   * the theme mirror (`bg-slate-900` paints the light surface, `text-white` the
+   * dark foreground), which is why the class names read backwards.
    */
   const link =
-    'relative rounded-full px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-white aria-[current=page]:text-white';
+    'rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 aria-[current=page]:bg-slate-900 aria-[current=page]:text-white';
   const current = (which: Section) => (section === which ? { 'aria-current': 'page' as const } : {});
 
   const skip = {
@@ -57,42 +53,31 @@ export function SiteNav() {
       >
         {skip.text}
       </a>
-      <header className="glass-strong fixed inset-x-0 top-0 z-50">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white">
         <nav
           aria-label={ES.tracking.nav.label}
-          className="mx-auto grid h-16 w-full max-w-[1800px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 lg:px-8"
+          className="mx-auto grid h-14 w-full max-w-[1800px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 lg:px-8"
         >
-          {/* Brand: the gradient is the only place it appears at rest. */}
-          <Link href="/" className="flex items-center gap-2 justify-self-start">
-            <span className="btn-grad grid h-8 w-8 place-items-center rounded-lg text-sm font-black">
-              J
-            </span>
-            <span className="hidden text-sm font-semibold tracking-tight text-white sm:block">
-              {ES.nav.brand}
-            </span>
-          </Link>
-
+          {/* Centred, as asked; the empty halves keep it exactly in the middle. */}
+          <span aria-hidden="true" />
           <ul className="col-start-2 flex items-center gap-1">
             <li>
-              <Link href="/" className={`${link} after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[image:var(--grad)] after:content-[''] after:opacity-0 aria-[current=page]:after:opacity-100`} {...current('offers')}>
+              <Link href="/" className={link} {...current('offers')}>
                 {ES.tracking.nav.offers}
               </Link>
             </li>
             <li>
-              <Link href={TRACKING_PATH} className={`${link} after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[image:var(--grad)] after:content-[''] after:opacity-0 aria-[current=page]:after:opacity-100`} {...current('tracking')}>
+              <Link href={TRACKING_PATH} className={link} {...current('tracking')}>
                 {ES.tracking.nav.tracking}
               </Link>
             </li>
             <li>
-              <Link href={MODELS_PATH} className={`${link} after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-[image:var(--grad)] after:content-[''] after:opacity-0 aria-[current=page]:after:opacity-100`} {...current('models')}>
+              <Link href={MODELS_PATH} className={link} {...current('models')}>
                 {ES.tracking.nav.models}
               </Link>
             </li>
           </ul>
-
-          <span aria-hidden="true" className="justify-self-end text-xs font-medium text-slate-500">
-            {ES.nav.tagline}
-          </span>
+          <span aria-hidden="true" />
         </nav>
       </header>
     </>

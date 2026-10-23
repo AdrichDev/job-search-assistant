@@ -89,13 +89,13 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
 
   return (
     <article
-      className={`glass rounded-2xl border-l-4 transition duration-200 hover:border-white/20 hover:shadow-[0_18px_40px_-24px_rgb(99_102_241_/_0.8)] motion-reduce:transition-none ${
+      className={`rounded-xl border bg-white shadow-sm transition hover:shadow-md motion-reduce:transition-none ${
         isSample
           ? // Amber rail, matching the page banner: same colour, same claim.
-            'border-l-amber-500 bg-amber-500/[0.06]'
+            'border-amber-300 border-l-4 border-l-amber-500 bg-amber-50/40'
           : applied
-            ? 'border-l-emerald-400 bg-emerald-400/[0.06]'
-            : 'border-l-[#6366f1]'
+            ? 'border-emerald-200 border-l-4 border-l-emerald-600 bg-emerald-50/30'
+            : 'border-slate-200 border-l-4 border-l-transparent'
       }`}
       aria-labelledby={`job-title-${entry.id}`}
     >
