@@ -15,7 +15,7 @@ describe('parseQueueFilters', () => {
   it('reads every filter it knows', () => {
     expect(
       parseQueueFilters({ cv: 'frontend', fuente: 'indeed', estado: 'applied', q: 'react' }, SOURCES),
-    ).toEqual({ cv: 'frontend', fuente: 'indeed', estado: 'applied', q: 'react' });
+    ).toEqual({ cv: 'frontend', fuente: 'indeed', estado: 'applied', q: 'react', pagina: 1 });
   });
 
   it('ignores a value it does not know instead of passing it through', () => {
@@ -40,7 +40,13 @@ describe('queueFiltersToQuery', () => {
 
   it('keeps a stable order and only the values that differ', () => {
     expect(
-      queueFiltersToQuery({ cv: 'general', fuente: 'all', estado: 'not_applied', q: 'java' }),
+      queueFiltersToQuery({
+        cv: 'general',
+        fuente: 'all',
+        estado: 'not_applied',
+        q: 'java',
+        pagina: 1,
+      }),
     ).toBe('?cv=general&estado=not_applied&q=java');
   });
 
@@ -49,7 +55,13 @@ describe('queueFiltersToQuery', () => {
   });
 
   it('round-trips through the parser', () => {
-    const filters = { cv: 'microsoft', fuente: 'indeed', estado: 'applied' as const, q: 'power bi' };
+    const filters = {
+      cv: 'microsoft',
+      fuente: 'indeed',
+      estado: 'applied' as const,
+      q: 'power bi',
+      pagina: 1,
+    };
     const query = queueFiltersToQuery(filters);
     const parsed = parseQueueFilters(
       Object.fromEntries(new URLSearchParams(query.slice(1))),

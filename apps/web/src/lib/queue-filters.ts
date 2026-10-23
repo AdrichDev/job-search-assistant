@@ -18,6 +18,8 @@ export interface QueueFilters {
   readonly fuente: string;
   readonly estado: AppliedFilter;
   readonly q: string;
+  /** 1-based; only written to the URL when it is not the first page. */
+  readonly pagina: number;
 }
 
 export const DEFAULT_QUEUE_FILTERS: QueueFilters = {
@@ -25,6 +27,7 @@ export const DEFAULT_QUEUE_FILTERS: QueueFilters = {
   fuente: 'all',
   estado: 'all',
   q: '',
+  pagina: 1,
 };
 
 const CV_VALUES: readonly string[] = ['all', 'frontend', 'microsoft', 'general'];
@@ -56,6 +59,8 @@ export function parseQueueFilters(
     fuente: fuente === 'all' || knownSources.includes(fuente) ? fuente : 'all',
     estado: (ESTADO_VALUES.includes(estado) ? estado : DEFAULT_QUEUE_FILTERS.estado) as AppliedFilter,
     q: q.slice(0, 120),
+    // Same rule as the page itself: anything unusable means the first page.
+    pagina: /^[0-9]{1,4}$/.test(first(params['pagina'])) ? Math.max(1, Number(first(params['pagina']))) : 1,
   };
 }
 
@@ -74,6 +79,9 @@ export function queueFiltersToQuery(filters: QueueFilters): string {
   const q = filters.q.trim();
   if (q.length > 0) {
     params.set('q', q);
+  }
+  if (filters.pagina > 1) {
+    params.set('pagina', String(filters.pagina));
   }
   const encoded = params.toString();
   return encoded.length === 0 ? '' : `?${encoded}`;

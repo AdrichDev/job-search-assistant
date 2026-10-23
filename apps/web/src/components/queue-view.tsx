@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { QueueEntry } from '@job-queue/core/domain';
 import { EmptyQueue } from '@/components/empty-queue';
 import { JobCard } from '@/components/job-card';
 import { ES } from '@/copy/es';
 import { matchesSource, sourceOptions } from '@/lib/source-labels';
 import { queueFiltersToQuery, type AppliedFilter, type QueueFilters } from '@/lib/queue-filters';
+import { paginateOffers } from '@/lib/offers-page';
 
 /**
  * Filtering happens in the browser over data the server already sent.
@@ -59,6 +60,21 @@ export function QueueView({
   const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>(initialFilters.estado);
   const [source, setSource] = useState<string>(initialFilters.fuente);
   const [search, setSearch] = useState(initialFilters.q);
+  const [pagina, setPagina] = useState(initialFilters.pagina);
+
+  /*
+   * A filter change starts again at the first page: page 4 of a new filter is
+   * almost always the wrong place to land. The FIRST render is skipped, or a
+   * shared link with `?pagina=2` would be reset to page 1 before it is shown.
+   */
+  const filtersMounted = useRef(false);
+  useEffect(() => {
+    if (!filtersMounted.current) {
+      filtersMounted.current = true;
+      return;
+    }
+    setPagina(1);
+  }, [cvVariant, source, appliedFilter, search]);
 
   /*
    * The state is the source of truth and the URL follows it, with
@@ -73,13 +89,14 @@ export function QueueView({
       fuente: source,
       estado: appliedFilter,
       q: search,
+      pagina,
     });
     const next = `${window.location.pathname}${query}`;
     if (`${window.location.pathname}${window.location.search}` === next) {
       return;
     }
     window.history.replaceState(null, '', next);
-  }, [cvVariant, source, appliedFilter, search]);
+  }, [cvVariant, source, appliedFilter, search, pagina]);
 
   const searchId = useId();
   const cvId = useId();
@@ -107,6 +124,9 @@ export function QueueView({
       return matchesSearch(entry, needle);
     });
   }, [entries, cvVariant, source, appliedFilter, search]);
+
+  /* Ten per page, over what the filters left visible. */
+  const page = paginateOffers(visible, pagina);
 
   return (
     <section aria-labelledby="queue-heading" id="queue" className="scroll-mt-4">
@@ -212,13 +232,63 @@ export function QueueView({
               <p className="mt-1 text-sm text-slate-500">{ES.queue.noMatchesHint}</p>
             </div>
           ) : (
-            <ul className="flex flex-col gap-4">
-              {visible.map((entry) => (
-                <li key={entry.id}>
-                  <JobCard entry={entry} now={now} />
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="flex flex-col gap-4">
+                {page.rows.map((entry) => (
+                  <li key={entry.id}>
+                    <JobCard entry={entry} now={now} />
+                  </li>
+                ))}
+              </ul>
+
+              {/*
+                Point 8 of the list: the offers are paginated, ten per page, the
+                same size as the tracking table. The page lives in the URL, so a
+                reload keeps it and a link can carry it.
+              */}
+              {page.totalPages > 1 && (
+                <nav
+                  aria-label={ES.tracking.pagination.label}
+                  className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setPagina(1)}
+                    disabled={page.page === 1}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 font-medium disabled:opacity-40"
+                  >
+                    {ES.tracking.pagination.first}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPagina(page.page - 1)}
+                    disabled={page.page === 1}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 font-medium disabled:opacity-40"
+                  >
+                    {ES.tracking.pagination.prev}
+                  </button>
+                  <span aria-live="polite" className="px-2 text-slate-600">
+                    {ES.tracking.pagination.page(page.page, page.totalPages)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPagina(page.page + 1)}
+                    disabled={page.page === page.totalPages}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 font-medium disabled:opacity-40"
+                  >
+                    {ES.tracking.pagination.next}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPagina(page.totalPages)}
+                    disabled={page.page === page.totalPages}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 font-medium disabled:opacity-40"
+                  >
+                    {ES.tracking.pagination.last}
+                  </button>
+                </nav>
+              )}
+            </>
           )}
         </>
       )}
