@@ -169,6 +169,21 @@ const ACTION_RESULT: Record<ActionMessage, string> = {
 };
 
 export const ES = {
+  /* The offer detail modal (point 8) ------------------------------------ */
+  detail: {
+    open: 'Abrir',
+    close: 'Cerrar',
+    requirements: 'Requisitos detectados',
+    rows: {
+      company: 'Empresa',
+      location: 'Ubicación',
+      contract: 'Contrato',
+      salary: 'Salario',
+      posted: 'Publicada',
+      sources: 'Fuentes',
+    },
+  },
+
 
   /* Document ---------------------------------------------------------- */
   meta: {

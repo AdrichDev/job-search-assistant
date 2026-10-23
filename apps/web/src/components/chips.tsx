@@ -22,10 +22,21 @@ const TONES: Record<Tone, string> = {
   muted: 'bg-white text-slate-600 ring-slate-200',
 };
 
-export function Chip({ tone = 'neutral', children }: { tone?: Tone; children: ReactNode }) {
+export function Chip({
+  tone = 'neutral',
+  compact = false,
+  children,
+}: {
+  tone?: Tone;
+  /** Smaller, for the offer card where six chips share one row (point 8). */
+  compact?: boolean;
+  children: ReactNode;
+}) {
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${TONES[tone]}`}
+      className={`inline-flex items-center rounded-md ring-1 ring-inset ${TONES[tone]} ${
+        compact ? 'px-1.5 py-0 text-[11px] font-medium' : 'px-2 py-0.5 text-xs font-medium'
+      }`}
     >
       {children}
     </span>

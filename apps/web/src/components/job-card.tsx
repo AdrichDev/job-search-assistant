@@ -4,6 +4,7 @@ import { ApplyLink } from '@/components/apply-link';
 import { Chip, RequirementChips, StatusChip } from '@/components/chips';
 import { describeCvCategorySuggestion } from '@/components/cv-category-copy';
 import { DismissButton } from '@/components/dismiss-button';
+import { OfferDetail, type OfferDetailRow } from '@/components/offer-detail';
 import { OutcomeForm } from '@/components/outcome-form';
 import { ScoreBreakdown } from '@/components/score-breakdown';
 import { ES, cvVariantLabel } from '@/copy/es';
@@ -87,6 +88,21 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
       ? null
       : describeCvCategorySuggestion(entry.cvCategorySuggestion);
 
+
+  /* The facts the card compresses, in full, for the detail modal (point 8). */
+  const detailRows: readonly OfferDetailRow[] = [
+    { label: ES.detail.rows.company, value: entry.company },
+    { label: ES.detail.rows.location, value: entry.location },
+    ...(salary === null ? [] : [{ label: ES.detail.rows.salary, value: salary }]),
+    ...(entry.contractType === null
+      ? []
+      : [{ label: ES.detail.rows.contract, value: entry.contractType }]),
+    { label: ES.detail.rows.posted, value: ageLabel(entry.postedAt, now) },
+    {
+      label: ES.detail.rows.sources,
+      value: sourceLabels.length === 0 ? ES.source.noSources : sourceLabels.join(' · '),
+    },
+  ];
   return (
     <article
       className={`rounded-xl border bg-white shadow-sm transition hover:shadow-md motion-reduce:transition-none ${
@@ -140,7 +156,9 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
               */}
               {isSample && (
                 <span title={ES.card.sampleBadgeTitle}>
-                  <Chip tone="warn">{ES.card.sampleBadge}</Chip>
+                  <Chip tone="warn" compact>
+                    {ES.card.sampleBadge}
+                  </Chip>
                 </span>
               )}
               {/*
@@ -156,10 +174,14 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
               */}
               {isUnverified && (
                 <span title={ES.card.unverifiedBadgeTitle}>
-                  <Chip tone="muted">{ES.card.unverifiedBadge}</Chip>
+                  <Chip tone="muted" compact>
+                    {ES.card.unverifiedBadge}
+                  </Chip>
                 </span>
               )}
-              <Chip tone="neutral">{cvVariantLabel(entry.cvVariant)}</Chip>
+              <Chip tone="neutral" compact>
+                {cvVariantLabel(entry.cvVariant)}
+              </Chip>
               <StatusChip status={entry.applicationStatus} />
             </div>
 
@@ -197,6 +219,14 @@ export function JobCard({ entry, now }: { entry: QueueEntry; now: number }) {
             housekeeping.
           */}
           <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+            <OfferDetail
+              title={entry.title}
+              company={entry.company}
+              rows={detailRows}
+              requirements={entry.requirements.matchedStack}
+              applyHref={entry.url}
+              applyLabel={ES.apply.action}
+            />
             <ApplyLink jobId={entry.id} url={entry.url} applied={applied} title={entry.title} />
             <DismissButton jobId={entry.id} title={entry.title} applied={applied} />
           </div>
