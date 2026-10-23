@@ -1,7 +1,7 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import type { ApplicationOutcome, TrackedApplication } from '@job-queue/core';
-import { APPLICATION_OUTCOMES } from '@job-queue/core';
-import { isResponse } from '@job-queue/core';
+import { APPLICATION_OUTCOMES, isResponse } from '@job-queue/core';
 import { describeDocuments, type DocumentRefsView } from '@/components/documents-format';
 import { formatTrackingDate, trackingSourceLabels } from '@/components/tracking-format';
 import {
@@ -12,37 +12,39 @@ import {
 } from '@/components/tracking-status';
 import { ES } from '@/copy/es';
 import { EMPTY_CATALOG, type ModelCatalog } from '@/server/model-catalog';
-import type { EstadoFilter, PaginatedRows, TrackingWarning } from '@/server/tracking';
+import {
+  DEFAULT_TRACKING_FILTERS,
+  trackingFiltersToQuery,
+  type TrackingFilters,
+} from '@/lib/tracking-filters';
+import type { PaginatedRows, TrackingWarning } from '@/server/tracking';
 
 const BASE_PATH = '/seguimiento';
 
-function filterHref(filter: EstadoFilter): string {
-  return filter === 'all' ? BASE_PATH : `${BASE_PATH}?estado=${filter}`;
+/** A estado link keeps every other active filter and always lands on page 1. */
+function estadoHref(filters: TrackingFilters, estado: ApplicationOutcome | 'all'): string {
+  const query = trackingFiltersToQuery({ ...filters, estado, pagina: 1 });
+  return query === '' ? BASE_PATH : `${BASE_PATH}${query}`;
 }
 
-/** Pagination links keep the active filter; a filter link never carries `pagina`. */
-function paginationHref(page: number, filter: EstadoFilter): string {
-  const params = new URLSearchParams();
-  if (filter !== 'all') {
-    params.set('estado', filter);
-  }
-  params.set('pagina', String(page));
-  return `${BASE_PATH}?${params.toString()}`;
+/** A pagination link keeps EVERY active filter, estado included. */
+function paginationHref(filters: TrackingFilters, page: number): string {
+  return `${BASE_PATH}${trackingFiltersToQuery({ ...filters, pagina: page })}`;
 }
 
 function FilterLinks({
-  active,
+  filters,
   counts,
   total,
 }: {
-  active: EstadoFilter;
+  filters: TrackingFilters;
   counts: Readonly<Record<ApplicationOutcome, number>>;
   total: number;
 }) {
-  const items: { filter: EstadoFilter; text: string }[] = [
+  const items: { filter: ApplicationOutcome | 'all'; text: string }[] = [
     { filter: 'all', text: ES.tracking.filter.option(ES.tracking.filter.all, total) },
     ...APPLICATION_OUTCOMES.map((outcome) => ({
-      filter: outcome as EstadoFilter,
+      filter: outcome,
       text: ES.tracking.filter.option(ES.status[outcome], counts[outcome]),
     })),
   ];
@@ -53,8 +55,8 @@ function FilterLinks({
         {items.map(({ filter, text }) => (
           <li key={filter}>
             <Link
-              href={filterHref(filter)}
-              {...(filter === active ? { 'aria-current': 'true' as const } : {})}
+              href={estadoHref(filters, filter)}
+              {...(filter === filters.estado ? { 'aria-current': 'true' as const } : {})}
               className="inline-flex rounded-md px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-100 aria-[current=true]:bg-slate-900 aria-[current=true]:text-white aria-[current=true]:ring-slate-900"
             >
               {text}
@@ -97,11 +99,11 @@ function PaginationEdge({
 function PaginationNav({
   page,
   totalPages,
-  filter,
+  filters,
 }: {
   page: number;
   totalPages: number;
-  filter: EstadoFilter;
+  filters: TrackingFilters;
 }) {
   if (totalPages <= 1) {
     return null;
@@ -111,19 +113,19 @@ function PaginationNav({
       aria-label={ES.tracking.pagination.label}
       className="mt-4 flex flex-wrap items-center justify-center gap-1 text-sm"
     >
-      <PaginationEdge available={page > 1} href={paginationHref(1, filter)} label={ES.tracking.pagination.first} />
-      <PaginationEdge available={page > 1} href={paginationHref(page - 1, filter)} label={ES.tracking.pagination.prev} />
+      <PaginationEdge available={page > 1} href={paginationHref(filters, 1)} label={ES.tracking.pagination.first} />
+      <PaginationEdge available={page > 1} href={paginationHref(filters, page - 1)} label={ES.tracking.pagination.prev} />
       <span className="px-2 font-medium text-slate-700">
         {ES.tracking.pagination.page(page, totalPages)}
       </span>
       <PaginationEdge
         available={page < totalPages}
-        href={paginationHref(page + 1, filter)}
+        href={paginationHref(filters, page + 1)}
         label={ES.tracking.pagination.next}
       />
       <PaginationEdge
         available={page < totalPages}
-        href={paginationHref(totalPages, filter)}
+        href={paginationHref(filters, totalPages)}
         label={ES.tracking.pagination.last}
       />
     </nav>
@@ -255,20 +257,190 @@ function Row({
   );
 }
 
+/** True when only the estado differs from the default set of filters. */
+function onlyEstadoActive(filters: TrackingFilters): boolean {
+  return (
+    filters.empresa === '' &&
+    filters.puesto === '' &&
+    filters.ciudad === '' &&
+    filters.portal === DEFAULT_TRACKING_FILTERS.portal &&
+    filters.contestado === DEFAULT_TRACKING_FILTERS.contestado &&
+    filters.desde === '' &&
+    filters.hasta === '' &&
+    filters.publicadaDesde === '' &&
+    filters.publicadaHasta === ''
+  );
+}
+
+const FILTER_FIELD_CLASS =
+  'w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900';
+
+function FilterField({
+  id,
+  label,
+  children,
+}: {
+  id: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-36 flex-1 flex-col gap-1">
+      <label htmlFor={id} className="text-xs font-medium text-slate-600">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The filter bar, as a plain GET form: no JavaScript, and the URL the submit
+ * produces is exactly the combination the table then shows. Submitting never
+ * carries `pagina`, so every change lands on page 1 by construction.
+ */
+function FilterForm({
+  filters,
+  portals,
+}: {
+  filters: TrackingFilters;
+  portals: readonly { value: string; count: number }[];
+}) {
+  const t = ES.tracking.filters;
+  return (
+    <form method="get" action={BASE_PATH} aria-label={t.label} className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+      <input type="hidden" name="estado" value={filters.estado} />
+      <div className="flex flex-wrap items-end gap-3">
+        <FilterField id="filtro-empresa" label={t.empresa}>
+          <input
+            id="filtro-empresa"
+            name="empresa"
+            type="text"
+            defaultValue={filters.empresa}
+            className={FILTER_FIELD_CLASS}
+          />
+        </FilterField>
+        <FilterField id="filtro-puesto" label={t.puesto}>
+          <input
+            id="filtro-puesto"
+            name="puesto"
+            type="text"
+            defaultValue={filters.puesto}
+            className={FILTER_FIELD_CLASS}
+          />
+        </FilterField>
+        <FilterField id="filtro-ciudad" label={t.ciudad}>
+          <input
+            id="filtro-ciudad"
+            name="ciudad"
+            type="text"
+            defaultValue={filters.ciudad}
+            className={FILTER_FIELD_CLASS}
+          />
+        </FilterField>
+        <FilterField id="filtro-portal" label={t.portal}>
+          <select
+            id="filtro-portal"
+            name="portal"
+            defaultValue={filters.portal}
+            className={FILTER_FIELD_CLASS}
+          >
+            <option value="all">{t.portalAll}</option>
+            {portals.map((portal) => (
+              <option key={portal.value} value={portal.value}>
+                {ES.tracking.filter.option(portal.value, portal.count)}
+              </option>
+            ))}
+          </select>
+        </FilterField>
+        <FilterField id="filtro-contestado" label={t.contestado}>
+          <select
+            id="filtro-contestado"
+            name="contestado"
+            defaultValue={filters.contestado}
+            className={FILTER_FIELD_CLASS}
+          >
+            <option value="all">{t.contestadoAll}</option>
+            <option value="si">{t.contestadoSi}</option>
+            <option value="no">{t.contestadoNo}</option>
+          </select>
+        </FilterField>
+        <FilterField id="filtro-desde" label={t.desde}>
+          <input
+            id="filtro-desde"
+            name="desde"
+            type="date"
+            defaultValue={filters.desde}
+            className={FILTER_FIELD_CLASS}
+          />
+        </FilterField>
+        <FilterField id="filtro-hasta" label={t.hasta}>
+          <input
+            id="filtro-hasta"
+            name="hasta"
+            type="date"
+            defaultValue={filters.hasta}
+            className={FILTER_FIELD_CLASS}
+          />
+        </FilterField>
+        <FilterField id="filtro-publicada-desde" label={t.publicadaDesde}>
+          <input
+            id="filtro-publicada-desde"
+            name="publicada-desde"
+            type="date"
+            defaultValue={filters.publicadaDesde}
+            className={FILTER_FIELD_CLASS}
+          />
+        </FilterField>
+        <FilterField id="filtro-publicada-hasta" label={t.publicadaHasta}>
+          <input
+            id="filtro-publicada-hasta"
+            name="publicada-hasta"
+            type="date"
+            defaultValue={filters.publicadaHasta}
+            className={FILTER_FIELD_CLASS}
+          />
+        </FilterField>
+        <div className="flex gap-2 pb-0.5">
+          <button
+            type="submit"
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-500"
+          >
+            {t.apply}
+          </button>
+          <Link
+            href={BASE_PATH}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            {t.clear}
+          </Link>
+        </div>
+      </div>
+    </form>
+  );
+}
+
 /** Read-only table of every application, filtered and paginated server-side. */
 export function TrackingView({
   rows,
   pagination,
   counts,
-  filter,
+  filters,
+  portals,
+  baseTotal,
   warnings,
   documents,
   catalog = EMPTY_CATALOG,
 }: {
+  /** EVERY application; the view filters nothing itself, the server did it. */
   rows: readonly TrackedApplication[];
   pagination: PaginatedRows;
+  /** Estado counts computed under every OTHER active filter. */
   counts: Readonly<Record<ApplicationOutcome, number>>;
-  filter: EstadoFilter;
+  filters: TrackingFilters;
+  portals: readonly { value: string; count: number }[];
+  /** Rows under every filter except the estado: the "Todas" link's count. */
+  baseTotal: number;
   warnings: readonly TrackingWarning[];
   /** Documents used per job id; resolved to names through `catalog` (read once by the page). */
   documents?: ReadonlyMap<string, DocumentRefsView>;
@@ -302,20 +474,33 @@ export function TrackingView({
         )
       ) : (
         <>
-          <FilterLinks active={filter} counts={counts} total={rows.length} />
+          <FilterLinks filters={filters} counts={counts} total={baseTotal} />
+          <FilterForm filters={filters} portals={portals} />
           <p className="mb-3 text-sm text-slate-600" aria-live="polite">
             {ES.tracking.showingRange(pagination.from, pagination.to, pagination.total)}
           </p>
 
           {pagination.rows.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 sm:p-8">
-              <h2 className="text-base font-semibold text-slate-900">
-                {ES.tracking.emptyFilterTitle(filter === 'all' ? '' : ES.status[filter])}
-              </h2>
-              <p className="prose-measure mt-2 text-sm text-slate-600">{ES.tracking.emptyFilterBody}</p>
-              <Link href={BASE_PATH} className="mt-3 inline-block text-sm font-medium text-indigo-700 underline">
-                {ES.tracking.emptyFilterAction}
-              </Link>
+              {onlyEstadoActive(filters) ? (
+                <>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    {ES.tracking.emptyFilterTitle(filters.estado === 'all' ? '' : ES.status[filters.estado])}
+                  </h2>
+                  <p className="prose-measure mt-2 text-sm text-slate-600">{ES.tracking.emptyFilterBody}</p>
+                  <Link href={BASE_PATH} className="mt-3 inline-block text-sm font-medium text-indigo-700 underline">
+                    {ES.tracking.emptyFilterAction}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-base font-semibold text-slate-900">{ES.tracking.emptyFiltersTitle}</h2>
+                  <p className="prose-measure mt-2 text-sm text-slate-600">{ES.tracking.emptyFiltersBody}</p>
+                  <Link href={BASE_PATH} className="mt-3 inline-block text-sm font-medium text-indigo-700 underline">
+                    {ES.tracking.emptyFiltersAction}
+                  </Link>
+                </>
+              )}
             </div>
           ) : (
             <div
@@ -371,7 +556,7 @@ export function TrackingView({
             </div>
           )}
 
-          <PaginationNav page={pagination.page} totalPages={pagination.totalPages} filter={filter} />
+          <PaginationNav page={pagination.page} totalPages={pagination.totalPages} filters={filters} />
         </>
       )}
     </>

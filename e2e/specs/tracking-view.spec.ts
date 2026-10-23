@@ -489,14 +489,15 @@ test.describe('tracking view pagination', () => {
     await expect(nav.getByText('Última')).toHaveAttribute('aria-disabled', 'true');
 
     await nav.getByRole('link', { name: 'Primera' }).click();
-    await expect(page).toHaveURL(/pagina=1/);
+    // Page 1 is the default, so the URL is clean: no pagina param at all.
+    await expect(page).not.toHaveURL(/pagina=/);
     await expect(page.locator('tbody tr')).toHaveCount(10);
     // Última jumps straight to the last page.
     await paginationNav(page).getByRole('link', { name: 'Última' }).click();
     await expect(page.locator('tbody tr')).toHaveCount(5);
     // Anterior steps back one page.
     await paginationNav(page).getByRole('link', { name: 'Anterior' }).click();
-    await expect(page).toHaveURL(/pagina=1/);
+    await expect(page).not.toHaveURL(/pagina=/);
   });
 
   test('an out-of-range page clamps to the last one and garbage shows page 1', async ({ page }) => {

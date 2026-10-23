@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  APPLICATION_OUTCOMES,
-  createApplication,
-  type Application,
+import { createApplication, type Application,
   type ApplicationOutcome,
   type ApplicationRepository,
   type JobQueue,
@@ -10,10 +7,8 @@ import {
 } from '@job-queue/core';
 import type { TrackedApplication } from '@job-queue/core';
 import {
-  filterTrackedRows,
   loadTracking,
   paginateRows,
-  parseEstadoFilter,
   parsePagina,
   TRACKING_PAGE_SIZE,
   type TrackingDeps,
@@ -51,21 +46,6 @@ function queueWith(jobs: unknown[]): QueueReader {
 const deps = (applications: readonly Application[], queueReader = emptyQueueReader): TrackingDeps => ({
   applicationRepository: createStubRepository(applications),
   queueReader,
-});
-
-describe('parseEstadoFilter', () => {
-  it('accepts every outcome', () => {
-    for (const outcome of APPLICATION_OUTCOMES) {
-      expect(parseEstadoFilter(outcome)).toBe(outcome);
-    }
-  });
-
-  it.each([undefined, '', 'all', 'todas', 'REJECTED', '__proto__', 'constructor', ['rejected', 'offer']])(
-    'falls back to all for %j',
-    (raw) => {
-      expect(parseEstadoFilter(raw as string | string[] | undefined)).toBe('all');
-    },
-  );
 });
 
 describe('loadTracking', () => {
@@ -118,15 +98,6 @@ describe('loadTracking', () => {
 
     expect(data.rows).toHaveLength(2);
     expect(data.warnings).toEqual([{ kind: 'queue', detail: 'bad queue' }]);
-  });
-});
-
-describe('filterTrackedRows', () => {
-  it('keeps one outcome, or everything for all', async () => {
-    const { rows } = await loadTracking(deps([IMPORTED, LEGACY]));
-    expect(filterTrackedRows(rows, 'all')).toHaveLength(2);
-    expect(filterTrackedRows(rows, 'screening').map((r) => r.jobId)).toEqual(['import-1a2b']);
-    expect(filterTrackedRows(rows, 'offer')).toEqual([]);
   });
 });
 
@@ -237,22 +208,6 @@ describe('paginateRows', () => {
 
   it('clamps an absurdly large but finite page to the last one', () => {
     expect(paginateRows(rows(25), 1e21).page).toBe(3);
-  });
-});
-
-describe('filter before pagination', () => {
-  it('paginates the filtered subset, not the whole log', () => {
-    const mixed: TrackedApplication[] = [
-      ...rows(11),
-      trackedRow('r-rechazada', 'rejected'),
-      trackedRow('r-oferta', 'offer'),
-    ];
-    const filtered = filterTrackedRows(mixed, 'rejected');
-
-    const paginated = paginateRows(filtered, 1);
-    expect(paginated.total).toBe(1);
-    expect(paginated.totalPages).toBe(1);
-    expect(paginated.rows.map((r) => r.jobId)).toEqual(['r-rechazada']);
   });
 });
 

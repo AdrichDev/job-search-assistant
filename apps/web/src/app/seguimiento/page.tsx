@@ -13,7 +13,13 @@ import { applicationRepository, cvModelRepository, mailProposalRepository, queue
 import { revertNoticeFor } from '@/server/history';
 import { mailNoticeFor } from '@/server/mail-notices';
 import { readMailStatusNow } from '@/server/mail-status';
-import { filterTrackedRows, loadTracking, paginateRows, parseEstadoFilter, parsePagina } from '@/server/tracking';
+import { loadTracking, paginateRows, parsePagina } from '@/server/tracking';
+import {
+  countUnderFilters,
+  filterTrackedRows,
+  parseTrackingFilters,
+  portalOptions,
+} from '@/lib/tracking-filters';
 
 /** The application log changes on every click elsewhere; never serve a cached copy. */
 export const dynamic = 'force-dynamic';
@@ -29,7 +35,6 @@ export default async function TrackingPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = await searchParams;
-  const filter = parseEstadoFilter(query.estado);
   const page = parsePagina(query.pagina);
   const notice: { readonly text: string; readonly warning: boolean } | null =
     query.edicion === 'guardada'
@@ -40,11 +45,25 @@ export default async function TrackingPage({
           ? { text: ES.tracking.notice.savedNotLogged, warning: true }
           : null;
   const undoNotice = revertNoticeFor(query.deshacer);
-  const { rows, counts, warnings, documents, catalog } = await loadTracking({
+  const { rows, warnings, documents, catalog } = await loadTracking({
     applicationRepository: applicationRepository(),
     queueReader: queueReader(),
     cvModelRepository: cvModelRepository(),
   });
+
+  /*
+   * The filter vocabulary is the spreadsheet's own (S1). The estado counts the
+   * filter bar shows are computed under every OTHER active filter, so each
+   * number says how many of the rows you are already looking at hold that
+   * estado - never how many the whole log holds.
+   */
+  const portals = portalOptions(rows);
+  const filters = parseTrackingFilters(
+    query,
+    portals.map((option) => option.value),
+  );
+  const baseRows = filterTrackedRows(rows, { ...filters, estado: 'all' });
+  const filteredRows = filterTrackedRows(rows, filters);
 
   /*
    * Mail (U5d): a READ of the mail state, the pending proposals, and the
@@ -160,9 +179,11 @@ export default async function TrackingPage({
 
       <TrackingView
         rows={rows}
-        pagination={paginateRows(filterTrackedRows(rows, filter), page)}
-        counts={counts}
-        filter={filter}
+        pagination={paginateRows(filteredRows, page)}
+        counts={countUnderFilters(rows, filters)}
+        filters={filters}
+        portals={portals}
+        baseTotal={baseRows.length}
         warnings={warnings}
         documents={documents}
         catalog={catalog}

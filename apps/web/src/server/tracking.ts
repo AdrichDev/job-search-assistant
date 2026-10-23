@@ -3,7 +3,6 @@ import 'server-only';
 import {
   buildTrackedApplications,
   countByOutcome,
-  isApplicationOutcome,
   type Application,
   type ApplicationOutcome,
   type ApplicationRepository,
@@ -19,8 +18,6 @@ import { loadModelCatalog, type ModelCatalog, EMPTY_CATALOG } from '@/server/mod
  * Read model of the tracking view (`/seguimiento`). Read-only on purpose: it
  * never writes the application log, the queue or the dismissals.
  */
-
-export type EstadoFilter = ApplicationOutcome | 'all';
 
 /** A non-fatal read problem. Structured so the UI words it in Spanish. */
 export interface TrackingWarning {
@@ -57,23 +54,10 @@ function describe(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause);
 }
 
-/** `?estado=` is user-controlled: anything that is not an outcome means "all". */
-export function parseEstadoFilter(raw: string | readonly string[] | undefined): EstadoFilter {
-  return typeof raw === 'string' && isApplicationOutcome(raw) ? raw : 'all';
-}
-
-export function filterTrackedRows(
-  rows: readonly TrackedApplication[],
-  filter: EstadoFilter,
-): readonly TrackedApplication[] {
-  return filter === 'all' ? rows : rows.filter((row) => row.outcome === filter);
-}
-
 /** UI-2: the user asked for exactly 10 rows per page. */
 export const TRACKING_PAGE_SIZE = 10;
 
-/**
- * `?pagina=` is user-controlled: anything that is not a finite positive integer
+/** `?pagina=` is user-controlled: anything that is not a finite positive integer
  * means page 1. Arrays count as absent (the page only ever sends a scalar),
  * and a value beyond the double range (`1e999`) is not a finite integer. A
  * merely huge but finite value (say `1e21`) survives and is clamped later by

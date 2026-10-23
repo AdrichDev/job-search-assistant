@@ -174,6 +174,16 @@ export const ES = {
     open: 'Abrir',
     close: 'Cerrar',
     requirements: 'Requisitos detectados',
+    description: 'Descripción',
+    noDescription: 'No se guardó el texto de esta oferta.',
+    scoreHeading: 'Puntuación estimada',
+    /* Los datos de requisitos que dejaron la tarjeta y viven aquí. */
+    requirementFacts: {
+      years: 'Experiencia solicitada',
+      workMode: 'Modalidad',
+      english: 'Inglés',
+      signals: 'Señales de experiencia',
+    },
     rows: {
       company: 'Empresa',
       location: 'Ubicación',
@@ -420,6 +430,21 @@ export const ES = {
       `Volver a abrir la oferta de ${title}. Ya está registrada como postulación.`,
   },
 
+  /* Ver la oferta, sin postularse --------------------------------------- */
+  /*
+   * Ver no es aplicar. El usuario lo dijo literalmente: quiere poder pulsar
+   * la oferta para verla sin que eso registre una postulación. El enlace de
+   * aquí solo abre; «Aplicar» sigue siendo el gesto que escribe en el registro.
+   */
+  viewOffer: {
+    action: 'Ver oferta',
+    /** El nombre accesible se compone con la palabra visible, como en la tabla de seguimiento. */
+    screenReader: (title: string, company: string) =>
+      `de ${title}${company.length > 0 ? ` en ${company}` : ''} (se abre en una pestaña nueva)`,
+    dialogAction: 'Ver la oferta',
+    titleSuffix: '(se abre en una pestaña nueva)',
+  },
+
   /* Dismiss ------------------------------------------------------------ */
   /*
    * Acción secundaria. El color de acento pertenece a «Aplicar», que es la
@@ -616,6 +641,28 @@ export const ES = {
       all: 'Todas',
       option: (label: string, count: number) => `${label} (${count})`,
     },
+    /*
+     * Los filtros del histórico, con el vocabulario de las columnas del Excel
+     * que importó el usuario (S1). Ningún campo de notas personales entra aquí.
+     */
+    filters: {
+      label: 'Filtrar el historial de postulaciones',
+      apply: 'Aplicar filtros',
+      clear: 'Limpiar filtros',
+      empresa: 'Empresa',
+      puesto: 'Puesto',
+      ciudad: 'Ciudad',
+      portal: 'Portal',
+      portalAll: 'Todos los portales',
+      contestado: '¿Contestó?',
+      contestadoAll: 'Todos',
+      contestadoSi: 'Sí',
+      contestadoNo: 'No',
+      desde: 'Solicitud desde',
+      hasta: 'Solicitud hasta',
+      publicadaDesde: 'Publicada desde',
+      publicadaHasta: 'Publicada hasta',
+    },
     caption:
       'Postulaciones con su empresa, puesto, fuente, ciudad, fechas, estado, documentos usados y notas',
     columns: {
@@ -664,6 +711,9 @@ export const ES = {
     emptyFilterTitle: (label: string) => `Ninguna postulación está en el estado «${label}»`,
     emptyFilterBody: 'Elige otro estado o vuelve a ver todas las postulaciones.',
     emptyFilterAction: 'Ver todas',
+    emptyFiltersTitle: 'Ninguna postulación coincide con los filtros',
+    emptyFiltersBody: 'Prueba con otros valores o límpialos para volver a ver todas las postulaciones.',
+    emptyFiltersAction: 'Limpiar filtros y ver todas',
     warningTitle: 'No se pudo leer todo',
     warning: {
       applications: (detail: string) =>
