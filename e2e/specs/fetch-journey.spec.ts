@@ -1,8 +1,8 @@
-import { expect, fetchButton, fetchPanel, test } from '../support/test.js';
+import { expect, refreshButton, refreshPanel, test } from '../support/test.js';
 import { HEALTHY_QUEUE } from '../fixtures/queue.js';
 
 /**
- * "Buscar ofertas", driven through a real browser.
+ * "Actualizar" (the fetch journey), driven through a real browser.
  *
  * ## What is really running
  *
@@ -27,17 +27,22 @@ import { HEALTHY_QUEUE } from '../fixtures/queue.js';
  */
 
 test.describe('fetch journey', () => {
+  /*
+   * The ONE control of S12: "Actualizar" runs the mail review and then the
+   * offer fetch. Its locators are the shared ones in `support/test.ts`, so
+   * there is a single source of truth for the renamed control.
+   */
   test.beforeEach(async ({ seed, page }) => {
     await seed(HEALTHY_QUEUE);
     await page.goto('/');
   });
 
-  test('the fetch control is a real, keyboard-reachable button in Spanish', async ({ page }) => {
-    const button = fetchButton(page);
+  test('the refresh control is a real, keyboard-reachable button in Spanish', async ({ page }) => {
+    const button = refreshButton(page);
 
     await expect(button).toBeVisible();
     await expect(button).toHaveAttribute('type', 'button');
-    await expect(button).toContainText('Buscar ofertas');
+    await expect(button).toContainText('Actualizar');
 
     await button.focus();
     await expect(button).toBeFocused();
@@ -50,22 +55,24 @@ test.describe('fetch journey', () => {
    * does not do and is not allowed to do.
    */
   test('the copy never calls this scraping', async ({ page }) => {
-    const text = (await fetchPanel(page).innerText()).toLowerCase();
+    const text = (await refreshPanel(page).innerText()).toLowerCase();
 
     expect(text).not.toContain('scrape');
     expect(text).not.toContain('scrap');
-    expect(text).toContain('buscar ofertas');
+    expect(text).toContain('actualizar');
+    // The mail review is half of what the button does, so the copy says so.
+    expect(text).toContain('correo');
   });
 
   test('reports an honest idle state before anything has been run', async ({ page }) => {
-    await expect(fetchPanel(page)).toContainText('Todavía no has lanzado ninguna búsqueda');
+    await expect(refreshPanel(page)).toContainText('Todavía no has lanzado ninguna búsqueda');
   });
 
   test('a click returns immediately and the state becomes running, then finished', async ({
     page,
   }) => {
     const started = Date.now();
-    await fetchButton(page).click();
+    await refreshButton(page).click();
 
     /*
      * The non-blocking claim. The action must come back in milliseconds; if it
@@ -73,12 +80,12 @@ test.describe('fetch journey', () => {
      * run. The state has to say something real either way - a fast fixture run
      * can finish before the first poll, so both live states are accepted.
      */
-    await expect(fetchPanel(page)).toContainText(/Búsqueda en curso|Última búsqueda terminada/, {
+    await expect(refreshPanel(page)).toContainText(/Búsqueda en curso|Última búsqueda terminada/, {
       timeout: 15_000,
     });
     expect(Date.now() - started).toBeLessThan(15_000);
 
-    await expect(fetchPanel(page)).toContainText('Última búsqueda terminada', {
+    await expect(refreshPanel(page)).toContainText('Última búsqueda terminada', {
       timeout: 60_000,
     });
   });
@@ -89,13 +96,13 @@ test.describe('fetch journey', () => {
    * are the state.
    */
   test('the difference between working and finished is carried in words', async ({ page }) => {
-    await fetchButton(page).click();
-    await expect(fetchPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
+    await refreshButton(page).click();
+    await expect(refreshPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
 
     // Compared case-insensitively: the summary heading is rendered with
     // `text-transform: uppercase`, and `innerText` reports the RENDERED text.
     // Asserting the literal casing would be asserting a CSS rule, not the copy.
-    const text = (await fetchPanel(page).innerText()).toLowerCase();
+    const text = (await refreshPanel(page).innerText()).toLowerCase();
     expect(text).toContain('resultado de la última búsqueda');
     expect(text).not.toContain('búsqueda en curso');
   });
@@ -106,10 +113,10 @@ test.describe('fetch journey', () => {
    * prints - not a second summary invented for the browser.
    */
   test('reports what the run found, in Spanish', async ({ page }) => {
-    await fetchButton(page).click();
-    await expect(fetchPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
+    await refreshButton(page).click();
+    await expect(refreshPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
 
-    const panel = fetchPanel(page);
+    const panel = refreshPanel(page);
     await expect(panel).toContainText(/ofertas? (encontrada|encontradas)/);
     await expect(panel).toContainText(/únicas? tras agrupar/);
     await expect(panel).toContainText('no ser ofertas de desarrollo de software');
@@ -135,7 +142,7 @@ test.describe('fetch journey', () => {
       // buttons are driven instead, simultaneously, before React can disable
       // either of them.
       const buttons = Array.from(document.querySelectorAll('button')).filter((node) =>
-        (node.textContent ?? '').includes('Buscar ofertas'),
+        (node.textContent ?? '').includes('Actualizar'),
       );
       buttons.forEach((button) => {
         button.click();
@@ -145,7 +152,7 @@ test.describe('fetch journey', () => {
 
     expect(accepted).toBeGreaterThan(0);
 
-    await expect(fetchPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
+    await expect(refreshPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
 
     /*
      * One run, proven by the report rather than by counting requests: a second
@@ -155,41 +162,41 @@ test.describe('fetch journey', () => {
      * `tests/app/fetch-run.test.ts`; what this adds is that the browser path
      * reaches the same lock.
      */
-    await expect(fetchPanel(page)).toContainText(/ofertas? (disponible|disponibles) para ti/);
+    await expect(refreshPanel(page)).toContainText(/ofertas? (disponible|disponibles) para ti/);
   });
 
   test('a second tab sees the run the first one started', async ({ page, context }) => {
-    await fetchButton(page).click();
+    await refreshButton(page).click();
 
     const second = await context.newPage();
     await second.goto('/');
 
     // Whatever the first tab's run is doing, the second must report the SAME
     // thing - the state is a file on the server, not React state in one tab.
-    await expect(fetchPanel(second)).toContainText(
+    await expect(refreshPanel(second)).toContainText(
       /Búsqueda en curso|Última búsqueda terminada/,
       { timeout: 30_000 },
     );
-    await expect(fetchPanel(second)).not.toContainText('Todavía no has lanzado');
+    await expect(refreshPanel(second)).not.toContainText('Todavía no has lanzado');
 
     await second.close();
   });
 
   test('the button is usable again once the run has finished', async ({ page }) => {
-    await fetchButton(page).click();
-    await expect(fetchPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
+    await refreshButton(page).click();
+    await expect(refreshPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
 
-    await expect(fetchButton(page)).toBeEnabled();
+    await expect(refreshButton(page)).toBeEnabled();
   });
 
   test('the run state survives a reload', async ({ page }) => {
-    await fetchButton(page).click();
-    await expect(fetchPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
+    await refreshButton(page).click();
+    await expect(refreshPanel(page)).toContainText('Última búsqueda terminada', { timeout: 60_000 });
 
     await page.reload();
 
     // Rendered on the SERVER from the state file, so it is correct on the first
     // paint rather than after the first poll.
-    await expect(fetchPanel(page)).toContainText('Última búsqueda terminada');
+    await expect(refreshPanel(page)).toContainText('Última búsqueda terminada');
   });
 });

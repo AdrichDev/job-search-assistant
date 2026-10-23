@@ -147,12 +147,12 @@ export function restoreButtonFor(page: Page, title: string): Locator {
     .getByRole('button', { name: /Recuperar/ });
 }
 
-/** The "Buscar ofertas" control. */
-export function fetchButton(page: Page): Locator {
-  return page.getByRole('button', { name: /Buscar ofertas|Buscando ofertas/ });
+/** The one "Actualizar" control (S12): mail review, then the offer search. */
+export function refreshButton(page: Page): Locator {
+  return page.getByRole('button', { name: /Actualizar|Actualizando/ });
 }
 
-/** The panel that reports what the fetch run is doing. */
-export function fetchPanel(page: Page): Locator {
-  return page.locator('section').filter({ has: page.locator('#fetch-heading') });
+/** The panel that reports what the update is doing. */
+export function refreshPanel(page: Page): Locator {
+  return page.locator('section').filter({ has: page.locator('#refresh-heading') });
 }

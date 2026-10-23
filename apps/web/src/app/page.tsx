@@ -14,7 +14,7 @@ import { parseQueueFilters } from '@/lib/queue-filters';
 import { sourceOptions } from '@/lib/source-labels';
 import { readMailStatusNow } from '@/server/mail-status';
 import { DismissedSection } from '@/components/dismissed-section';
-import { FetchPanel } from '@/components/fetch-panel';
+import { RefreshPanel } from '@/components/fetch-panel';
 import { QueueView } from '@/components/queue-view';
 import { StatsPanel } from '@/components/stats-panel';
 import { ES } from '@/copy/es';
@@ -171,7 +171,7 @@ export default async function DashboardPage({
         both of them. A "get new offers" button below the offers it would
         replace is a button nobody finds on the morning the list is stale.
       */}
-      <FetchPanel initialState={fetchState} />
+      <RefreshPanel initialState={fetchState} />
 
       <StatsPanel stats={stats} models={modelCatalog} />
 

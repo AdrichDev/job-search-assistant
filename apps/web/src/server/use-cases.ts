@@ -23,6 +23,8 @@ import {
   type FetchRunState,
   type JobQueue,
   type Logger,
+  type MailCheckOutcome,
+  type MailCheckResult,
   type PipelineRunner,
   type RunStateStore,
   type TrackableQueueJob,
@@ -594,4 +596,78 @@ export async function startFetch(deps: FetchDeps): Promise<FetchStartOutcome> {
 /** What the run is doing right now. Polled by the browser. */
 export function readFetchState(deps: FetchDeps): Promise<FetchRunState> {
   return deps.runStateStore.read();
+}
+
+/* Refresh: one mail review, then one fetch --------------------------------- */
+
+/** The mail half of the refresh, in the shape the panel words. */
+export interface RefreshMailResult {
+  readonly outcome: MailCheckOutcome;
+  /** Proposals this review created; 0 unless the outcome is `ok`. */
+  readonly proposed: number;
+}
+
+export interface RefreshDeps {
+  /** The forced mail review. Reuses the exact pipeline of the CLI and the catch-up. */
+  readonly runMailReview: () => Promise<MailCheckResult>;
+  /** Proposals still waiting for a decision BEFORE this run, i.e. the older ones. */
+  readonly countPendingProposals: () => Promise<number>;
+  /** The offer fetch. Its single-flight lock is inside `startFetch`, not here. */
+  readonly startRun: () => Promise<FetchStartOutcome>;
+}
+
+export interface RefreshOutcome {
+  readonly mail: RefreshMailResult;
+  /** Pending proposals counted before the review; null when the list could not be read. */
+  readonly pendingProposals: number | null;
+  readonly fetch: ActionOutcome;
+  /** Resolves when the background fetch has finished. NOT serializable: the action strips it. */
+  readonly completion: Promise<void>;
+}
+
+/** The serializable part of a refresh - what `startRefreshAction` returns to the browser. */
+export type RefreshResult = Omit<RefreshOutcome, 'completion'>;
+
+/**
+ * The "Actualizar" composite (S12): review the mail, then search the sources,
+ * in that order, and report what each half found.
+ *
+ * The two halves stay independent on purpose: a broken or refused mail review
+ * must not stop the offer search, and an offer search that is already running
+ * (another tab, a reloaded page) is reported through `fetch.ok` rather than
+ * failing the whole refresh. The single-flight guarantees are the existing
+ * ones - the mail's own `already_running` marker and the fetch's
+ * exclusive-create lock - exactly as with the buttons they replace.
+ */
+export async function startRefresh(deps: RefreshDeps): Promise<RefreshOutcome> {
+  /*
+   * Counted BEFORE the review, on purpose. The panel words this number as
+   * "propuestas anteriores", and a count taken afterwards would include the
+   * proposals this very run just created, telling the candidate that an older
+   * decision is waiting when none is.
+   */
+  let pendingProposals: number | null = null;
+  try {
+    pendingProposals = await deps.countPendingProposals();
+  } catch {
+    // The count is information, never a failure of the refresh.
+  }
+
+  let mail: RefreshMailResult;
+  try {
+    const result = await deps.runMailReview();
+    mail = { outcome: result.outcome, proposed: result.proposed };
+  } catch {
+    // `checkMailWithProposals` already swallows its own failures; reaching here
+    // means a dependency broke. Report the generic failure and keep going.
+    mail = { outcome: { status: 'failed' }, proposed: 0 };
+  }
+
+  const start = await deps.startRun();
+  return {
+    mail,
+    pendingProposals,
+    fetch: { ok: start.ok, message: start.message },
+    completion: start.completion,
+  };
 }

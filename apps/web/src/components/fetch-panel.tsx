@@ -2,34 +2,36 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { FetchRunState, FetchRunSummary } from '@job-queue/core/domain';
-import { fetchStateAction, startFetchAction } from '@/app/actions';
+import { fetchStateAction, startRefreshAction } from '@/app/actions';
+import { mailRunText } from '@/server/mail-notices';
+import type { RefreshResult } from '@/server/use-cases';
 import { ES, LOCALE, translateActionMessage } from '@/copy/es';
 
 /**
- * "Buscar ofertas": run the ingestion pipeline without opening a terminal.
+ * "Actualizar": the ONE control of S12. It runs the mail review and the offer
+ * fetch, in that order, and then reports what it found - new offers (the run
+ * summary below), mail proposals and replies (the mail line), and application
+ * updates still waiting for a decision.
  *
- * ## Terminology
- *
- * This FETCHES. It asks the same configured sources the CLI asks - public job
- * APIs and employer ATS endpoints - and it never navigates
- * or parses a job board's HTML. Calling it scraping in the copy would describe
- * something this program does not do and is not allowed to do.
+ * The file keeps its fetch-panel name and this section keeps its heading id:
+ * both are the same control it always was, with the mail review folded in
+ * instead of a second competing button next to it.
  *
  * ## Why polling
  *
  * The run state has to be persisted on the server anyway: a second TAB must be
  * able to see that a run is in flight, and a reload must not lose it. Once the
  * state is a file the server can read, polling it is three lines and no
- * infrastructure. A stream would add a connection to keep alive, a reconnect
- * path and a fallback - all to shave a couple of seconds off the granularity of
- * a job measured in minutes. The interval is 2s while running and NOTHING at
- * all when idle, so a page left open overnight costs zero requests.
+ * infrastructure. The interval is 2s while running and NOTHING at all when
+ * idle, so a page left open overnight costs zero requests.
  *
  * ## Why the button is not the single-flight mechanism
  *
  * It is disabled while running, and that is a courtesy, not the guarantee. The
- * guarantee is the exclusive-create lock in the server (`fetch-run.ts`), because
+ * guarantee is server-side: the exclusive-create lock in the fetch
+ * (`fetch-run.ts`) and the mail check's own `already_running` marker, because
  * a second tab has its own enabled button and a reloaded page has a fresh one.
  * This component is allowed to be wrong about the state; the server is not.
  */
@@ -150,9 +152,11 @@ function RunSummary({ summary }: { summary: FetchRunSummary }) {
   );
 }
 
-export function FetchPanel({ initialState }: { initialState: FetchRunState }) {
+export function RefreshPanel({ initialState }: { initialState: FetchRunState }) {
   const [state, setState] = useState<FetchRunState>(initialState);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [mail, setMail] = useState<RefreshResult['mail'] | null>(null);
+  const [pendingProposals, setPendingProposals] = useState<number | null>(null);
   const [isStarting, startTransition] = useTransition();
   const router = useRouter();
 
@@ -192,8 +196,10 @@ export function FetchPanel({ initialState }: { initialState: FetchRunState }) {
 
   function handleStart() {
     startTransition(async () => {
-      const result = await startFetchAction();
-      setFeedback(translateActionMessage(result.message));
+      const result = await startRefreshAction();
+      setMail(result.mail);
+      setPendingProposals(result.pendingProposals);
+      setFeedback(translateActionMessage(result.fetch.message));
       // Reads the state back immediately rather than assuming the click won:
       // when it did not, this is what makes the panel show the run that is
       // actually in flight instead of a stale idle.
@@ -205,16 +211,16 @@ export function FetchPanel({ initialState }: { initialState: FetchRunState }) {
 
   return (
     <section
-      aria-labelledby="fetch-heading"
+      aria-labelledby="refresh-heading"
       className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h2 id="fetch-heading" className="text-sm font-semibold text-slate-900">
-            {ES.fetch.action}
+          <h2 id="refresh-heading" className="text-sm font-semibold text-slate-900">
+            {ES.refresh.heading}
           </h2>
           <p className="prose-measure mt-1 text-xs leading-relaxed text-slate-500">
-            {ES.fetch.hint}
+            {ES.refresh.hint}
           </p>
         </div>
 
@@ -231,8 +237,8 @@ export function FetchPanel({ initialState }: { initialState: FetchRunState }) {
           }
         >
           {busy ? <Spinner /> : <SearchIcon />}
-          <span>{busy ? ES.fetch.pending : ES.fetch.action}</span>
-          <span className="sr-only">{ES.fetch.screenReader}</span>
+          <span>{busy ? ES.refresh.pending : ES.refresh.action}</span>
+          <span className="sr-only">{ES.refresh.screenReader}</span>
         </button>
       </div>
 
@@ -253,6 +259,37 @@ export function FetchPanel({ initialState }: { initialState: FetchRunState }) {
 
       {feedback !== null && !running && (
         <p className="mt-1 text-xs font-medium text-slate-600">{feedback}</p>
+      )}
+
+      {/*
+        THE MAIL LINE.
+
+        What the review found, in the same words /seguimiento uses for the same
+        outcome. The proposals themselves are decided there, so the count links
+        instead of duplicating the decision UI; the pending line covers older
+        proposals the human has not decided yet ("actualizaciones de
+        candidaturas" the user asked about).
+      */}
+      {mail !== null && (
+        <div
+          role="status"
+          className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"
+        >
+          <p className="font-semibold">{ES.refresh.mailHeading}</p>
+          <p className="mt-1">{mailRunText(mail.outcome)}</p>
+          {mail.proposed > 0 && (
+            <p className="mt-1 font-medium text-slate-900">{ES.mail.status.homePending(mail.proposed)}</p>
+          )}
+          {pendingProposals !== null && pendingProposals > 0 && (
+            <p className="mt-1">{ES.refresh.mailPending(pendingProposals)}</p>
+          )}
+          <Link
+            className="mt-1 inline-block font-medium text-indigo-700 underline"
+            href="/seguimiento#correo"
+          >
+            {ES.mail.status.homeLink}
+          </Link>
+        </div>
       )}
 
       {state.status === 'failed' && (

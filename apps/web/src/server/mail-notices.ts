@@ -268,3 +268,13 @@ export function runSlugFor(outcome: MailRunOutcome): RunNoticeCode {
       return assertNever(outcome);
   }
 }
+
+/**
+ * The Spanish sentence for a mail run outcome, reused by the "Actualizar"
+ * panel so its mail line words the outcome exactly like /seguimiento does.
+ * Every outcome maps through the closed slug set; anything unmapped falls back
+ * to the generic failure text and is never echoed.
+ */
+export function mailRunText(outcome: MailRunOutcome): string {
+  return runNoticeFor(runSlugFor(outcome))?.text ?? ES.mail.run.failed;
+}

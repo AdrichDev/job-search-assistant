@@ -509,6 +509,25 @@ export const ES = {
     warningsHeading: 'Avisos de esta búsqueda',
   },
 
+  /* Actualizar ----------------------------------------------------------- */
+  /*
+   * Un solo botón (S12): revisa el correo y busca ofertas nuevas, en ese
+   * orden. El resultado de la búsqueda sigue siendo el de «fetch» de arriba;
+   * esto añade lo que el correo encontró.
+   */
+  refresh: {
+    heading: 'Actualizar',
+    hint: 'Revisa tu correo en busca de respuestas y propuestas, y después busca ofertas nuevas en las fuentes configuradas.',
+    action: 'Actualizar',
+    pending: 'Actualizando…',
+    screenReader: 'Revisar el correo y buscar ofertas nuevas en todas las fuentes configuradas.',
+    mailHeading: 'Correo',
+    mailPending: (n: number) =>
+      n === 1
+        ? 'Además, 1 propuesta anterior sigue pendiente de decidir.'
+        : `Además, ${n} propuestas anteriores siguen pendientes de decidir.`,
+  },
+
   /* Score breakdown ---------------------------------------------------- */
   score: {
     summary: (total: string) => `Ver puntuación estimada (${total} sobre 100)`,

@@ -22,6 +22,7 @@ import {
   updateCvModelFromForm,
 } from '@/server/cv-models';
 import { pipelineRunner } from '@/server/pipeline';
+import { mailCheckDeps } from '@/server/refresh';
 import {
   applyToJob,
   dismissOffer,
@@ -31,10 +32,13 @@ import {
   revertChange,
   setOutcome,
   startFetch,
+  startRefresh,
   type ActionOutcome,
   type FetchDeps,
+  type RefreshResult,
   type WriteDeps,
 } from '@/server/use-cases';
+import { checkMail } from '@/server/mail-use-cases';
 
 /**
  * Server actions: the only write surface exposed to the browser.
@@ -215,6 +219,38 @@ export async function startFetchAction(): Promise<ActionOutcome> {
 /** What the run is doing right now. Polled by the fetch button while it runs. */
 export async function fetchStateAction(): Promise<FetchRunState> {
   return readFetchState(fetchDeps());
+}
+
+/**
+ * The ONE "Actualizar" control (S12): a mail review FIRST, then the offer
+ * fetch, and what each half found as the answer.
+ *
+ * The mail review is awaited here - it is seconds, not minutes - while the
+ * fetch is backgrounded exactly like `startFetchAction`: the completion
+ * promise is dropped (with the same anti-GC insurance) and the browser follows
+ * the run by polling `fetchStateAction`.
+ *
+ * Single-flight is NOT enforced here. The mail review refuses a concurrent run
+ * itself (`already_running`), and the fetch refuses a second run through the
+ * exclusive-create lock in `startFetchRun`, which is what keeps a second tab
+ * from starting a duplicate.
+ */
+export async function startRefreshAction(): Promise<RefreshResult> {
+  const mailDeps = mailCheckDeps();
+  const { completion, ...outcome } = await startRefresh({
+    runMailReview: () => checkMail(mailDeps, { force: true }),
+    countPendingProposals: async () => (await mailDeps.proposals.listPending()).length,
+    startRun: () => startFetch(fetchDeps()),
+  });
+
+  // Same insurance as `startFetchAction`: a collected completion would be a
+  // lock that is never released. The set holds at most one entry.
+  inFlight.add(completion);
+  void completion.finally(() => inFlight.delete(completion));
+
+  // `completion` is a promise and cannot cross the action boundary; the browser
+  // polls the state file instead.
+  return outcome;
 }
 
 /* CV model library -------------------------------------------------------- */

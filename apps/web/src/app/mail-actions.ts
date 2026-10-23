@@ -7,9 +7,7 @@ import {
   applicationHistoryRepository,
   applicationRepository,
   mailProposalRepository,
-  mailRunStateStore,
 } from '@/server/container';
-import { gmailReader, mailConfigured } from '@/server/mail';
 import {
   acceptAllFromForm,
   acceptFromForm,
@@ -17,25 +15,13 @@ import {
   checkNow,
   dismissFromForm,
 } from '@/server/mail-actions-core';
-import type { MailCheckDeps } from '@/server/mail-use-cases';
+import { mailCheckDeps } from '@/server/refresh';
 
 /**
  * Thin shells over `@/server/mail-actions-core` (unit-tested there). Form posts
  * that redirect with a closed Spanish slug; none of them echoes an error.
  * Covered end to end by the U5e e2e, not by unit tests.
  */
-
-function checkDeps(): MailCheckDeps {
-  return {
-    configured: () => mailConfigured(),
-    reader: gmailReader(),
-    store: mailRunStateStore(),
-    proposals: mailProposalRepository(),
-    applications: applicationRepository(),
-    now: () => new Date(),
-    logger: consoleLogger,
-  };
-}
 
 function refresh(): void {
   revalidatePath('/');
@@ -96,7 +82,7 @@ export async function dismissMailProposalAction(formData: FormData): Promise<voi
 export async function checkMailNowAction(): Promise<void> {
   let to = '/seguimiento?correo=fallo#correo';
   try {
-    to = await checkNow(checkDeps());
+    to = await checkNow(mailCheckDeps());
     refresh();
   } catch {
     // keep the generic target
@@ -107,7 +93,7 @@ export async function checkMailNowAction(): Promise<void> {
 /** Called from a client effect: never redirects, never throws. */
 export async function catchUpMailAction(): Promise<{ ran: boolean }> {
   try {
-    const { ran } = await catchUp(checkDeps());
+    const { ran } = await catchUp(mailCheckDeps());
     return { ran };
   } catch {
     return { ran: false };
