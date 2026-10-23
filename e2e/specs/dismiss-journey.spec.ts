@@ -53,13 +53,23 @@ test.describe('dismiss journey', () => {
     const apply = applyLinkFor(page, TITLE);
     const dismiss = dismissButtonFor(page, TITLE);
 
+    const applyImage = await apply.evaluate((element) => getComputedStyle(element).backgroundImage);
+    const dismissImage = await dismiss.evaluate(
+      (element) => getComputedStyle(element).backgroundImage,
+    );
     const applyBackground = await apply.evaluate((node) => getComputedStyle(node).backgroundColor);
     const dismissBackground = await dismiss.evaluate(
       (node) => getComputedStyle(node).backgroundColor,
     );
 
-    expect(applyBackground).not.toBe('rgba(0, 0, 0, 0)');
+    /*
+     * Apply carries the fill. It is a GRADIENT (a background image) since the
+     * redesign, so the fill can live in either property -what must hold is that
+     * Apply has one and Dismiss has none.
+     */
+    expect(applyBackground !== 'rgba(0, 0, 0, 0)' || applyImage !== 'none').toBe(true);
     expect(dismissBackground).toBe('rgba(0, 0, 0, 0)');
+    expect(dismissImage).toBe('none');
   });
 
   test('clicking Descartar hides the offer and records exactly one dismissal', async ({ page }) => {

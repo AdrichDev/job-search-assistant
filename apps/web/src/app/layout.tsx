@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { SiteNav } from '@/components/site-nav';
+import { ViewIn } from '@/components/view-in';
 import { ES } from '@/copy/es';
 import './globals.css';
 
@@ -18,8 +19,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body className="min-h-screen font-sans">
+        {/*
+          The header sits in the LAYOUT, not in each page: that is what makes the
+          navigation dynamic -it never remounts, and only the content below it
+          changes. The top padding reserves its height.
+        */}
         <SiteNav />
-        {children}
+        <div className="pt-16">
+          <ViewIn>{children}</ViewIn>
+        </div>
       </body>
     </html>
   );

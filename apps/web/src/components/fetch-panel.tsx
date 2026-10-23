@@ -206,7 +206,7 @@ export function FetchPanel({ initialState }: { initialState: FetchRunState }) {
   return (
     <section
       aria-labelledby="fetch-heading"
-      className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      className="glass mb-6 rounded-2xl p-4"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">

@@ -96,7 +96,11 @@ export default async function DashboardPage({
   return (
     <main className="mx-auto w-full max-w-[1800px] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <header className="mb-8">
-        <h1 className="border-l-4 border-neon-cyan pl-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
+          <span className="text-grad font-bold">✦</span>
+          {ES.nav.pill.offers}
+        </p>
+<h1 className="text-4xl font-black tracking-tight text-[#f8fafc] sm:text-5xl">
           {ES.header.title}
         </h1>
         {mail.pendingCount > 0 && (

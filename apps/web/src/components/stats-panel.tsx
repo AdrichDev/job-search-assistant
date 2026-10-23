@@ -15,11 +15,43 @@ function percent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
 
-function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
+/**
+ * One hue per metric.
+ *
+ * The user's complaint about the redesign was precise: "todas las sections o
+ * cards tienen el mismo color azul". A funnel is a sequence, so the colour is a
+ * position: indigo where offers enter, through violet, fuchsia and orange, to
+ * lime at the end. The hues are explicit values because the theme mirror would
+ * otherwise turn them into surfaces.
+ */
+const TONES = {
+  indigo: { rail: 'from-[#6366f1] to-[#818cf8]', value: 'text-[#a5b4fc]' },
+  violet: { rail: 'from-[#9d00ff] to-[#c084fc]', value: 'text-[#d8b4fe]' },
+  fuchsia: { rail: 'from-[#d946ef] to-[#f0abfc]', value: 'text-[#f5d0fe]' },
+  orange: { rail: 'from-[#ff9900] to-[#fdba74]', value: 'text-[#fed7aa]' },
+  cyan: { rail: 'from-[#00f0ff] to-[#67e8f9]', value: 'text-[#a5f3fc]' },
+  lime: { rail: 'from-[#84cc16] to-[#bef264]', value: 'text-[#d9f99d]' },
+} as const;
+
+type Tone = keyof typeof TONES;
+
+function Metric({
+  label,
+  value,
+  hint,
+  tone = 'indigo',
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: Tone;
+}) {
+  const hue = TONES[tone];
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="glass relative overflow-hidden rounded-xl p-4">
+      <span aria-hidden="true" className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${hue.rail}`} />
       <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</dd>
+      <dd className={`mt-1 text-2xl font-bold tabular-nums ${hue.value}`}>{value}</dd>
       {hint !== undefined && <p className="mt-0.5 text-xs text-slate-500">{hint}</p>}
     </div>
   );
@@ -98,29 +130,34 @@ export function StatsPanel({
 
       <h3 className="mb-2 text-sm font-semibold text-slate-800">{ES.stats.funnelHeading}</h3>
       <dl className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Metric label={ES.stats.surfaced} value={String(stats.funnel.surfaced)} />
+        <Metric label={ES.stats.surfaced} value={String(stats.funnel.surfaced)} tone="indigo" />
         <Metric
           label={ES.stats.applied}
+          tone="violet"
           value={String(stats.funnel.applied)}
           hint={ES.stats.stageRate(percent(stats.funnel.applicationRate))}
         />
         <Metric
           label={ES.stats.responses}
+          tone="fuchsia"
           value={String(stats.funnel.responses)}
           hint={ES.stats.stageRate(percent(stats.funnel.responseRate))}
         />
         <Metric
           label={ES.stats.advanced}
+          tone="orange"
           value={String(stats.funnel.advances)}
           hint={ES.stats.stageRate(percent(stats.funnel.advanceRate))}
         />
         <Metric
           label={ES.stats.interviews}
+          tone="cyan"
           value={String(stats.funnel.interviews)}
           hint={ES.stats.stageRate(percent(stats.funnel.interviewRate))}
         />
         <Metric
           label={ES.stats.offers}
+          tone="lime"
           value={String(stats.funnel.offers)}
           hint={ES.stats.stageRate(percent(stats.funnel.offerRate))}
         />
@@ -133,18 +170,20 @@ export function StatsPanel({
       ) : (
         <>
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Metric label={ES.stats.applied} value={String(stats.totalApplied)} />
+            <Metric label={ES.stats.applied} value={String(stats.totalApplied)} tone="violet" />
             <Metric
               label={ES.stats.responseRate}
+              tone="fuchsia"
               value={percent(stats.responseRate)}
               hint={ES.stats.responseHint(stats.responses, stats.totalApplied)}
             />
             <Metric
               label={ES.stats.advanced}
+              tone="orange"
               value={percent(stats.advanceRate)}
               hint={ES.stats.advancedHint(stats.advances)}
             />
-            <Metric label={ES.stats.pending} value={String(stats.pending)} />
+            <Metric label={ES.stats.pending} value={String(stats.pending)} tone="cyan" />
           </dl>
 
           {modelRows.length === 0 ? (
