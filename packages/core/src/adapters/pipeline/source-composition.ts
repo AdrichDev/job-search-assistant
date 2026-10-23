@@ -1,4 +1,5 @@
 import { companiesFor } from '../../config/company-boards.js';
+import { MANFRED_TIMEOUT_MS } from '../../config/manfred.js';
 import type { SelectableSourceId } from '../../cli/source-selection.js';
 import type { JobSource } from '../../ports/job-source.js';
 import type { LinkChecker } from '../../ports/link-checker.js';
@@ -74,7 +75,10 @@ export function buildSourceFactories(
   return {
     fixture: () => createFixtureJobSource({ filePath: options.fixturePath, now }),
 
-    manfred: () => createManfredJobSource({ logger, timeoutMs, concurrency, now }),
+    // Manfred gets its own budget: its archive endpoint ships megabytes and a
+    // 15 s shared default failed the whole source (see MANFRED_TIMEOUT_MS).
+    manfred: () =>
+      createManfredJobSource({ logger, timeoutMs: MANFRED_TIMEOUT_MS, concurrency, now }),
 
     greenhouse: () =>
       createGreenhouseJobSource({ ...boardOptions, companies: companiesFor('greenhouse') }),

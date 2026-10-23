@@ -32,6 +32,18 @@
 export const MANFRED_BASE_URL = 'https://www.getmanfred.com';
 
 /**
+ * Manfred's own timeout, bigger than the shared board default.
+ *
+ * MEASURED, not guessed: the offers endpoint answers ~2.3 MB in ~9.6 s and the
+ * sitemap ~289 KB in ~8.1 s from this connection. With the shared 15 s default
+ * the whole source failed with "request timed out after 15000ms" and the run
+ * reported "1 of 5 source queries failed" -which is exactly the "no coge bien
+ * las fuentes" the user saw. The other four boards answer in well under a
+ * second, so they keep the shared default.
+ */
+export const MANFRED_TIMEOUT_MS = 45_000;
+
+/**
  * The offers list. `lang=ES` is not a preference - it is the parameter that
  * makes the endpoint answer at all.
  */

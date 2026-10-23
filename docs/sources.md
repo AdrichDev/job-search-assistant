@@ -63,3 +63,40 @@ re-check them before building an adapter.
 1. Confirm the route is in the allowed table and the terms permit it.
 2. API or ATS: add a `JobSource` adapter and register it in
    `packages/core/src/adapters/pipeline/source-composition.ts`.
+
+## Last verification (2026-10-23)
+
+A real `npm start -- --source=all` run, no flags skipped, on the author's machine:
+
+| Source | Status | Fetched |
+|--------|--------|---------|
+| `greenhouse` | ok | 176 |
+| `smartrecruiters` | ok | 111 |
+| `ashby` | ok | 90 |
+| `manfred` | ok | 23 |
+| `lever` | ok | 16 |
+
+416 postings fetched, 414 unique, 34 passing both filters. **Nothing failed**, which
+was not true before this run: `manfred` used to answer
+`request timed out after 15000ms` and the run reported "1 of 5 source queries
+failed". The endpoint itself was fine — the offers list is ~2.3 MB and answered in
+~9.6 s, and the sitemap ~289 KB in ~8.1 s — so the shared 15 s board default was
+simply too tight for it. Manfred now has its own budget
+(`MANFRED_TIMEOUT_MS`), and the other four boards keep the shared default because
+they answer in well under a second.
+
+### Refuted, with the reason
+
+These were tried and are NOT sources any more. The reason is recorded so nobody
+re-adds them by accident:
+
+| Removed | Why |
+|---------|-----|
+| `adzuna` | Spanish-market yield was negligible for this profile; removed, and the credentials are not referenced anywhere. |
+| `arbeitnow` | Same: European board with almost no Spanish junior software offers. |
+| `landingjobs` | Same: negligible Spanish yield. |
+| Clarity AI (a Greenhouse board) | Its board answers 404; the entry was deleted rather than left as a warning on every run. |
+
+Not a source and never will be: scraping or automating LinkedIn, Indeed, InfoJobs,
+Tecnoempleo, Michael Page or Experteer (see the rejected routes above). For those
+the only routes are email alerts and manual import.
