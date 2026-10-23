@@ -467,6 +467,9 @@ export async function buildJobQueue(
       title: entry.job.title,
       company: entry.job.company,
       location: entry.job.location,
+      // Kept while the raw Job exists: the offer detail dialog shows the full
+      // posting text, which no later read can recover from the fingerprint id.
+      description: entry.job.description,
       url: entry.job.url,
       postedAt: entry.job.postedAt.toISOString(),
       salaryMin: entry.job.salaryMin,

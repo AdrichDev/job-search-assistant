@@ -78,6 +78,13 @@ const queueEntrySchema = z.object({
   company: z.string(),
   location: z.string(),
   /*
+   * Optional, with NO default: a queue written before this field existed
+   * holds no description, and inventing one would be exactly the kind of
+   * lie this reader exists to stop. The UI renders its own "no description"
+   * state for the absent field instead.
+   */
+  description: z.string().optional(),
+  /*
    * Absolute, and enforced on the way IN as well as on the way out.
    *
    * A queue file is written by this codebase, which is exactly why it deserves

@@ -248,6 +248,9 @@ describe('buildJobQueue', () => {
         'contractType',
         'cvCategorySuggestion',
         'cvVariant',
+        // The full posting text, persisted so the offer detail dialog can
+        // show it after the raw Job is gone (optional, so legacy files read).
+        'description',
         'id',
         'liveness',
         'location',

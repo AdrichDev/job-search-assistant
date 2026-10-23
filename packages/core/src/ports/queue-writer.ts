@@ -79,6 +79,16 @@ export interface QueueEntry {
   readonly title: string;
   readonly company: string;
   readonly location: string;
+  /**
+   * The full posting text, kept so the offer detail dialog can show it.
+   *
+   * OPTIONAL: queue files written before this field existed hold no
+   * description, and the UI renders nothing for them rather than inventing
+   * one. The dedupe and scoring layers read it while the raw `Job` is alive;
+   * persisting the description itself is what lets the offer detail keep
+   * showing it once that raw `Job` is gone.
+   */
+  readonly description?: string;
   readonly url: string;
   readonly postedAt: string;
   readonly salaryMin: number | null;
