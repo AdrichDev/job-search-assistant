@@ -58,8 +58,20 @@ the list is the simplified list, and `Abrir` shows everything the way a job boar
 - T5 (S2, S3, S4) e2e: the row carries the nine items, the dialog carries them plus the full
   description, and viewing an offer leaves the application log untouched while applying writes it.
 - T6 (S5) Capture the portal from the mail and show it as the source of a mail-derived row. Core
-  change: the proposal needs the portal, persisted, and the row must prefer it over a generic
-  label. Separate unit, not started.
+  change, own unit. What the code already gives us: `MailMessage` (port) carries the sender address
+  and the subject, and `propose-from-mail.ts` already matches a message to exactly one open
+  application before creating a proposal. So the portal is derivable, not guessable:
+  1. A pure `portalFromSender(from)` in `packages/core/src/domain/`: map the known alert domains to a
+     stable label (`infojobs`, `linkedin`, `indeed`, `tecnoempleo`, `manfred`, ...); for any other
+     domain return the registrable domain lowercased, EXCEPT generic mail providers (gmail, outlook,
+     hotmail, yahoo, proton...), where the sender says nothing about the portal and the answer must
+     be null rather than a lie. Unit tests for both paths and for a malformed address.
+  2. `MailProposal` gains an OPTIONAL portal, set at creation from the matched message, persisted by
+     the proposal repository the same way the other fields are, so proposals stored before this
+     existed still read back fine.
+  3. Show it: the proposals UI and, for a tracking row that has no imported portal, the Portal the
+     alert email revealed - never invented, never overwriting an imported one.
+  This is metadata from the alert, not scraping: `docs/sources.md` keeps its boundary untouched.
 
 ## Log
 
