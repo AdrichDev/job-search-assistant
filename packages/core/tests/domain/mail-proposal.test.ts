@@ -63,6 +63,22 @@ describe('createMailProposal', () => {
   });
 });
 
+describe('createMailProposal portal', () => {
+  it('carries the portal the alert revealed when the draft has one', () => {
+    const proposal = createMailProposal({ ...draft, portal: 'infojobs' });
+    expect(proposal.portal).toBe('infojobs');
+  });
+
+  it('omits the portal when the draft has none', () => {
+    const proposal = createMailProposal(draft);
+    expect('portal' in proposal).toBe(false);
+  });
+
+  it('omits a blank portal instead of storing an empty label', () => {
+    expect(createMailProposal({ ...draft, portal: '  ' }).portal).toBeUndefined();
+  });
+});
+
 describe('isMailProposalOutcome', () => {
   it('accepts only outcomes a mail can announce', () => {
     for (const ok of ['rejected', 'screening', 'interview', 'offer']) {

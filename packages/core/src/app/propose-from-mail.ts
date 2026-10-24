@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { Application, ApplicationOutcome } from '../domain/application.js';
 import { createMailProposal } from '../domain/mail-proposal.js';
 import { classifyReply } from '../domain/mail-reply.js';
+import { portalFromSender } from '../domain/mail-portal.js';
 import { containsTerm, normalizeText } from '../domain/text.js';
 import type { MailMessage } from '../ports/gmail-reader.js';
 import type { MailProposalRepository } from '../ports/mail-proposal-repository.js';
@@ -119,6 +120,8 @@ export async function proposeFromMail(input: ProposeFromMailInput): Promise<Prop
       continue;
     }
 
+    const portal = portalFromSender(message.from);
+
     const added = await input.repository.add(
       createMailProposal({
         id: proposalId(message.id),
@@ -128,6 +131,7 @@ export async function proposeFromMail(input: ProposeFromMailInput): Promise<Prop
         messageId: message.id,
         snippet: message.snippet,
         evidence: reply.evidence,
+        ...(portal === null ? {} : { portal }),
         detectedAt: input.now(),
       }),
     );

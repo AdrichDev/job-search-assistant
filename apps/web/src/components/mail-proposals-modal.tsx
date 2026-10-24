@@ -26,6 +26,8 @@ export interface MailModalRow {
   /** Spanish label of the application's current state, or null when it is gone. */
   readonly currentState: string | null;
   readonly proposedState: string;
+  /** The portal the alert's sender revealed, when it named one. */
+  readonly portal?: string;
   readonly snippet: string;
 }
 
@@ -105,6 +107,12 @@ export function MailProposalsModal({ rows }: { readonly rows: readonly MailModal
                   <dt className="shrink-0">{ES.mail.modal.proposedState}:</dt>
                   <dd className="font-medium text-[#f8fafc]">{row.proposedState}</dd>
                 </div>
+                {row.portal !== undefined && (
+                  <div className="flex gap-2">
+                    <dt className="shrink-0">{ES.mail.modal.portal}:</dt>
+                    <dd>{row.portal}</dd>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <dt className="shrink-0">{ES.mail.modal.evidence}:</dt>
                   <dd className="italic">«{row.snippet}»</dd>

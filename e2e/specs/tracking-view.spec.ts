@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../support/test.js';
 import { HEALTHY_QUEUE } from '../fixtures/queue.js';
 import { seedApplications, type SeedApplication } from '../support/workspace.js';
+import { seedMailProposals } from '../support/mail.js';
 
 /**
  * The tracking view (CU5/CU6): every application in one place, imported ones
@@ -545,6 +546,49 @@ test.describe('tracking view accessibility', () => {
     await expect(page.locator('tbody th[scope="row"]')).toHaveCount(5);
     // Layout tables are forbidden: the only table is the data table.
     await expect(page.locator('table')).toHaveCount(1);
+  });
+
+  test('a row with no imported portal falls back to the portal the alert revealed', async ({
+    page,
+  }) => {
+    // An imported row WITHOUT a portal, plus the pending proposal its alert produced.
+    await seedApplications([
+      {
+        jobId: 'import-dddd4444',
+        appliedAt: '2026-03-06T00:00:00.000Z',
+        sourceIds: [],
+        outcome: 'applied',
+        listing: { company: 'Delta Soft', title: 'Backend Developer' },
+      },
+    ]);
+    await seedMailProposals([
+      {
+        id: 'p-portal',
+        jobId: 'import-dddd4444',
+        proposedOutcome: 'screening',
+        basedOnOutcome: 'applied',
+        messageId: 'msg-portal',
+        snippet: 'Buenas noticias: pasas a la siguiente fase.',
+        detectedAt: '2026-03-07T08:00:00.000Z',
+        status: 'pending',
+        portal: 'infojobs',
+      },
+    ]);
+    await page.goto('/seguimiento');
+
+    // The proposals UI names the portal the alert revealed.
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText('Portal:')).toBeVisible();
+    await expect(dialog).toContainText('infojobs');
+    await dialog.press('Escape');
+
+    // The row shows the mail-revealed portal and the Portal filter can select it.
+    const row = rowFor(page, 'Delta Soft');
+    await expect(row).toContainText('infojobs');
+    await page.getByLabel('Portal').selectOption('infojobs');
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(page.locator('tbody tr')).toContainText('Delta Soft');
   });
 
   test('the skip link is first and lands on the table page', async ({ page }) => {

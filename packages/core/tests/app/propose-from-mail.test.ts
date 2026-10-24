@@ -71,6 +71,19 @@ describe('proposeFromMail', () => {
     expect(proposal?.evidence).toContain('entrevista');
   });
 
+  it('stamps the portal the alert sender reveals onto the proposal', async () => {
+    await run([message({ id: 'm-portal', from: 'no-reply@infojobs.net' })]);
+    const [proposal] = await repository.listPending();
+    expect(proposal?.portal).toBe('infojobs');
+  });
+
+  it('leaves the portal out when the sender is a personal address', async () => {
+    await run([message({ id: 'm-personal', from: 'rrhh@gmail.com' })]);
+    const [proposal] = await repository.listPending();
+    expect(proposal).not.toBeNull();
+    expect('portal' in (proposal ?? {})).toBe(false);
+  });
+
   it('is idempotent: running twice creates nothing new', async () => {
     await run([message({ id: 'm1' })]);
     const second = await run([message({ id: 'm1' })]);

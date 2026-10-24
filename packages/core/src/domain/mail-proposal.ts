@@ -32,6 +32,12 @@ export interface MailProposal {
   readonly messageId: string;
   readonly snippet: string;
   readonly evidence: readonly string[];
+  /**
+   * The portal the alert's sender revealed (`portalFromSender`), when it named
+   * one. Absent on proposals stored before this field existed, and absent for
+   * generic senders: a personal address says nothing about the portal.
+   */
+  readonly portal?: string;
   readonly detectedAt: Date;
   readonly status: MailProposalStatus;
   /** Set when accepted: the change-history entry that recorded the edit. */
@@ -46,6 +52,7 @@ export interface MailProposalDraft {
   readonly messageId: string;
   readonly snippet: string;
   readonly evidence: readonly string[];
+  readonly portal?: string;
   readonly detectedAt: Date;
 }
 
@@ -89,6 +96,9 @@ export function createMailProposal(draft: MailProposalDraft): MailProposal {
     messageId: requireText(draft.messageId, 'messageId'),
     snippet: sanitizeSnippet(draft.snippet),
     evidence: [...draft.evidence],
+    ...(draft.portal === undefined || draft.portal.trim().length === 0
+      ? {}
+      : { portal: draft.portal.trim() }),
     detectedAt: draft.detectedAt,
     status: 'pending',
   };

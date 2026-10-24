@@ -36,6 +36,7 @@ const proposalSchema = z
     messageId: z.string().min(1),
     snippet: z.string(),
     evidence: z.array(z.string()),
+    portal: z.string().min(1).optional(),
     detectedAt: isoDate,
     status: z.enum(MAIL_PROPOSAL_STATUSES),
     historyEntryId: z.string().min(1).optional(),
@@ -102,9 +103,10 @@ export function createJsonMailProposalRepository(
       );
     }
 
-    return parsed.data.proposals.map(({ detectedAt, historyEntryId, basedOnOutcome, ...rest }) => ({
+    return parsed.data.proposals.map(({ detectedAt, historyEntryId, basedOnOutcome, portal, ...rest }) => ({
       ...rest,
       ...(basedOnOutcome === undefined ? {} : { basedOnOutcome }),
+      ...(portal === undefined ? {} : { portal }),
       detectedAt: new Date(detectedAt),
       ...(historyEntryId === undefined ? {} : { historyEntryId }),
     }));
@@ -122,6 +124,7 @@ export function createJsonMailProposalRepository(
           messageId: proposal.messageId,
           snippet: proposal.snippet,
           evidence: proposal.evidence,
+          ...(proposal.portal === undefined ? {} : { portal: proposal.portal }),
           detectedAt: proposal.detectedAt.toISOString(),
           status: proposal.status,
           ...(proposal.historyEntryId === undefined ? {} : { historyEntryId: proposal.historyEntryId }),

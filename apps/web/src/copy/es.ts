@@ -1015,6 +1015,7 @@ export const ES = {
           : `Tu correo propone ${n} cambios de estado. Acéptalos para aplicarlos o cancélalos para decidirlo más tarde.`,
       currentState: 'Estado actual',
       proposedState: 'Estado propuesto',
+      portal: 'Portal',
       evidence: 'Evidencia',
       cancel: 'Cancelar',
     },

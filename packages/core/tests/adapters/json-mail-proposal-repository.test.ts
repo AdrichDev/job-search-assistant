@@ -47,6 +47,57 @@ describe('createJsonMailProposalRepository', () => {
     expect(await readdir(directory)).toEqual(['mail-proposals.json']);
   });
 
+  it('persists the portal the alert revealed and reads it back', async () => {
+    const repository = createJsonMailProposalRepository({ filePath });
+    await repository.add(
+      createMailProposal({
+        id: 'p-portal',
+        jobId: 'nubesol::dev::madrid',
+        proposedOutcome: 'interview',
+        messageId: 'm-portal',
+        snippet: 'Te invitamos a una entrevista',
+        evidence: ['entrevista'],
+        detectedAt: new Date('2026-02-03T08:00:00.000Z'),
+        portal: 'infojobs',
+      }),
+    );
+    const again = createJsonMailProposalRepository({ filePath });
+    expect((await again.findByMessageId('m-portal'))?.portal).toBe('infojobs');
+  });
+
+  it('reads back a proposal stored before the portal field existed', async () => {
+    await writeFile(
+      filePath,
+      `${JSON.stringify(
+        {
+          version: 1,
+          proposals: [
+            {
+              id: 'p-old',
+              jobId: 'nubesol::dev::madrid',
+              proposedOutcome: 'interview',
+              messageId: 'm-old',
+              snippet: 'Te invitamos a una entrevista',
+              evidence: ['entrevista'],
+              detectedAt: '2026-02-03T08:00:00.000Z',
+              status: 'pending',
+            },
+          ],
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+    const repository = createJsonMailProposalRepository({ filePath });
+    const read = await repository.findByMessageId('m-old');
+    expect(read).not.toBeNull();
+    expect('portal' in (read ?? {})).toBe(false);
+    // And the file stays writable without inventing a portal.
+    await repository.markDismissed('p-old');
+    expect((await repository.list())[0]?.status).toBe('dismissed');
+  });
+
   it('is idempotent by messageId and keeps the original untouched', async () => {
     const repository = createJsonMailProposalRepository({ filePath });
     await repository.add(proposal('m1'));

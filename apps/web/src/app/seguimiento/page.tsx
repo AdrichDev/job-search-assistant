@@ -4,6 +4,7 @@ import { MailCatchUp } from '@/components/mail-catchup';
 import { MailProposalsModal, type MailModalRow } from '@/components/mail-proposals-modal';
 import { TrackingView } from '@/components/tracking-view';
 import { LOCALE, ES } from '@/copy/es';
+import { mailPortalByJob, withMailPortalFallback } from '@/lib/mail-portal';
 import {
   acceptMailProposalAction,
   checkMailNowAction,
@@ -45,11 +46,29 @@ export default async function TrackingPage({
           ? { text: ES.tracking.notice.savedNotLogged, warning: true }
           : null;
   const undoNotice = revertNoticeFor(query.deshacer);
-  const { rows, warnings, documents, catalog } = await loadTracking({
+  const { rows: trackedRows, warnings, documents, catalog } = await loadTracking({
     applicationRepository: applicationRepository(),
     queueReader: queueReader(),
     cvModelRepository: cvModelRepository(),
   });
+
+  /*
+   * Mail (U5d + S5): ONE read of every proposal serves both the pending modal
+   * and the portal the alert revealed (S5), which fills the tracked rows
+   * WITHOUT an imported portal before the Portal filter and the table read
+   * them. An imported portal is never overwritten and none is ever invented.
+   */
+  let proposals: readonly MailProposal[] = [];
+  try {
+    proposals = await mailProposalRepository().list();
+  } catch (cause: unknown) {
+    // The modal and the portal fallback just stay empty; the error is logged.
+    consoleLogger.error(
+      `Mail proposals unreadable: ${cause instanceof Error ? cause.message : String(cause)}`,
+    );
+  }
+  const rows = withMailPortalFallback(trackedRows, mailPortalByJob(proposals));
+  const pending = proposals.filter((proposal) => proposal.status === 'pending');
 
   /*
    * The filter vocabulary is the spreadsheet's own (S1). The estado counts the
@@ -83,16 +102,6 @@ export default async function TrackingPage({
 
   const mailStatus = await readMailStatusNow();
 
-  let pending: readonly MailProposal[] = [];
-  try {
-    pending = await mailProposalRepository().listPending();
-  } catch (cause: unknown) {
-    // The count above still tells the truth; the list just stays empty.
-    consoleLogger.error(
-      `Mail proposals unreadable: ${cause instanceof Error ? cause.message : String(cause)}`,
-    );
-  }
-
   const rowsByJob = new Map(rows.map((row) => [row.jobId, row]));
   const modalRows: readonly MailModalRow[] = pending.map((proposal) => {
     const tracked = rowsByJob.get(proposal.jobId);
@@ -102,6 +111,7 @@ export default async function TrackingPage({
       title: tracked?.title ?? '',
       currentState: tracked ? ES.outcomeOption[tracked.outcome] : null,
       proposedState: ES.outcomeOption[proposal.proposedOutcome],
+      ...(proposal.portal === undefined ? {} : { portal: proposal.portal }),
       snippet: proposal.snippet,
     };
   });
@@ -246,6 +256,7 @@ export default async function TrackingPage({
                         </>
                       )}
                       {ES.mail.modal.proposedState}: {row.proposedState}
+                      {row.portal !== undefined ? ` · ${ES.mail.modal.portal}: ${row.portal}` : null}
                     </p>
                     {row.snippet.length > 0 && (
                       <p className="mt-1 italic text-slate-300">«{row.snippet}»</p>

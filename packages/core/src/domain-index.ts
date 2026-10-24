@@ -153,6 +153,7 @@ export {
   type MailProposalOutcome,
   type MailProposalStatus,
 } from './domain/mail-proposal.js';
+export { portalFromSender } from './domain/mail-portal.js';
 export {
   classifyReply,
   type ReplyClassification,

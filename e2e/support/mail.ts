@@ -24,6 +24,8 @@ export interface SeedProposal {
   readonly messageId: string;
   readonly snippet: string;
   readonly evidence?: readonly string[];
+  /** The portal the alert's sender revealed; absent when it named none. */
+  readonly portal?: string;
   /** ISO date. */
   readonly detectedAt: string;
   readonly status: 'pending' | 'accepted' | 'dismissed';
@@ -37,6 +39,7 @@ export interface StoredProposal {
   readonly messageId: string;
   readonly snippet: string;
   readonly evidence: readonly string[];
+  readonly portal?: string;
   readonly detectedAt: string;
   readonly status: 'pending' | 'accepted' | 'dismissed';
   readonly historyEntryId?: string;
